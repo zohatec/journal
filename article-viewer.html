@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>ARC Journals</title>
+			<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+			<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+			<link rel="stylesheet" href="style.css">
+  <style>
+    .article-viewer-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+    .viewer-header {
+      border-bottom: 2px solid #eef2f8;
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .viewer-header h1 {
+      font-size: 1.8rem;
+      font-family: 'Lora', serif;
+      color: #0a2540;
+      margin-bottom: 0.5rem;
+    }
+    .viewer-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: #5b6e8c;
+    }
+    .viewer-content {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #1e2a3e;
+    }
+    .viewer-content p {
+      margin-bottom: 1rem;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #c4452c;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .back-link i {
+      margin-right: 6px;
+    }
+    @media (max-width: 650px) {
+      .article-viewer-container {
+        padding: 1.2rem;
+        margin: 1rem;
+      }
+      .viewer-header h1 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +8801712534626</a>
+    <a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a>
+    <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+  </div>
+
+	<nav class="main-nav">
+	  <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+	  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+	  <div class="nav-links" id="navLinks"></div>
+	</nav>
+
+  <div class="hero-search" style="background: #085f99; padding: 1rem;">
+    <h2 style="font-size: 1.6rem;">📖 Article Details...</h2>
+  </div>
+
+  <div class="article-viewer-container" id="articleViewer">
+    <div class="viewer-header">
+      <h1 id="viewerTitle">Loading article...</h1>
+      <div class="viewer-meta" id="viewerMeta"></div>
+    </div>
+    <div class="viewer-content" id="viewerContent">
+      <p>Please wait, retrieving content...</p>
+    </div>
+    <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> Back to journal</a>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div>
+      <div class="footer-col"><h4>Resources</h4><p><a href="#">Journal Submissions</a></p></div>
+      <div class="footer-col"><h4>Publishing</h4><p><a href="#">Open Access Policy</a></p></div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
+</div>
+
+<script src="journals-data.js"></script>
+<script>
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('cat');      // 'arts', 'comparative', 'economics'
+    const journalId = params.get('journalId');
+    const articleId = params.get('articleId');
+
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerMeta = document.getElementById('viewerMeta');
+    const viewerContent = document.getElementById('viewerContent');
+
+    if (!cat || journalId === null || articleId === null || !journalData[cat] || !journalData[cat][journalId]) {
+      viewerTitle.innerText = 'Article not found';
+      viewerContent.innerHTML = '<p>Invalid article reference. Please go back and try again.</p>';
+      return;
+    }
+
+    const journal = journalData[cat][journalId];
+    const article = journal.articles[articleId];
+    if (!article) {
+      viewerTitle.innerText = 'Article not found';
+      viewerContent.innerHTML = '<p>The requested article does not exist.</p>';
+      return;
+    }
+
+			// ----------------------Set title---------------------
+    viewerTitle.innerText = article.title;
+
+			// -----------------Build meta info--------------------
+    let catName = '';
+    if (cat === 'arts') catName = 'Arts & Culture';
+    else if (cat === 'comparative') catName = 'Comparative & International Studies';
+    else if (cat === 'economics') catName = 'Economics & Business';
+    else catName = cat;
+
+    viewerMeta.innerHTML = `<span><i class="fas fa-book-open"></i> ${escapeHtml(journal.title)}</span>
+                            <span><i class="fas fa-tag"></i> ${escapeHtml(catName)}</span>`;
+
+    // -----------------Display full content if exists, otherwise generate a default message
+    if (article.fullContent) {
+      viewerContent.innerHTML = article.fullContent;
+    } else {
+      viewerContent.innerHTML = `<p><strong>Full content not available for this article.</strong></p>
+                                 <p>Please check back later or contact the editorial office.</p>`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+  })();
+</script>
+	<script src="menu.js"></script>
+	<script src="script.js"></script>
+</body>
+</html>

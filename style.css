@@ -1,0 +1,992 @@
+/* ===================RESET & BASE================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f5f7fb;
+  color: #1e2a3e;
+  line-height: 1.5;
+}
+
+.site-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+/* =====================TOP BAR==================== */
+.top-bar {
+  background-color: #0a2540;
+  color: #eef2f5;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.8rem;
+  flex-wrap: wrap;
+}
+.top-bar a {
+  color: #ccdde6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.top-bar a:hover {
+  color: #ffffff;
+}
+.top-bar .whatsapp-link {
+  color: #25D366;
+}
+.top-bar .whatsapp-link:hover {
+  color: #ffffff;
+}
+
+/* =======================MAIN NAVIGATION========================= */
+.main-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9edf2;
+  flex-wrap: wrap;
+  background: white;
+  position: relative;
+}
+.logo-area h1 {
+  font-family: 'Lora', serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #0a2540;
+  letter-spacing: -0.3px;
+}
+.logo-area p {
+  font-size: 0.75rem;
+  color: #5b6e8c;
+}
+
+/* ==================Hamburger button (hidden on desktop)================ */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  color: #0a2540;
+  transition: color 0.2s;
+}
+.menu-toggle:hover {
+  color: #c4452c;
+}
+
+/* =================Navigation links container============= */
+.nav-links {
+  display: flex;
+  gap: 1.6rem;
+  flex-wrap: wrap;
+}
+.nav-links a {
+  text-decoration: none;
+  font-weight: 500;
+  color: #1f3a4b;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+.nav-links a:hover {
+  color: #c4452c;
+}
+.nav-links a.active {
+  color: #c4452c;
+  border-bottom: 2px solid #c4452c;
+  padding-bottom: 4px;
+}
+
+/* ============================HERO & SEARCH======================== */
+.hero-search {
+  background: #085f99;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+.hero-search h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  font-family: 'Lora', serif;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+.hero-search .tagline {
+  color: #cbd5e1;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+.search-container {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  background: white;
+  border-radius: 60px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #cfdfed;
+  overflow: hidden;
+}
+.search-container input {
+  flex: 1;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  background: white;
+}
+.search-container button {
+  background: #0a2540;
+  border: none;
+  padding: 0 2rem;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-container button:hover {
+  background: #c4452c;
+}
+.search-hint {
+  font-size: 0.75rem;
+  margin-top: 12px;
+  color: #cbd5e1;
+}
+
+/* ======================TWO COLUMN LAYOUT============================= */
+.two-columns {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* =====SIDEBAR======== */
+.sidebar {
+  flex: 1;
+  min-width: 250px;
+}
+.sidebar-section {
+  background: #ffffff;
+  border-radius: 20px;
+  margin-bottom: 1.8rem;
+  border: 1px solid #eef2f8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+.sidebar-section h3 {
+  background: #fafcfd;
+  padding: 1rem 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e2eaf1;
+  color: #0f2b3d;
+  font-family: 'Lora', serif;
+}
+.sidebar-section ul {
+  list-style: none;
+  padding: 0.5rem 0;
+}
+.sidebar-section li {
+  padding: 0.6rem 1.2rem;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2c4c6e;
+  cursor: default;
+}
+.sidebar-section li i {
+  width: 22px;
+  color: #b4684a;
+  font-size: 0.9rem;
+}
+.sidebar-section li:hover {
+  background-color: #f9f5f2;
+  border-left-color: #c4452c;
+  color: #1a2e42;
+}
+
+/* ===========================MAIN CONTENT============================== */
+.main-content {
+  flex: 2.5;
+  min-width: 280px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid #e2eaf1;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: 'Lora', serif;
+  color: #0a2540;
+}
+.results-count {
+  font-size: 0.8rem;
+  background: #eef2f8;
+  padding: 0.2rem 0.7rem;
+  border-radius: 40px;
+  color: #2c4c6c;
+}
+/* =================ARTICLE CARDS===================== */
+.articles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.article-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #eef2f8;
+  padding: 1.2rem 1.5rem;
+  transition: all 0.2s ease;
+}
+.article-card:hover {
+  border-color: #d4dee8;
+  box-shadow: 0 12px 22px -12px rgba(0, 0, 0, 0.08);
+}
+.article-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1f3a4b;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.2px;
+}
+.article-authors {
+  font-size: 0.85rem;
+  color: #4a627a;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+.article-excerpt {
+  font-size: 0.9rem;
+  color: #2c4c6e;
+  margin: 0.6rem 0;
+  line-height: 1.5;
+}
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #c4452c;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  padding: 0;
+  transition: color 0.2s;
+}
+.read-more-btn:hover {
+  color: #0a2540;
+  text-decoration: underline;
+}
+.full-article-content {
+  display: none;
+}
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: #6c819c;
+  margin: 0.6rem 0 0.5rem;
+  border-top: 1px solid #f0f3f8;
+  padding-top: 0.6rem;
+}
+.article-meta span i {
+  margin-right: 4px;
+}
+.doi-badge {
+  background: #f3f6fc;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #2c5282;
+}
+.views-downloads {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #5d6f8f;
+}
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  background: #fafafc;
+  border-radius: 28px;
+  color: #6b7a8a;
+}
+
+/* ===============================Modal Styles================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.modal-overlay.active {
+  visibility: visible;
+  opacity: 1;
+}
+.modal-container {
+  background: white;
+  max-width: 800px;
+  width: 90%;
+  max-height: 85vh;
+  border-radius: 20px;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #6c819c;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #c4452c;
+}
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #0a2540;
+}
+.modal-authors {
+  color: #4a627a;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.modal-meta {
+  margin-bottom: 1.5rem;
+  font-size: 0.8rem;
+  color: #6c819c;
+}
+.modal-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1e2a3e;
+}
+.modal-body p {
+  margin-bottom: 1rem;
+}
+
+/* =============================Scroll to Top Button============================ */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: #0a2540;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 18px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 99;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+.scroll-top-btn:hover {
+  background: #c4452c;
+  transform: translateY(-3px);
+}
+.scroll-top-btn.show {
+  display: flex;
+}
+
+/* ===================================FOOTER======================================= */
+.footer {
+  background: #0a1c2c;
+  color: #bdd3e8;
+  padding: 2rem 1.5rem 1.2rem;
+  margin-top: 1rem;
+  border-top: 1px solid #1f3f54;
+}
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.footer-col h4 {
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  color: #ebc7b5;
+}
+.footer-col p, .footer-col a {
+  font-size: 0.85rem;
+  color: #bbd1e2;
+  text-decoration: none;
+  line-height: 1.5;
+}
+.footer-col a:hover {
+  color: #e6b8a8;
+}
+.copyright {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #1f4057;
+  font-size: 0.75rem;
+}
+/* ==============About / Services / Submit Pages Custom Content====================== */
+.about-content, .services-content, .submit-content {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #eef2f8;
+  padding: 1.5rem;
+}
+.about-content h3, .services-content h3, .submit-content h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #0a2540;
+}
+.about-content p, .services-content p, .submit-content p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+.service-list {
+  list-style: none;
+  margin-top: 1rem;
+}
+.service-list li {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #eef2f8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.service-list li i {
+  color: #c4452c;
+  width: 24px;
+}
+.submit-form .form-group {
+  margin-bottom: 1.2rem;
+}
+.submit-form label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  color: #1f3a4b;
+}
+.submit-form input, .submit-form textarea, .submit-form select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #cfdfed;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+}
+.submit-form button {
+  background: #0a2540;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 40px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.submit-form button:hover {
+  background: #c4452c;
+}
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .articles-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .article-image {
+      width: 100%;
+      height: 200px;
+      background: #cbd5e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: #0a2540;
+      border-radius: 16px 16px 0 0;
+      margin-bottom: 1rem;
+    }
+    .article-card { overflow: hidden; display: flex; flex-direction: column; }
+
+	/* ========== PAGINATION STYLES ========== */
+.pagination {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button {
+  background: #f5f7fb;
+  border: 1px solid #cfdfed;
+  color: #1f3a4b;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  background: #eef2f8;
+  border-color: #c4452c;
+  color: #c4452c;
+}
+
+.pagination-controls button.active {
+  background: #0a2540;
+  border-color: #0a2540;
+  color: white;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 650px) {
+  .pagination-controls button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+/* ====================RESPONSIVE: MOBILE MENU==================== */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background: white;
+    padding: 1rem 0;
+    gap: 1rem;
+    text-align: center;
+    border-top: 1px solid #e9edf2;
+    margin-top: 1rem;
+  }
+  .nav-links.show {
+    display: flex;
+  }
+  .main-nav {
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    padding: 0.5rem;
+  }
+  .nav-links a.active {
+    border-bottom: none;
+    background: #f9f5f2;
+  }
+}
+
+/* ====================Other responsive adjustments===================== */
+@media (max-width: 880px) {
+  .two-columns {
+    flex-direction: column;
+  }
+  .sidebar {
+    order: 2;
+  }
+  .main-content {
+    order: 1;
+  }
+  .hero-search h2 {
+    font-size: 1.6rem;
+  }
+  .article-card {
+    padding: 1rem;
+  }
+  .section-header h2 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 650px) {
+  .top-bar {
+    justify-content: center;
+    gap: 1rem;
+  }
+  .search-container {
+    flex-direction: column;
+    border-radius: 32px;
+    background: white;
+  }
+  .search-container button {
+    padding: 0.8rem;
+    justify-content: center;
+    border-radius: 0 0 32px 32px;
+  }
+  .search-container input {
+    border-radius: 32px 32px 0 0;
+  }
+  .article-meta {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-search h2 {
+    font-size: 1.4rem;
+  }
+  .sidebar-section li {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+  .article-title {
+    font-size: 1rem;
+  }
+}
+/* ========== SIMPLIFIED JOURNAL CARDS (journals-arts/comparative/economics pages) ========== */
+
+/* Make the entire card a clean clickable block */
+.journal-card-simple {
+  padding: 0 !important;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Anchor wrapping icon + title */
+.journal-card-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  padding: 1.5rem 1.2rem 1.2rem;
+  transition: background 0.2s ease;
+}
+
+.journal-card-link:hover {
+  background: #f9f5f2;
+}
+
+.journal-card-link:hover .article-image {
+  background: #b8c8d8;
+  color: #c4452c;
+}
+
+.journal-card-link:hover .article-title {
+  color: #c4452c;
+}
+
+.journal-card-simple .article-image {
+  width: 100%;
+  height: 160px;
+  background: #cbd5e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: #0a2540;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.journal-card-simple .article-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f3a4b;
+  text-align: center;
+  line-height: 1.4;
+  transition: color 0.2s ease;
+}
+/* ========== জার্নাল লিস্ট পেজ (journals.html) ========== */
+.journals-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 0.5rem 0.5rem;
+  margin-top: 0.2rem;
+}
+
+/* লিংকের স্টাইল – শুধু নাম, কোনো কার্ড নয় */
+.journal-name-link {
+  display: block;
+  padding: 0.3rem 0;
+  color: #1f3a4b;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-bottom: 1px dotted #e2eaf1;
+  transition: all 0.4s;
+}
+
+.journal-name-link:hover {
+  color: #c4452c;
+  border-bottom-color: #c4452c;
+  padding-left: 5px;
+}
+
+/* প্রতিটি ক্যাটাগরির শিরোনামের নিচে ব্যবধান */
+.category-section {
+  margin-bottom: 1.5rem;
+}
+.category-section h3 {
+  font-size: 1.3rem;
+  border-left: 4px solid #c4452c;
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Lora', serif;
+  color: #0a2540;
+}
+
+/* মোবাইলে ১ কলাম, ট্যাবলেটে ২ কলাম */
+@media (max-width: 992px) {
+  .journals-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 650px) {
+  .journals-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== ARTICLE LISTING PAGE (article-listing.html) ========== */
+
+/* Journal header banner */
+.journal-header-card {
+  background: linear-gradient(135deg, #0a2540 0%, #0d3a6b 100%);
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: white;
+  box-shadow: 0 4px 16px rgba(10, 37, 64, 0.18);
+}
+
+.journal-header-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #ebc7b5;
+  flex-shrink: 0;
+}
+
+.journal-header-info h3 {
+  font-size: 1.1rem;
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+  margin-bottom: 0.2rem;
+}
+
+.journal-header-info p {
+  font-size: 0.78rem;
+  color: #94b8d4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Article list container */
+.article-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* Each article list item: icon + title + arrow */
+.article-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.2rem;
+  background: #ffffff;
+  border: 1px solid #eef2f8;
+  border-left: 3px solid transparent;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #1f3a4b;
+  font-size: 0.93rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.article-list-item:hover {
+  background: #fdf9f7;
+  border-left-color: #c4452c;
+  color: #c4452c;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(196, 69, 44, 0.08);
+}
+
+.article-item-icon {
+  width: 38px;
+  height: 38px;
+  background: #eef2f8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #0a2540;
+  font-size: 1rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.article-list-item:hover .article-item-icon {
+  background: #fde8e3;
+  color: #c4452c;
+}
+
+.article-item-title {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.article-item-arrow {
+  font-size: 0.75rem;
+  color: #c4452c;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.article-list-item:hover .article-item-arrow {
+  opacity: 1;
+}
+
+/* Responsive adjustments for article-listing page */
+@media (max-width: 650px) {
+  .journal-header-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.2rem;
+  }
+  .article-list-item {
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+  }
+  .journal-header-info h3 {
+    font-size: 1rem;
+  }
+}
+								/* ===============Dropdown menu styles for Donate================= */
+/* ড্রপডাউন কন্টেইনার ও স্টাইল */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropbtn i {
+  font-size: 0.7rem;
+  margin-left: 4px;
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border-radius: 8px;
+  top: 100%;
+  left: auto;
+  right: 0;
+}
+.dropdown-content a {
+  color: #1f3a4b;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #eef2f8;
+}
+.dropdown-content a:hover {
+  background-color: #f9f5f2;
+  color: #c4452c;
+}
+/* ডেস্কটপে হোভার করলে খোলা */
+@media (min-width: 769px) {
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+}
+/* মোবাইলে হোভার ডিজএবল এবং ক্লিক নিয়ন্ত্রণ */
+@media (max-width: 768px) {
+  .dropdown:hover .dropdown-content {
+    display: none; /* হোভার কাজ করবে না */
+  }
+  .dropdown-content {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+    left: 0;
+    right: auto;
+  }
+  body, .site-wrapper {
+    overflow-x: hidden;
+  }
+}
+	
+	

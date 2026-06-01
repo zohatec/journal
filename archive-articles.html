@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Archive – Articles in Journal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .article-list-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: white;
+      padding: 0.8rem 1.2rem;
+      margin-bottom: 0.8rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #0a2540;
+      transition: 0.2s;
+      border: 1px solid #eef2f8;
+    }
+    .article-list-item:hover { background: #f8f9fc; transform: translateX(3px); }
+    .error-msg { color: #c4452c; background: #fff0ed; padding: 1rem; border-radius: 12px; }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
+    <a href="mailto:contact@abclaw.com"><i class="far fa-envelope"></i> contact@abclaw.com</a>
+    <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+  </div>
+
+  <!-- Navigation -->
+	<nav class="main-nav">
+	  <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+	  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+	  <div class="nav-links" id="navLinks"></div>
+	</nav>
+
+  <!-- Hero -->
+  <div class="hero-search" style="background: #085f99;">
+    <h2 id="journalTitle">Articles</h2>
+    <div class="tagline" id="journalYearInfo"></div>
+  </div>
+
+  <!-- Two columns -->
+  <div class="two-columns">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3><i class="fas fa-arrow-left"></i> <a href="javascript:history.back()" style="color:#c4452c;">Back to Journals</a></h3>
+      </div>
+    </aside>
+    <div class="main-content">
+      <div class="section-header">
+        <h2><i class="fas fa-scroll"></i> Articles in this Journal</h2>
+      </div>
+      <div id="articlesContainer"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div>
+      <div class="footer-col"><h4>Resources</h4><p><a href="#">Journal Submissions</a></p><p><a href="#">Peer Review Guidelines</a></p></div>
+      <div class="footer-col"><h4>Publishing</h4><p><a href="#">Open Access Policy</a></p><p><a href="#">Call for Papers</a></p></div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
+</div>
+
+<script src="archive-data.js"></script>
+<script>
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const year = params.get('year');
+  const journalId = params.get('journalId');
+
+  let journal = null;
+  if (year && typeof archiveData !== 'undefined' && archiveData[year]) {
+    journal = archiveData[year].find(j => j.id === journalId);
+  }
+
+  const journalTitleElem = document.getElementById('journalTitle');
+  const journalYearInfo = document.getElementById('journalYearInfo');
+  const articlesContainer = document.getElementById('articlesContainer');
+
+  if (!journal) {
+    journalTitleElem.innerText = 'Journal Not Found';
+    journalYearInfo.innerText = 'Invalid year or journal selection.';
+    articlesContainer.innerHTML = '<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> No articles available.</div>';
+  } else {
+    journalTitleElem.innerText = journal.title;
+    journalYearInfo.innerText = `Published: ${year} | Total ${journal.articles.length} articles`;
+
+    if (!journal.articles || journal.articles.length === 0) {
+      articlesContainer.innerHTML = '<div class="error-msg"><i class="fas fa-info-circle"></i> This journal has no articles.</div>';
+    } else {
+      const articlesHtml = journal.articles.map((art, idx) => {
+        const articleTitle = art.title ? art.title : `Article ${idx+1}`;
+        const viewerUrl = `article-viewer.html?year=${encodeURIComponent(year)}&journalId=${encodeURIComponent(journalId)}&articleId=${idx}`;
+        return `
+          <a href="${viewerUrl}" target="_blank" class="article-list-item">
+            <i class="fas fa-file-alt" style="color:#c4452c;"></i>
+            <span><strong>${escapeHtml(articleTitle)}</strong></span>
+            <i class="fas fa-external-link-alt" style="margin-left:auto; font-size:0.8rem; opacity:0.6;"></i>
+          </a>
+        `;
+      }).join('');
+      articlesContainer.innerHTML = articlesHtml;
+    }
+  }
+
+  // মোবাইল মেনু টগল
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.getElementById('navLinks');
+  if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => navLinks.classList.toggle('show'));
+  }
+</script>
+		<script src="menu.js"></script>
+</body>
+</html>
