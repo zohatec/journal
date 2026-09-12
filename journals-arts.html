@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI, Society & Ethical Research - ARC Journals</title>
+  <title>Arts & Culture - ARC Journals</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -26,7 +26,6 @@
     <div class="tagline">Exploring the intersection of art, culture and human values</div>
   </div>
   <div class="two-columns">
-    <!-- UNIFIED SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-section">
         <h3><i class="fas fa-balance-scale"></i> Journals (A–Z)</h3>
@@ -47,14 +46,13 @@
 		  <li><a href="journals-digital.html"><i class="fas fa-server"></i> Technology & Digital Studies</a></li>
         </ul>
       </div>
-      
     </aside>
     <div class="main-content">
       <div class="section-header">
         <h2><i class="fas fa-robot"></i> Featured Journals in Arts & Culture</h2>
         <div class="results-count" id="resultCount">0 articles</div>
       </div>
-      <div id="articlesContainer" class="articles-grid"></div>
+      <div id="articlesContainer" class="articles-grid" data-category="Arts & Culture"></div>
       <div id="noResultsMsg" class="no-results" style="display:none;"><i class="fas fa-search-minus"></i> No articles found.</div>
       <div class="pagination" id="pagination"></div>
     </div>
@@ -68,8 +66,8 @@
     <div class="copyright">© 2026 ARC Journals</div>
   </footer>
 </div>
-	<script src="journals-data.js"></script>
 	<script src="menu.js"></script>
 	<script src="script.js"></script>
+	<script type="module" src="category-listing.js"></script>
 </body>
 </html>
