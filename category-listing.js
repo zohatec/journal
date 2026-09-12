@@ -13,8 +13,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const container = document.getElementById("articlesList");
+const PAGE_SIZE = 6;
+let allItems = [];
+let currentPage = 1;
+
+const container = document.getElementById("articlesContainer");
+const resultCount = document.getElementById("resultCount");
+const noResultsMsg = document.getElementById("noResultsMsg");
+const pagination = document.getElementById("pagination");
 const category = container.dataset.category;
+
+function renderPage(page) {
+  currentPage = page;
+  const start = (page - 1) * PAGE_SIZE;
+  const pageItems = allItems.slice(start, start + PAGE_SIZE);
+
+  container.innerHTML = pageItems.map(d => `
+    <div class="jr-card">
+      <h3>${d.title || "(শিরোনামহীন)"}</h3>
+      <div class="jr-meta">${d.fullName || ""} ${d.institution ? "· " + d.institution : ""} ${d.submittedAt ? "· " + new Date(d.submittedAt).toLocaleDateString() : ""}</div>
+      <p>${d.abstract || ""}</p>
+      <a class="jr-pdf-link" href="${d.fileUrl}" target="_blank">📄 PDF দেখুন</a>
+    </div>
+  `).join("");
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const totalPages = Math.ceil(allItems.length / PAGE_SIZE);
+  if (totalPages <= 1) { pagination.innerHTML = ""; return; }
+  let html = "";
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="jr-page-btn ${i === currentPage ? "active" : ""}" data-page="${i}">${i}</button>`;
+  }
+  pagination.innerHTML = html;
+  pagination.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => renderPage(Number(btn.dataset.page)));
+  });
+}
 
 try {
   const q = query(
@@ -23,22 +60,16 @@ try {
     orderBy("submittedAt", "desc")
   );
   const snapshot = await getDocs(q);
+  allItems = snapshot.docs.map(doc => doc.data());
+  resultCount.textContent = `${allItems.length} articles`;
 
-  if (snapshot.empty) {
-    container.innerHTML = "<p>এই ক্যাটাগরিতে এখনো কোনো সাবমিশন নেই।</p>";
-  } else {
+  if (allItems.length === 0) {
+    noResultsMsg.style.display = "block";
     container.innerHTML = "";
-    snapshot.forEach((doc) => {
-      const d = doc.data();
-      const date = d.submittedAt ? new Date(d.submittedAt).toLocaleDateString() : "";
-      container.innerHTML += `
-        <div class="article-card">
-          <h3>${d.title || "(শিরোনামহীন)"}</h3>
-          <div class="article-meta">${d.fullName || ""} ${d.institution ? "· " + d.institution : ""} ${date ? "· " + date : ""}</div>
-          <p>${d.abstract || ""}</p>
-          <a class="pdf-link" href="${d.fileUrl}" target="_blank">📄 PDF দেখুন</a>
-        </div>`;
-    });
+    pagination.innerHTML = "";
+  } else {
+    noResultsMsg.style.display = "none";
+    renderPage(1);
   }
 } catch (err) {
   container.innerHTML = "<p>ডেটা লোড করতে সমস্যা হয়েছে।</p>";
