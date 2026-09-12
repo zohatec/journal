@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ARC Journals — Submissions</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .article-card { border: 1px solid #ddd; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+  .article-card h3 { margin: 0 0 0.4rem 0; }
+  .article-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
+  .article-card a.pdf-link { display: inline-block; margin-top: 0.6rem; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="site-wrapper">
+	<nav class="main-nav">
+	  <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+	  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+	  <div class="nav-links" id="navLinks"></div>
+	</nav>
+<div class="hero-search"><h2>All Submissions</h2><div class="tagline">Browse submitted manuscripts</div></div>
+<div class="main-content" style="max-width:800px; margin:2rem auto; padding:0 1rem;">
+  <div id="articlesList">লোড হচ্ছে...</div>
+</div>
+<footer class="footer"><div class="footer-inner"><div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p></div></div><div class="copyright">© 2026 ARC Journals</div></footer>
+</div>
+	<script src="menu.js"></script>
+	<script src="script.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  // ⬇️ submit.html এ যে firebaseConfig বসিয়েছিলেন, হুবহু সেটাই এখানেও বসান ⬇️
+	  const firebaseConfig = {
+	  apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+	  authDomain: "my-journal-a0eaa.firebaseapp.com",
+	  projectId: "my-journal-a0eaa",
+	  storageBucket: "my-journal-a0eaa.firebasestorage.app",
+	  messagingSenderId: "577249786861",
+	  appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+	};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const container = document.getElementById("articlesList");
+
+  try {
+    const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      container.innerHTML = "<p>এখনো কোনো সাবমিশন নেই।</p>";
+    } else {
+      container.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const d = doc.data();
+        const date = d.submittedAt ? new Date(d.submittedAt).toLocaleDateString() : "";
+        container.innerHTML += `
+          <div class="article-card">
+            <h3>${d.title || "(শিরোনামহীন)"}</h3>
+            <div class="article-meta">${d.fullName || ""} ${d.institution ? "· " + d.institution : ""} ${date ? "· " + date : ""} ${d.submissionType ? "· " + d.submissionType : ""}</div>
+            <p>${d.abstract || ""}</p>
+            <a class="pdf-link" href="${d.fileUrl}" target="_blank">📄 PDF দেখুন</a>
+          </div>`;
+      });
+    }
+  } catch (err) {
+    container.innerHTML = "<p>ডেটা লোড করতে সমস্যা হয়েছে।</p>";
+    console.error(err);
+  }
+</script>
+</body>
+</html>
