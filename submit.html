@@ -36,9 +36,82 @@
     </div>
     
   </aside>
-<div class="main-content"><div class="submit-content"><h3>Manuscript Submission Form</h3><form class="submit-form" action="#" method="post"><div class="form-group"><label>Full Name *</label><input type="text" required></div><div class="form-group"><label>Email Address *</label><input type="email" required></div><div class="form-group"><label>Institution/Affiliation</label><input type="text"></div><div class="form-group"><label>Manuscript Title *</label><input type="text" required></div><div class="form-group"><label>Submission Type</label><select><option>Article</option><option>Book Review</option><option>Case Note</option><option>Essay</option></select></div><div class="form-group"><label>Abstract (max 300 words)</label><textarea rows="4"></textarea></div><div class="form-group"><label>Upload Manuscript (PDF)</label><input type="file" accept=".pdf"></div><div class="form-group"><button type="submit">Submit for Review <i class="fas fa-paper-plane"></i></button></div></form><p style="margin-top:1rem; font-size:0.8rem;">* By submitting, you confirm this work is original and not under consideration elsewhere.</p></div></div></div>
+<div class="main-content"><div class="submit-content"><h3>Manuscript Submission Form</h3>
+<form class="submit-form" id="articleForm" action="#" method="post">
+  <div class="form-group"><label>Full Name *</label><input type="text" id="fullName" required></div>
+  <div class="form-group"><label>Email Address *</label><input type="email" id="email" required></div>
+  <div class="form-group"><label>Institution/Affiliation</label><input type="text" id="institution"></div>
+  <div class="form-group"><label>Manuscript Title *</label><input type="text" id="title" required></div>
+  <div class="form-group"><label>Submission Type</label>
+    <select id="submissionType">
+      <option>Article</option>
+      <option>Book Review</option>
+      <option>Case Note</option>
+      <option>Essay</option>
+    </select>
+  </div>
+  <div class="form-group"><label>Abstract (max 300 words)</label><textarea rows="4" id="abstract"></textarea></div>
+  <div class="form-group"><label>Upload Manuscript (PDF)</label><input type="file" id="fileInput" accept=".pdf" required></div>
+  <div class="form-group"><button type="submit">Submit for Review <i class="fas fa-paper-plane"></i></button></div>
+  <p id="statusMsg" style="margin-top:1rem;"></p>
+</form>
+<p style="margin-top:1rem; font-size:0.8rem;">* By submitting, you confirm this work is original and not under consideration elsewhere.</p></div></div></div>
 <footer class="footer"><div class="footer-inner"><div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div><div class="footer-col"><h4>Policies</h4><p><a href="#">Peer Review Policy</a></p><p><a href="#">Publication Ethics</a></p></div><div class="footer-col"><h4>Contact</h4><p><a href="#">Editorial Office</a></p></div></div><div class="copyright">© 2026 ARC Journals</div></footer></div>
 	<script src="menu.js"></script>
 	<script src="script.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  // ⬇️⬇️ এখানে আপনার Firebase config বসান (Firebase Console > Project settings > Your apps থেকে কপি করা) ⬇️⬇️
+	  const firebaseConfig = {
+	  apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+	  authDomain: "my-journal-a0eaa.firebaseapp.com",
+	  projectId: "my-journal-a0eaa",
+	  storageBucket: "my-journal-a0eaa.firebasestorage.app",
+	  messagingSenderId: "577249786861",
+	  appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+	};
+  // ⬆️⬆️ ---------------------------------------------------------------- ⬆️⬆️
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const form = document.getElementById("articleForm");
+  const statusMsg = document.getElementById("statusMsg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = document.getElementById("fileInput").files[0];
+    if (!file) { statusMsg.textContent = "দয়া করে একটা PDF ফাইল বাছাই করুন।"; return; }
+
+    statusMsg.textContent = "সাবমিট হচ্ছে, একটু অপেক্ষা করুন...";
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("https://journal-upload.ssbcpoint.workers.dev", { method: "POST", body: formData });
+      const { fileUrl } = await res.json();
+
+      await addDoc(collection(db, "submissions"), {
+        fullName: document.getElementById("fullName").value,
+        email: document.getElementById("email").value,
+        institution: document.getElementById("institution").value,
+        title: document.getElementById("title").value,
+        submissionType: document.getElementById("submissionType").value,
+        abstract: document.getElementById("abstract").value,
+        fileUrl,
+        submittedAt: new Date().toISOString(),
+      });
+
+      statusMsg.textContent = "সাবমিট সফল হয়েছে! ধন্যবাদ।";
+      form.reset();
+    } catch (err) {
+      statusMsg.textContent = "একটা সমস্যা হয়েছে, আবার চেষ্টা করুন।";
+      console.error(err);
+    }
+  });
+</script>
 </body>
 </html>
