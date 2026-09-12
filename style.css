@@ -249,7 +249,8 @@ body {
   border-radius: 40px;
   color: #2c4c6c;
 }
-/* =================ARTICLE CARDS===================== */
+
+/* ================= ARTICLE CARDS (Default) ================= */
 .articles-grid {
   display: flex;
   flex-direction: column;
@@ -531,43 +532,106 @@ body {
 .submit-form button:hover {
   background: #c4452c;
 }
-    .articles-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-    }
-    @media (max-width: 768px) {
-      .articles-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    .article-image {
-      width: 100%;
-      height: 200px;
-      background: #cbd5e6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      color: #0a2540;
-      border-radius: 16px 16px 0 0;
-      margin-bottom: 1rem;
-    }
-    .article-card { overflow: hidden; display: flex; flex-direction: column; }
 
-	/* ========== PAGINATION STYLES ========== */
+/* ========== JOURNALS LISTING PAGES: Grid layout for journal cards ========== */
+	/* জার্নাল লিস্টিং গ্রিড - বড় স্ক্রিনে ২ কলাম */
+.journals-grid-view {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1.5rem !important;
+}
+
+/* মোবাইলে ১ কলাম */
+@media (max-width: 650px) {
+  .journals-grid-view {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* কার্ডের ভেতরের ছবি ও টেক্সট স্টাইল (আগের থাকলে রাখুন, না থাকলে যোগ করুন) */
+.journal-card-horizontal {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eef2f8;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+.journal-card-horizontal:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  border-color: #d4dee8;
+}
+.journal-card-link-horizontal {
+  display: flex;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem;
+  gap: 1rem;
+  align-items: center;
+}
+.card-image {
+  flex-shrink: 0;
+  width: 100px;
+  height: 130px;
+  background: #f0f4f9;
+  /* border-radius: 12px; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card-image i {
+  font-size: 2.5rem;
+  color: #0a2540;
+}
+.card-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f3a4b;
+  line-height: 1.4;
+  margin: 0;
+}
+.card-meta {
+  font-size: 0.75rem;
+  color: #6c819c;
+  margin: 0;
+}
+.journal-card-horizontal:hover .card-title {
+  color: #c4452c;
+}
+@media (max-width: 650px) {
+  .card-image {
+    width: 80px;
+    height: 105px;
+  }
+  .card-title {
+    font-size: 0.9rem;
+  }
+}
+
+/* PAGINATION STYLES */
 .pagination {
   margin-top: 2rem;
   text-align: center;
 }
-
 .pagination-controls {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-
 .pagination-controls button {
   background: #f5f7fb;
   border: 1px solid #cfdfed;
@@ -579,30 +643,173 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .pagination-controls button:hover:not(:disabled) {
   background: #eef2f8;
   border-color: #c4452c;
   color: #c4452c;
 }
-
 .pagination-controls button.active {
   background: #0a2540;
   border-color: #0a2540;
   color: white;
 }
-
 .pagination-controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-@media (max-width: 650px) {
-  .pagination-controls button {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+/* ARTICLE LISTING PAGE */
+.journal-header-card {
+  background: linear-gradient(135deg, #0a2540 0%, #0d3a6b 100%);
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: white;
+  box-shadow: 0 4px 16px rgba(10, 37, 64, 0.18);
+}
+.journal-header-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #ebc7b5;
+  flex-shrink: 0;
+}
+.journal-header-info h3 {
+  font-size: 1.1rem;
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+  margin-bottom: 0.2rem;
+}
+.journal-header-info p {
+  font-size: 0.78rem;
+  color: #94b8d4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.article-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.article-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.2rem;
+  background: #ffffff;
+  border: 1px solid #eef2f8;
+  border-left: 3px solid transparent;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #1f3a4b;
+  font-size: 0.93rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+.article-list-item:hover {
+  background: #fdf9f7;
+  border-left-color: #c4452c;
+  color: #c4452c;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(196, 69, 44, 0.08);
+}
+.article-item-icon {
+  width: 38px;
+  height: 38px;
+  background: #eef2f8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #0a2540;
+  font-size: 1rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.article-list-item:hover .article-item-icon {
+  background: #fde8e3;
+  color: #c4452c;
+}
+.article-item-title {
+  flex: 1;
+  line-height: 1.4;
+}
+.article-item-arrow {
+  font-size: 0.75rem;
+  color: #c4452c;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+.article-list-item:hover .article-item-arrow {
+  opacity: 1;
+}
+
+/* DROPDOWN MENU STYLES */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropbtn i {
+  font-size: 0.7rem;
+  margin-left: 4px;
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border-radius: 8px;
+  top: 100%;
+  left: auto;
+  right: 0;
+}
+.dropdown-content a {
+  color: #1f3a4b;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #eef2f8;
+}
+.dropdown-content a:hover {
+  background-color: #f9f5f2;
+  color: #c4452c;
+}
+@media (min-width: 769px) {
+  .dropdown:hover .dropdown-content {
+    display: block;
   }
 }
+@media (max-width: 768px) {
+  .dropdown:hover .dropdown-content {
+    display: none;
+  }
+  .dropdown-content {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+    left: 0;
+    right: auto;
+  }
+  body, .site-wrapper {
+    overflow-x: hidden;
+  }
+}
+
 /* ====================RESPONSIVE: MOBILE MENU==================== */
 @media (max-width: 768px) {
   .menu-toggle {
@@ -655,7 +862,6 @@ body {
     font-size: 1.3rem;
   }
 }
-
 @media (max-width: 650px) {
   .top-bar {
     justify-content: center;
@@ -684,7 +890,6 @@ body {
     gap: 1.2rem;
   }
 }
-
 @media (max-width: 480px) {
   .hero-search h2 {
     font-size: 1.4rem;
@@ -697,71 +902,14 @@ body {
     font-size: 1rem;
   }
 }
-/* ========== SIMPLIFIED JOURNAL CARDS (journals-arts/comparative/economics pages) ========== */
 
-/* Make the entire card a clean clickable block */
-.journal-card-simple {
-  padding: 0 !important;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-/* Anchor wrapping icon + title */
-.journal-card-link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  width: 100%;
-  padding: 1.5rem 1.2rem 1.2rem;
-  transition: background 0.2s ease;
-}
-
-.journal-card-link:hover {
-  background: #f9f5f2;
-}
-
-.journal-card-link:hover .article-image {
-  background: #b8c8d8;
-  color: #c4452c;
-}
-
-.journal-card-link:hover .article-title {
-  color: #c4452c;
-}
-
-.journal-card-simple .article-image {
-  width: 100%;
-  height: 160px;
-  background: #cbd5e6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  color: #0a2540;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.journal-card-simple .article-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1f3a4b;
-  text-align: center;
-  line-height: 1.4;
-  transition: color 0.2s ease;
-}
-/* ========== জার্নাল লিস্ট পেজ (journals.html) ========== */
+/* জার্নাল লিস্ট পেজ (journals.html) - আলাদা গ্রিড */
 .journals-grid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 0.5rem 0.5rem;
+  gap: 0.5rem;
   margin-top: 0.2rem;
 }
-
-/* লিংকের স্টাইল – শুধু নাম, কোনো কার্ড নয় */
 .journal-name-link {
   display: block;
   padding: 0.3rem 0;
@@ -772,14 +920,11 @@ body {
   border-bottom: 1px dotted #e2eaf1;
   transition: all 0.4s;
 }
-
 .journal-name-link:hover {
   color: #c4452c;
   border-bottom-color: #c4452c;
   padding-left: 5px;
 }
-
-/* প্রতিটি ক্যাটাগরির শিরোনামের নিচে ব্যবধান */
 .category-section {
   margin-bottom: 1.5rem;
 }
@@ -791,8 +936,6 @@ body {
   font-family: 'Lora', serif;
   color: #0a2540;
 }
-
-/* মোবাইলে ১ কলাম, ট্যাবলেটে ২ কলাম */
 @media (max-width: 992px) {
   .journals-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -803,190 +946,3 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
-/* ========== ARTICLE LISTING PAGE (article-listing.html) ========== */
-
-/* Journal header banner */
-.journal-header-card {
-  background: linear-gradient(135deg, #0a2540 0%, #0d3a6b 100%);
-  border-radius: 16px;
-  padding: 1.4rem 1.5rem;
-  margin-bottom: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  color: white;
-  box-shadow: 0 4px 16px rgba(10, 37, 64, 0.18);
-}
-
-.journal-header-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.6rem;
-  color: #ebc7b5;
-  flex-shrink: 0;
-}
-
-.journal-header-info h3 {
-  font-size: 1.1rem;
-  font-family: 'Lora', serif;
-  font-weight: 600;
-  color: #ffffff;
-  line-height: 1.4;
-  margin-bottom: 0.2rem;
-}
-
-.journal-header-info p {
-  font-size: 0.78rem;
-  color: #94b8d4;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Article list container */
-.article-list-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-/* Each article list item: icon + title + arrow */
-.article-list-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.95rem 1.2rem;
-  background: #ffffff;
-  border: 1px solid #eef2f8;
-  border-left: 3px solid transparent;
-  border-radius: 12px;
-  text-decoration: none;
-  color: #1f3a4b;
-  font-size: 0.93rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.article-list-item:hover {
-  background: #fdf9f7;
-  border-left-color: #c4452c;
-  color: #c4452c;
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(196, 69, 44, 0.08);
-}
-
-.article-item-icon {
-  width: 38px;
-  height: 38px;
-  background: #eef2f8;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: #0a2540;
-  font-size: 1rem;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.article-list-item:hover .article-item-icon {
-  background: #fde8e3;
-  color: #c4452c;
-}
-
-.article-item-title {
-  flex: 1;
-  line-height: 1.4;
-}
-
-.article-item-arrow {
-  font-size: 0.75rem;
-  color: #c4452c;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  flex-shrink: 0;
-}
-
-.article-list-item:hover .article-item-arrow {
-  opacity: 1;
-}
-
-/* Responsive adjustments for article-listing page */
-@media (max-width: 650px) {
-  .journal-header-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 1.2rem;
-  }
-  .article-list-item {
-    padding: 0.8rem 1rem;
-    font-size: 0.88rem;
-  }
-  .journal-header-info h3 {
-    font-size: 1rem;
-  }
-}
-								/* ===============Dropdown menu styles for Donate================= */
-/* ড্রপডাউন কন্টেইনার ও স্টাইল */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-.dropbtn i {
-  font-size: 0.7rem;
-  margin-left: 4px;
-}
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: white;
-  min-width: 200px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-  z-index: 1000;
-  border-radius: 8px;
-  top: 100%;
-  left: auto;
-  right: 0;
-}
-.dropdown-content a {
-  color: #1f3a4b;
-  padding: 10px 16px;
-  text-decoration: none;
-  display: block;
-  font-size: 0.85rem;
-  border-bottom: 1px solid #eef2f8;
-}
-.dropdown-content a:hover {
-  background-color: #f9f5f2;
-  color: #c4452c;
-}
-/* ডেস্কটপে হোভার করলে খোলা */
-@media (min-width: 769px) {
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
-}
-/* মোবাইলে হোভার ডিজএবল এবং ক্লিক নিয়ন্ত্রণ */
-@media (max-width: 768px) {
-  .dropdown:hover .dropdown-content {
-    display: none; /* হোভার কাজ করবে না */
-  }
-  .dropdown-content {
-    position: static;
-    width: 100%;
-    box-shadow: none;
-    border-radius: 0;
-    left: 0;
-    right: auto;
-  }
-  body, .site-wrapper {
-    overflow-x: hidden;
-  }
-}
-	
-	
