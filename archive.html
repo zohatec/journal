@@ -3,119 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Archive - Journals according to Year</title>
+  <title>Archive - Journals by Year</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    .year-grid {
+    .journals-list {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 1.5rem;
-      margin-top: 2rem;
     }
-    .year-card {
+    .journal-card {
+      display: flex;
+      gap: 1.5rem;
       background: white;
       border-radius: 16px;
-      padding: 1.8rem 2rem;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       transition: 0.2s;
       text-decoration: none;
       color: #0a2540;
-      flex: 1 1 150px;
+      overflow: hidden;
     }
-    .year-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-      background: #f8f9fc;
+    .journal-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
     }
-    .year-card h2 {
-      font-size: 2.5rem;
-      margin: 0;
-      color: #c4452c;
+    .journal-image {
+      width: 100px;
+      height: 130px;
+      flex-shrink: 0;
+      background: #f0f4f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
-    .year-card p {
-      margin: 0.5rem 0 0;
-      font-size: 0.9rem;
+    .journal-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .journal-info {
+      flex: 1;
+      padding: 1rem 1rem 1rem 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .journal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .journal-meta {
+      font-size: 0.85rem;
       color: #5b6e8c;
+    }
+    .error-msg {
+      color: #c4452c;
+      background: #fff0ed;
+      padding: 1rem;
+      border-radius: 12px;
+    }
+    @media (max-width: 650px) {
+      .journal-card {
+        flex-direction: column;
+      }
+      .journal-image {
+        width: 100%;
+        height: 160px;
+      }
+      .journal-info {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
 <body>
 <div class="site-wrapper">
-  <!-- same top-bar and nav as other pages (copy from article-listing.html) -->
+  <!-- Top Bar -->
   <div class="top-bar">
     <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
     <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
     <a href="mailto:contact@abclaw.com"><i class="far fa-envelope"></i> contact@abclaw.com</a>
     <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
   </div>
+
+  <!-- Main Navigation -->
 	<nav class="main-nav">
 	  <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
 	  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
 	  <div class="nav-links" id="navLinks"></div>
 	</nav>
 
+  <!-- Hero -->
   <div class="hero-search">
-    <h2>Journal Archive</h2>
-    <div class="tagline">Select Year</div>
+    <h2 id="pageTitle">Journals</h2>
+    <div class="tagline" id="yearSubtitle"></div>
   </div>
 
+  <!-- Two columns -->
   <div class="two-columns">
     <aside class="sidebar">
       <div class="sidebar-section">
-        <h3><i class="fas fa-archive"></i> Browse Archive</h3>
-        <ul>
-          <li><a href="archive.html">All Years</a></li>
-        </ul>
+        <h3><i class="fas fa-arrow-left"></i> <a href="archive.html" style="color:#c4452c;">Back to Years</a></h3>
       </div>
     </aside>
     <div class="main-content">
       <div class="section-header">
-        <h2><i class="fas fa-calendar-alt"></i> Year of Published</h2>
+        <h2><i class="fas fa-journal-whills"></i> Journals Published</h2>
       </div>
-      <div id="yearContainer" class="year-grid"></div>
+      <div id="journalsContainer" class="journals-list"></div>
     </div>
   </div>
-						<!-- Footer Section -->
-			<footer class="footer">
-		  <div class="footer-inner">
-			<div class="footer-col">
-			  <h4>ARC Journals</h4>
-			  <p>University of Rajshahi.</p>
-			  <p><i class="fas fa-phone"></i> +880 1712534626</p>
-			</div>
-			<div class="footer-col">
-			  <h4>Resources</h4>
-			  <p><a href="#">Journal Submissions</a></p>
-			  <p><a href="#">Peer Review Guidelines</a></p>
-			</div>
-			<div class="footer-col">
-			  <h4>Publishing</h4>
-			  <p><a href="#">Open Access Policy</a></p>
-			  <p><a href="#">Call for Papers</a></p>
-			</div>
-		  </div>
-		  <div class="copyright">© 2026 ARC Journals</div>
-		</footer>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4>ARC Journals</h4>
+        <p>University of Rajshahi.</p>
+        <p><i class="fas fa-phone"></i> +880 1712534626</p>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <p><a href="#">Journal Submissions</a></p>
+        <p><a href="#">Peer Review Guidelines</a></p>
+      </div>
+      <div class="footer-col">
+        <h4>Publishing</h4>
+        <p><a href="#">Open Access Policy</a></p>
+        <p><a href="#">Call for Papers</a></p>
+      </div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
 </div>
+
 <script src="archive-data.js"></script>
 <script>
-  const yearContainer = document.getElementById('yearContainer');
-  const years = Object.keys(archiveData).sort().reverse(); // 2026...2022
-  yearContainer.innerHTML = years.map(year => `
-    <a href="archive-journals.html?year=${year}" class="year-card">
-      <h2>${year}</h2>
-      <p><i class="fas fa-book-open"></i> ${archiveData[year].length} Journal</p>
-    </a>
-  `).join('');
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
 
-  // মোবাইল মেনু টগল (আপনার script.js এর মত করে দিন বা এখানে যোগ করুন)
+  // ইমেজ ফাংশন: জার্নালের আইডি অনুযায়ী আলাদা ইমেজ দেখাবে
+  // আপনি চাইলে শিরোনামের কীওয়ার্ড বা custom ফিল্ডও ব্যবহার করতে পারেন
+  function getJournalImage(journalId, journalTitle) {
+    // পদ্ধতি ১: আইডি অনুযায়ী সরাসরি ইমেজ ম্যাপ (সহজ ও দ্রুত)
+    // এখানে প্রতিটি জার্নালের জন্য আলাদা ইমেজ ফাইল নির্ধারণ করুন
+    const imageMap = {
+      // ২০২২ সালের জার্নাল
+      '2022_journal_01': 'law.png',
+      '2022_journal_02': 'culture.png',
+      // ২০২৩ সালের জার্নাল
+      '2023_journal_01': 'abc.png',
+      '2023_journal_02': 'xyz.png',
+      // ২০২৪ সালের জার্নাল
+      '2024_journal_01': 'zoha.png',
+      '2024_journal_02': 'arts.png',
+      // ২০২৫ সালের জาร্নাল
+      '2025_journal_01': 'journal.png',
+      '2025_journal_02': 'law.png',
+      // ২০২৬ সালের জার্নাল (আপনি এখানে আরো যোগ করতে পারেন)
+      '2026_journal_01': 'culture.png',
+      '2026_journal_02': 'abc.png'
+    };
+    
+    const imageFile = imageMap[journalId] || 'journal.png';
+    return `images/${imageFile}`;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const year = urlParams.get('year');
+  const pageTitle = document.getElementById('pageTitle');
+  const yearSubtitle = document.getElementById('yearSubtitle');
+  const journalsContainer = document.getElementById('journalsContainer');
+
+  if (!year || !archiveData[year]) {
+    pageTitle.innerText = 'Year Not Found';
+    yearSubtitle.innerText = 'Please select a valid year from archive.';
+    journalsContainer.innerHTML = '<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> No journals available for this year.</div>';
+  } else {
+    pageTitle.innerText = `${year} – Archived Journals`;
+    yearSubtitle.innerText = `Total ${archiveData[year].length} journals found`;
+    const journals = archiveData[year];
+    journalsContainer.innerHTML = journals.map(j => {
+      const imageUrl = getJournalImage(j.id, j.title);
+      return `
+        <a href="archive-articles.html?year=${encodeURIComponent(year)}&journalId=${encodeURIComponent(j.id)}" class="journal-card">
+          <div class="journal-image">
+            <img src="${imageUrl}" alt="${escapeHtml(j.title)}" onerror="this.src='https://placehold.co/100x130?text=No+Image'">
+          </div>
+          <div class="journal-info">
+            <div class="journal-title">${escapeHtml(j.title)}</div>
+            <div class="journal-meta"><i class="fas fa-file-alt"></i> ${j.articles.length} articles</div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  // মোবাইল মেনু টগল
   const menuToggle = document.getElementById('menuToggle');
   const navLinks = document.getElementById('navLinks');
-  if(menuToggle && navLinks){
-    menuToggle.addEventListener('click',()=> navLinks.classList.toggle('show'));
+  if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => navLinks.classList.toggle('show'));
   }
 </script>
 	<script src="menu.js"></script>
