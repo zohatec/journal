@@ -174,130 +174,167 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     updateFilter();
   }
+	// ========== JOURNAL LISTING PAGES (journals-*.html) WITH PORTRAIT CARDS AND PAGINATION ==========
+		(function () {
+		  let currentCategory = '';
+		  const path = window.location.pathname;
+		  if (path.includes('journals-arts')) currentCategory = 'arts';
+		  else if (path.includes('journals-comparative')) currentCategory = 'comparative';
+		  else if (path.includes('journals-economics')) currentCategory = 'economics';
+		  else if (path.includes('journals-education')) currentCategory = 'education';
+		  else if (path.includes('journals-space')) currentCategory = 'space';
+		  else if (path.includes('journals-health')) currentCategory = 'health';
+		  else if (path.includes('journals-history')) currentCategory = 'history';
+		  else if (path.includes('journals-human')) currentCategory = 'human';
+		  else if (path.includes('journals-inter')) currentCategory = 'inter';
+		  else if (path.includes('journals-law')) currentCategory = 'law';
+		  else if (path.includes('journals-justice')) currentCategory = 'justice';
+		  else if (path.includes('journals-migration')) currentCategory = 'migration';
+		  else if (path.includes('journals-philosophy')) currentCategory = 'philosophy';
+		  else if (path.includes('journals-digital')) currentCategory = 'digital';
+		  else return;
 
-  // ========== JOURNAL LISTING PAGES (journals-*.html) ==========
-  (function () {
-    let currentCategory = '';
-    const path = window.location.pathname;
-    if (path.includes('journals-arts')) currentCategory = 'arts';
-    else if (path.includes('journals-comparative')) currentCategory = 'comparative';
-    else if (path.includes('journals-economics')) currentCategory = 'economics';
-    else if (path.includes('journals-education')) currentCategory = 'education';
-    else if (path.includes('journals-space')) currentCategory = 'space';
-    else if (path.includes('journals-health')) currentCategory = 'health';
-    else if (path.includes('journals-history')) currentCategory = 'history';
-    else if (path.includes('journals-human')) currentCategory = 'human';
-    else if (path.includes('journals-inter')) currentCategory = 'inter';
-    else if (path.includes('journals-law')) currentCategory = 'law';
-    else if (path.includes('journals-justice')) currentCategory = 'justice';
-    else if (path.includes('journals-migration')) currentCategory = 'migration';
-    else if (path.includes('journals-philosophy')) currentCategory = 'philosophy';
-    else if (path.includes('journals-digital')) currentCategory = 'digital';
-    else return;
+		  const container = document.getElementById('articlesContainer');
+		  const paginationDiv = document.getElementById('pagination');
+		  const resultCountSpan = document.getElementById('resultCount');
+		  const noResultsDiv = document.getElementById('noResultsMsg');
+		  const mainContent = document.querySelector('.main-content');
+		  const itemsPerPage = 6;  // 2 columns × 3 rows
+		  let currentPage = 1;
+		  let totalPages = 1;
+		  let journals = [];
 
-    const container = document.getElementById('articlesContainer');
-    const paginationDiv = document.getElementById('pagination');
-    const resultCountSpan = document.getElementById('resultCount');
-    const noResultsDiv = document.getElementById('noResultsMsg');
-    const itemsPerPage = 6;
-    let currentPage = 1;
-    let totalPages = 1;
-    let journals = [];
+		  // গ্রিড ক্লাস যোগ করুন (২ কলামের জন্য)
+		  if (container && !container.classList.contains('journals-grid-view')) {
+			container.classList.add('journals-grid-view');
+		  }
 
-    function renderJournals() {
-      if (!container) return;
-      const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const pageJournals = journals.slice(start, end);
-      if (pageJournals.length === 0) {
-        container.innerHTML = '';
-        if (noResultsDiv) noResultsDiv.style.display = 'block';
-        if (resultCountSpan) resultCountSpan.innerText = '0 journals';
-        return;
-      }
-      if (noResultsDiv) noResultsDiv.style.display = 'none';
-      let html = '';
-      pageJournals.forEach(function (journal, i) {
-        const globalIndex = start + i;
-        const articleListUrl = 'article-listing.html?cat=' + encodeURIComponent(currentCategory) + '&id=' + globalIndex;
-        html += `
-          <article class="article-card journal-card-simple">
-            <a href="${articleListUrl}" target="_blank" class="journal-card-link" title="${escapeHtml(journal.title)}">
-              <div class="article-image"><i class="fas ${escapeHtml(journal.iconClass)} fa-3x"></i></div>
-              <div class="article-title">${escapeHtml(journal.title)}</div>
-            </a>
-          </article>
-        `;
-      });
-      container.innerHTML = html;
-      if (resultCountSpan) {
-        resultCountSpan.innerText = journals.length + ' journal' + (journals.length !== 1 ? 's' : '');
-      }
-      const mainContent = document.querySelector('.main-content');
-      if (mainContent && currentPage > 1) mainContent.scrollIntoView({ behavior: 'smooth' });
-    }
+		  function renderJournals() {
+			if (!container) return;
+			const start = (currentPage - 1) * itemsPerPage;
+			const end = start + itemsPerPage;
+			const pageJournals = journals.slice(start, end);
+			
+			if (pageJournals.length === 0) {
+			  container.innerHTML = '';
+			  if (noResultsDiv) noResultsDiv.style.display = 'block';
+			  if (resultCountSpan) resultCountSpan.innerText = '0 journals';
+			  if (paginationDiv) paginationDiv.innerHTML = '';
+			  return;
+			}
+			
+			if (noResultsDiv) noResultsDiv.style.display = 'none';
+			let html = '';
+			pageJournals.forEach((journal, idx) => {
+			  const globalIndex = journals.indexOf(journal);
+			  const articleListUrl = 'article-listing.html?cat=' + encodeURIComponent(currentCategory) + '&id=' + globalIndex;
+			  let mediaHtml = '';
+			  if (journal.image && journal.image.trim() !== '') {
+				mediaHtml = `<img src="${escapeHtml(journal.image)}" alt="${escapeHtml(journal.title)}">`;
+			  } else {
+				mediaHtml = `<i class="fas ${escapeHtml(journal.iconClass)}"></i>`;
+			  }
+			  html += `
+				<article class="journal-card-horizontal">
+				  <a href="${articleListUrl}" class="journal-card-link-horizontal">
+					<div class="card-image">${mediaHtml}</div>
+					<div class="card-details">
+					  <h3 class="card-title">${escapeHtml(journal.title)}</h3>
+					  <p class="card-meta">ISSN:2169-2459 | Published Year</p>
+					</div>
+				  </a>
+				</article>
+			  `;
+			});
+			container.innerHTML = html;
+			if (resultCountSpan) {
+			  resultCountSpan.innerText = journals.length + ' journal' + (journals.length !== 1 ? 's' : '');
+			}
+			if (mainContent && currentPage > 1) mainContent.scrollIntoView({ behavior: 'smooth' });
+		  }
 
-    function buildPagination() {
-      if (!paginationDiv) return;
-      if (totalPages <= 1) { paginationDiv.innerHTML = ''; return; }
-      let paginationHtml = '<div class="pagination-controls">';
-      paginationHtml += `<button class="page-prev" ${currentPage === 1 ? 'disabled' : ''}>&#8249; Previous</button>`;
-      let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPages, currentPage + 2);
-      if (endPage - startPage < 4) {
-        if (startPage === 1) endPage = Math.min(totalPages, 5);
-        if (endPage === totalPages) startPage = Math.max(1, totalPages - 4);
-      }
-      for (let i = startPage; i <= endPage; i++) {
-        paginationHtml += `<button class="page-num ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
-      }
-      paginationHtml += `<button class="page-next" ${currentPage === totalPages ? 'disabled' : ''}>Next &#8250;</button>`;
-      paginationHtml += '</div>';
-      paginationDiv.innerHTML = paginationHtml;
-      const prevBtn = paginationDiv.querySelector('.page-prev');
-      const nextBtn = paginationDiv.querySelector('.page-next');
-      const pageBtns = paginationDiv.querySelectorAll('.page-num');
-      if (prevBtn && !prevBtn.disabled) prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; updatePage(); } });
-      if (nextBtn && !nextBtn.disabled) nextBtn.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; updatePage(); } });
-      pageBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const page = parseInt(btn.getAttribute('data-page'), 10);
-          if (!isNaN(page) && page !== currentPage) { currentPage = page; updatePage(); }
-        });
-      });
-    }
+		  function buildPagination() {
+			if (!paginationDiv) return;
+			if (totalPages <= 1) {
+			  paginationDiv.innerHTML = '';
+			  return;
+			}
+			let paginationHtml = '<div class="pagination-controls">';
+			paginationHtml += `<button class="page-prev" ${currentPage === 1 ? 'disabled' : ''}>&#8249; Previous</button>`;
+			let startPage = Math.max(1, currentPage - 2);
+			let endPage = Math.min(totalPages, currentPage + 2);
+			if (endPage - startPage < 4) {
+			  if (startPage === 1) endPage = Math.min(totalPages, 5);
+			  if (endPage === totalPages) startPage = Math.max(1, totalPages - 4);
+			}
+			for (let i = startPage; i <= endPage; i++) {
+			  paginationHtml += `<button class="page-num ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+			}
+			paginationHtml += `<button class="page-next" ${currentPage === totalPages ? 'disabled' : ''}>Next &#8250;</button>`;
+			paginationHtml += '</div>';
+			paginationDiv.innerHTML = paginationHtml;
 
-    function updatePage() {
-      renderJournals();
-      buildPagination();
-      window.location.hash = 'page-' + currentPage;
-    }
+			const prevBtn = paginationDiv.querySelector('.page-prev');
+			const nextBtn = paginationDiv.querySelector('.page-next');
+			const pageBtns = paginationDiv.querySelectorAll('.page-num');
+			
+			if (prevBtn && !prevBtn.disabled) {
+			  prevBtn.addEventListener('click', () => {
+				if (currentPage > 1) {
+				  currentPage--;
+				  updatePage();
+				}
+			  });
+			}
+			if (nextBtn && !nextBtn.disabled) {
+			  nextBtn.addEventListener('click', () => {
+				if (currentPage < totalPages) {
+				  currentPage++;
+				  updatePage();
+				}
+			  });
+			}
+			pageBtns.forEach(btn => {
+			  btn.addEventListener('click', () => {
+				const page = parseInt(btn.getAttribute('data-page'), 10);
+				if (!isNaN(page) && page !== currentPage) {
+				  currentPage = page;
+				  updatePage();
+				}
+			  });
+			});
+		  }
 
-    function init() {
-      if (typeof journalData === 'undefined' || !journalData[currentCategory]) return;
-      journals = journalData[currentCategory];
-      totalPages = Math.ceil(journals.length / itemsPerPage);
-      const hash = window.location.hash;
-      if (hash.startsWith('#page-')) {
-        const pageNum = parseInt(hash.replace('#page-', ''), 10);
-        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) currentPage = pageNum;
-      }
-      renderJournals();
-      buildPagination();
-      window.addEventListener('hashchange', () => {
-        const newHash = window.location.hash;
-        if (newHash.startsWith('#page-')) {
-          const pageNum = parseInt(newHash.replace('#page-', ''), 10);
-          if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages && pageNum !== currentPage) {
-            currentPage = pageNum;
-            updatePage();
-          }
-        }
-      });
-    }
-    init();
-  })();
+		  function updatePage() {
+			renderJournals();
+			buildPagination();
+			window.location.hash = 'page-' + currentPage;
+		  }
 
+		  function init() {
+			if (typeof journalData === 'undefined' || !journalData[currentCategory]) return;
+			journals = journalData[currentCategory];
+			totalPages = Math.ceil(journals.length / itemsPerPage);
+			const hash = window.location.hash;
+			if (hash.startsWith('#page-')) {
+			  const pageNum = parseInt(hash.replace('#page-', ''), 10);
+			  if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) currentPage = pageNum;
+			}
+			renderJournals();
+			buildPagination();
+			window.addEventListener('hashchange', () => {
+			  const newHash = window.location.hash;
+			  if (newHash.startsWith('#page-')) {
+				const pageNum = parseInt(newHash.replace('#page-', ''), 10);
+				if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages && pageNum !== currentPage) {
+				  currentPage = pageNum;
+				  updatePage();
+				}
+			  }
+			});
+		  }
+		  init();
+		})();
 	  // ========== ARTICLE LISTING PAGE (article-listing.html) WITH SIDEBAR MENU ==========
   (function () {
     const path = window.location.pathname;
@@ -506,7 +543,15 @@ function renderJournalMenu(journal) {
       const journalHeaderIcon = document.getElementById('journalHeaderIcon');
       const journalHeaderTitle = document.getElementById('journalHeaderTitle');
       const journalHeaderCat = document.getElementById('journalHeaderCat');
-      if (journalHeaderIcon) journalHeaderIcon.innerHTML = '<i class="fas ' + escapeHtml(journal.iconClass) + '"></i>';
+		if (journalHeaderIcon) {
+		  // যদি জার্নালে image প্রপার্টি থাকে এবং তা খালি না হয়
+		  if (journal.image && journal.image.trim() !== '') {
+			journalHeaderIcon.innerHTML = '<img src="' + escapeHtml(journal.image) + '" alt="' + escapeHtml(journal.title) + '" style="width:100%; height:100%; object-fit:contain;">';
+		  } else {
+			// ইমেজ না থাকলে পুরনো আইকন দেখাবে
+			journalHeaderIcon.innerHTML = '<i class="fas ' + escapeHtml(journal.iconClass) + '"></i>';
+		  }
+		};
       if (journalHeaderTitle) journalHeaderTitle.innerText = journal.title;
       if (journalHeaderCat) journalHeaderCat.innerText = catNames[cat] || cat;
 
