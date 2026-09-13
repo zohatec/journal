@@ -946,10 +946,15 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
+	/* Journal Cards */
 .jr-card { border: 1px solid #ddd; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
 .jr-card h3 { margin: 0 0 0.4rem 0; }
 .jr-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
 .jr-pdf-link { display: inline-block; margin-top: 0.6rem; font-weight: 600; }
 .jr-page-btn { margin: 0 4px; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
 .jr-page-btn.active { background: #1a2b4c; color: #fff; }
+			/* Article Cards */
+.article-card { border: 1px solid #ddd; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+.article-card h3 { margin: 0 0 0.4rem 0; }
+.article-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
+.article-card a.pdf-link { display: inline-block; margin-top: 0.6rem; font-weight: 600; }
