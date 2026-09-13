@@ -5,6 +5,7 @@
       <a href="index.html">Home</a>
       <a href="articles.html">Articles</a>
       <a href="journals.html">Journals</a>
+      <a href="archive.html">Archive</a>
       <a href="books.html">Books</a>
       <a href="news.html">News</a>
       <a href="about.html">About</a>
