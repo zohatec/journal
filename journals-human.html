@@ -57,6 +57,13 @@
       <div id="articlesContainer" class="articles-grid"></div>
       <div id="noResultsMsg" class="no-results" style="display:none;"><i class="fas fa-search-minus"></i> No articles found.</div>
       <div class="pagination" id="pagination"></div>
+
+      <!-- ⬇️ নতুন সেকশন: লাইভ সাবমিশন এখানে দেখাবে ⬇️ -->
+      <div class="section-header" style="margin-top:2.5rem;">
+        <h2><i class="fas fa-inbox"></i> New Submissions</h2>
+      </div>
+      <div id="newSubmissionsList" class="articles-grid" data-category="Human Rights & Indigenous Studies"></div>
+
     </div>
   </div>
   <footer class="footer">
@@ -71,5 +78,6 @@
 	<script src="journals-data.js"></script>
 	<script src="menu.js"></script>
 	<script src="script.js"></script>
+	<script type="module" src="category-listing.js"></script>
 </body>
 </html>
