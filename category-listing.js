@@ -20,6 +20,7 @@ try {
   const q = query(
     collection(db, "submissions"),
     where("category", "==", category),
+    where("approved", "==", true),
     orderBy("submittedAt", "desc")
   );
   const snapshot = await getDocs(q);
