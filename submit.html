@@ -50,7 +50,7 @@
   </div>
   <div class="form-group"><label>Category *</label>
     <select id="category" required>
-      <option value="">-- ক্যাটাগরি বাছাই করুন --</option>
+      <option value="">-- Select Category --</option>
       <option>Arts & Culture</option>
       <option>Comparative & International Studies</option>
       <option>Economics & Business</option>
@@ -99,9 +99,9 @@ const firebaseConfig = {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const file = document.getElementById("fileInput").files[0];
-    if (!file) { statusMsg.textContent = "দয়া করে একটা PDF ফাইল বাছাই করুন।"; return; }
+    if (!file) { statusMsg.textContent = "Please! Select a PDF File"; return; }
 
-    statusMsg.textContent = "সাবমিট হচ্ছে, একটু অপেক্ষা করুন...";
+    statusMsg.textContent = "Submitting, please wait a moment...";
 
     try {
       const formData = new FormData();
@@ -122,10 +122,10 @@ const firebaseConfig = {
         submittedAt: new Date().toISOString(),
       });
 
-      statusMsg.textContent = "সাবমিট সফল হয়েছে! ধন্যবাদ।";
+      statusMsg.textContent = "Submission successful! Thank you...";
       form.reset();
     } catch (err) {
-      statusMsg.textContent = "একটা সমস্যা হয়েছে, আবার চেষ্টা করুন।";
+      statusMsg.textContent = "Something went wrong. Please try again...";
       console.error(err);
     }
   });
