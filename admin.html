@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Panel — ARC Journals</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-wrap { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .sub-card { background: white; border: 1px solid #eee; border-radius: 10px; padding: 1.2rem; margin-bottom: 1rem; }
+  .sub-card h3 { margin: 0.4rem 0 0.3rem 0; }
+  .sub-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
+  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  .status-pending { background: #fff3cd; color: #856404; }
+  .status-approved { background: #d4edda; color: #155724; }
+  .btn-row { margin-top: 0.8rem; display: flex; gap: 0.6rem; }
+  .btn-approve { background: #1a7a3c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  .btn-delete { background: #c4452c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  .btn-logout { background: #555; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="admin-wrap">
+  <div class="admin-header">
+    <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+    <button class="btn-logout" id="logoutBtn">Log Out</button>
+  </div>
+  <div id="submissionsList">লোড হচ্ছে...</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+	onst firebaseConfig = {
+	  apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+	  authDomain: "my-journal-a0eaa.firebaseapp.com",
+	  projectId: "my-journal-a0eaa",
+	  storageBucket: "my-journal-a0eaa.firebasestorage.app",
+	  messagingSenderId: "577249786861",
+	  appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+	};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const container = document.getElementById("submissionsList");
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) window.location.href = "admin-login.html";
+    else loadSubmissions();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "admin-login.html";
+  });
+
+  function extractFilePath(fileUrl) {
+    const marker = "/main/";
+    const idx = fileUrl.indexOf(marker);
+    return idx === -1 ? null : fileUrl.substring(idx + marker.length);
+  }
+
+  async function loadSubmissions() {
+    const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      container.innerHTML = "<p>কোনো সাবমিশন নেই।</p>";
+      return;
+    }
+
+    container.innerHTML = "";
+    snapshot.forEach((docSnap) => {
+      const d = docSnap.data();
+      const id = docSnap.id;
+      const statusClass = d.approved ? "status-approved" : "status-pending";
+      const statusText = d.approved ? "Approved" : "Pending";
+
+      const card = document.createElement("div");
+      card.className = "sub-card";
+      card.innerHTML = `
+        <span class="status-badge ${statusClass}">${statusText}</span>
+        <h3>${d.title || "(শিরোনামহীন)"}</h3>
+        <div class="sub-meta">${d.fullName || ""} · ${d.email || ""} ${d.category ? "· " + d.category : ""} ${d.submittedAt ? "· " + new Date(d.submittedAt).toLocaleDateString() : ""}</div>
+        <p>${d.abstract || ""}</p>
+        <a href="${d.fileUrl}" target="_blank">📄 PDF দেখুন</a>
+        <div class="btn-row">
+          ${d.approved ? "" : `<button class="btn-approve" data-id="${id}">✅ Approve</button>`}
+          <button class="btn-delete" data-id="${id}" data-fileurl="${d.fileUrl}">🗑️ Delete</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    container.querySelectorAll(".btn-approve").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: true });
+        loadSubmissions();
+      });
+    });
+
+    container.querySelectorAll(".btn-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("আপনি কি নিশ্চিত এটা মুছে ফেলতে চান?")) return;
+        const id = btn.dataset.id;
+        const filePath = extractFilePath(btn.dataset.fileurl);
+
+        try {
+          if (filePath) {
+            const idToken = await auth.currentUser.getIdToken();
+            await fetch("https://journal-upload.ssbcpoint.workers.dev/delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken, filePath }),
+            });
+          }
+          await deleteDoc(doc(db, "submissions", id));
+          loadSubmissions();
+        } catch (err) {
+          alert("মুছতে সমস্যা হয়েছে।");
+          console.error(err);
+        }
+      });
+    });
+  }
+</script>
+</body>
+</html>
