@@ -38,7 +38,7 @@ const firebaseConfig = {
   const container = document.getElementById("articlesList");
 
   try {
-    const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
+	const q = query(collection(db, "submissions"), where("approved", "==", true), orderBy("submittedAt", "desc"));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
