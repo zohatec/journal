@@ -32,7 +32,7 @@ body {
   flex-wrap: wrap;
 }
 .top-bar a {
-  color: #ccdde6;
+  color: #00FFFF;
   text-decoration: none;
   transition: color 0.2s;
 }
