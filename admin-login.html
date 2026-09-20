@@ -54,7 +54,7 @@
       await signInWithEmailAndPassword(auth, email, password);
       window.location.href = "admin.html";
     } catch (err) {
-      errorEl.textContent = "ইমেইল বা পাসওয়ার্ড ভুল।";
+      errorEl.textContent = "The email or password is incorrect.";
       console.error(err);
     }
   });
