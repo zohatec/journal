@@ -959,5 +959,5 @@ body {
 .article-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
 .article-card a.pdf-link { display: inline-block; margin-top: 0.6rem; font-weight: 600; }
 /* ============হেডার পার্ট=========== */
-.top-bar .login-link { color: inherit; text-decoration: none; margin-left: 0.5rem; }
+.top-bar .login-link { color: #00FFFF; text-decoration: bold; margin-left: 0.5rem; }
 .top-bar .login-link:hover { text-decoration: underline; }
