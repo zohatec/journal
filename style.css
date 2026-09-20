@@ -32,12 +32,12 @@ body {
   flex-wrap: wrap;
 }
 .top-bar a {
-  color: #00FFFF;
+  color: white;
   text-decoration: none;
   transition: color 0.2s;
 }
 .top-bar a:hover {
-  color: #ffffff;
+  color: yellow;
 }
 .top-bar .whatsapp-link {
   color: #25D366;
