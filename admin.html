@@ -24,7 +24,7 @@
     <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
     <button class="btn-logout" id="logoutBtn">Log Out</button>
   </div>
-  <div id="submissionsList">লোড হচ্ছে...</div>
+  <div id="submissionsList">Loading...</div>
 </div>
 
 <script type="module">
@@ -67,7 +67,7 @@
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      container.innerHTML = "<p>কোনো সাবমিশন নেই।</p>";
+      container.innerHTML = "<p>No Submissions.</p>";
       return;
     }
 
@@ -82,10 +82,10 @@
       card.className = "sub-card";
       card.innerHTML = `
         <span class="status-badge ${statusClass}">${statusText}</span>
-        <h3>${d.title || "(শিরোনামহীন)"}</h3>
+        <h3>${d.title || "(Untitled)"}</h3>
         <div class="sub-meta">${d.fullName || ""} · ${d.email || ""} ${d.category ? "· " + d.category : ""} ${d.submittedAt ? "· " + new Date(d.submittedAt).toLocaleDateString() : ""}</div>
         <p>${d.abstract || ""}</p>
-        <a href="${d.fileUrl}" target="_blank">📄 PDF দেখুন</a>
+        <a href="${d.fileUrl}" target="_blank">📄 See the PDF</a>
         <div class="btn-row">
           ${d.approved ? "" : `<button class="btn-approve" data-id="${id}">✅ Approve</button>`}
           <button class="btn-delete" data-id="${id}" data-fileurl="${d.fileUrl}">🗑️ Delete</button>
@@ -103,7 +103,7 @@
 
     container.querySelectorAll(".btn-delete").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        if (!confirm("আপনি কি নিশ্চিত এটা মুছে ফেলতে চান?")) return;
+        if (!confirm("Are you sure you want to delete this?")) return;
         const id = btn.dataset.id;
         const filePath = extractFilePath(btn.dataset.fileurl);
 
@@ -119,7 +119,7 @@
           await deleteDoc(doc(db, "submissions", id));
           loadSubmissions();
         } catch (err) {
-          alert("মুছতে সমস্যা হয়েছে।");
+          alert("There was a problem deleting it.");
           console.error(err);
         }
       });
