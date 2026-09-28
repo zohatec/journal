@@ -11,15 +11,13 @@ body {
   color: #1e2a3e;
   line-height: 1.5;
 }
-
 .site-wrapper {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   background-color: #ffffff;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.03);
   position: relative;
 }
-
 /* =====================TOP BAR==================== */
 .top-bar {
   background-color: #0a2540;
@@ -104,13 +102,33 @@ body {
   border-bottom: 2px solid #c4452c;
   padding-bottom: 4px;
 }
-
 /* ============================HERO & SEARCH======================== */
 .hero-search {
+  position: relative;
   background: #085f99;
-  padding: 2rem 1.5rem;
+  padding: 4.5rem 1.5rem;
   text-align: center;
   border-bottom: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+.hero-search::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
+  animation: heroZoom 14s ease-out both;
+  z-index: 0;
+}
+.hero-search::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(10,37,64,0.85) 0%, rgba(8,95,153,0.62) 100%);
+  z-index: 1;
+}
+.hero-search > * {
+  position: relative;
+  z-index: 2;
 }
 .hero-search h2 {
   font-size: 2rem;
@@ -961,3 +979,69 @@ body {
 /* ============হেডার পার্ট=========== */
 .top-bar .login-link { color: #00FFFF; text-decoration: bold; margin-left: 0.5rem; }
 .top-bar .login-link:hover { text-decoration: underline; }
+/* ================= নতুন সেকশন: অ্যানিমেশন ইত্যাদি ================= */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroZoom {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
+.hero-search h2 { animation: fadeUp 0.7s 0.05s ease both; text-shadow: 0 2px 14px rgba(0,0,0,0.4); }
+.hero-search .tagline { animation: fadeUp 0.7s 0.2s ease both; }
+.hero-search .search-container { animation: fadeUp 0.7s 0.35s ease both; }
+.hero-search .search-hint { animation: fadeUp 0.7s 0.5s ease both; }
+@media (max-width: 650px) {
+  .hero-search { padding: 3rem 1rem; }
+}
+/* স্ক্রল রিভিল — স্ক্রল করলে কনটেন্ট নিচ থেকে ভেসে আসবে */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(0.2,0.7,0.3,1), transform 0.7s cubic-bezier(0.2,0.7,0.3,1);
+}
+.reveal.revealed { opacity: 1; transform: none; }
+.articles-grid .reveal:nth-child(2), .journals-grid-view .reveal:nth-child(2) { transition-delay: 0.07s; }
+.articles-grid .reveal:nth-child(3), .journals-grid-view .reveal:nth-child(3) { transition-delay: 0.14s; }
+.articles-grid .reveal:nth-child(4), .journals-grid-view .reveal:nth-child(4) { transition-delay: 0.21s; }
+.articles-grid .reveal:nth-child(5), .journals-grid-view .reveal:nth-child(5) { transition-delay: 0.28s; }
+.articles-grid .reveal:nth-child(6), .journals-grid-view .reveal:nth-child(6) { transition-delay: 0.35s; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .hero-search h2, .hero-search .tagline, .hero-search .search-container,
+  .hero-search .search-hint, .hero-search::before { animation: none; }
+}
+/* ইউনিভার্সিটি অটোসাজেস্ট ড্রপডাউন */
+.autocomplete-wrapper { position: relative; }
+.autocomplete-list {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0; right: 0;
+  background: #ffffff;
+  border: 1px solid #cfdfed;
+  border-radius: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 60;
+  box-shadow: 0 12px 28px rgba(10,37,64,0.14);
+  display: none;
+}
+.autocomplete-list.show { display: block; }
+.autocomplete-item {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  color: #2c4c6e;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f3f8;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover, .autocomplete-item.active { background: #f9f5f2; color: #c4452c; }
+
+/* বোনাস ফিক্স: সাইডবারের লিংকগুলো সুন্দর রং-এ দেখাবে */
+.sidebar-section li a { color: inherit; text-decoration: none; }
+
+/* ঐচ্ছিক: খুব বড় মনিটরে পড়ার আরাম */
+@media (min-width: 1600px) {
+  .two-columns { padding-left: 3rem; padding-right: 3rem; }
+}
