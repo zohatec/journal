@@ -83,7 +83,112 @@
 <footer class="footer"><div class="footer-inner"><div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div><div class="footer-col"><h4>Policies</h4><p><a href="#">Peer Review Policy</a></p><p><a href="#">Publication Ethics</a></p></div><div class="footer-col"><h4>Contact</h4><p><a href="#">Editorial Office</a></p></div></div><div class="copyright">© 2026 ARC Journals</div></footer></div>
 	<script src="menu.js"></script>
 	<script src="script.js"></script>
+<script>
+  // ===== Institution Auto-Suggest =====
+  (function () {
+    var UNIVERSITIES = [
+      "University of Rajshahi", "University of Dhaka",
+      "Bangladesh University of Engineering and Technology (BUET)",
+      "University of Chittagong", "Jahangirnagar University", "Khulna University",
+      "Rajshahi University of Engineering & Technology (RUET)",
+      "Chittagong University of Engineering & Technology (CUET)",
+      "Khulna University of Engineering & Technology (KUET)",
+      "Shahjalal University of Science and Technology (SUST)",
+      "Islamic University, Bangladesh", "University of Barishal",
+      "Bangladesh Agricultural University", "Sylhet Agricultural University",
+      "Bangabandhu Sheikh Mujibur Rahman Agricultural University",
+      "Mawlana Bhashani Science and Technology University",
+      "Hajee Mohammad Danesh Science & Technology University",
+      "Noakhali Science and Technology University",
+      "Pabna University of Science and Technology",
+      "Rangamati Science and Technology University",
+      "Jatiya Kabi Kazi Nazrul Islam University",
+      "Begum Rokeya University, Rangpur", "Comilla University",
+      "Bangabandhu Sheikh Mujibur Rahman Science and Technology University",
+      "Bangabandhu Sheikh Mujibur Rahman Maritime University",
+      "BRAC University", "North South University",
+      "Independent University, Bangladesh (IUB)",
+      "Ahsanullah University of Science and Technology (AUST)",
+      "East West University", "United International University (UIU)",
+      "Daffodil International University",
+      "American International University-Bangladesh (AIUB)",
+      "University of Liberal Arts Bangladesh (ULAB)", "Stamford University Bangladesh",
+      "Massachusetts Institute of Technology (MIT)", "Harvard University",
+      "Stanford University", "University of Oxford", "University of Cambridge",
+      "California Institute of Technology (Caltech)", "ETH Zurich",
+      "University of Chicago", "University College London (UCL)",
+      "Imperial College London", "Princeton University", "Yale University",
+      "Columbia University", "University of Pennsylvania", "Johns Hopkins University",
+      "Cornell University", "University of Michigan", "Duke University",
+      "Northwestern University", "New York University (NYU)",
+      "University of California, Berkeley", "University of California, Los Angeles (UCLA)",
+      "University of Toronto", "McGill University", "University of British Columbia",
+      "University of Melbourne", "University of Sydney",
+      "Australian National University (ANU)", "National University of Singapore (NUS)",
+      "Nanyang Technological University (NTU)", "University of Hong Kong",
+      "Hong Kong University of Science and Technology", "Tsinghua University",
+      "Peking University", "Fudan University", "Shanghai Jiao Tong University",
+      "University of Tokyo", "Kyoto University", "Seoul National University",
+      "KAIST", "Universiti Malaya", "University of Edinburgh",
+      "University of Manchester", "King's College London",
+      "London School of Economics and Political Science (LSE)",
+      "Delft University of Technology", "Technical University of Munich (TUM)",
+      "Heidelberg University", "Sorbonne University",
+      "École Polytechnique Fédérale de Lausanne (EPFL)"
+    ];
 
+    var input = document.getElementById('institution');
+    var listEl = document.getElementById('institutionList');
+    if (!input || !listEl) return;
+    var activeIndex = -1;
+
+    function hideList() { listEl.classList.remove('show'); activeIndex = -1; }
+
+    function showList(items) {
+      listEl.innerHTML = '';
+      if (!items.length) { hideList(); return; }
+      items.forEach(function (u) {
+        var div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.textContent = u;
+        div.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          input.value = u;
+          hideList();
+        });
+        listEl.appendChild(div);
+      });
+      activeIndex = -1;
+      listEl.classList.add('show');
+    }
+
+    input.addEventListener('input', function () {
+      var q = input.value.trim().toLowerCase();
+      if (q.length < 2) { hideList(); return; }
+      showList(UNIVERSITIES.filter(function (u) {
+        return u.toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 8));
+    });
+
+    input.addEventListener('keydown', function (e) {
+      var items = listEl.querySelectorAll('.autocomplete-item');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; }
+      else if (e.key === 'Enter') {
+        if (activeIndex >= 0) { e.preventDefault(); input.value = items[activeIndex].textContent; hideList(); }
+        return;
+      }
+      else if (e.key === 'Escape') { hideList(); return; }
+      else return;
+      items.forEach(function (it, i) { it.classList.toggle('active', i === activeIndex); });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.autocomplete-wrapper')) hideList();
+    });
+  })();
+</script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
