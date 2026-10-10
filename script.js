@@ -765,3 +765,55 @@ function renderJournalMenu(journal) {
     }
   }
 });
+// ================== Gmail Compose + Scroll Reveal ==================
+(function () {
+  function initEnhancements() {
+
+    // ১) সব mailto: লিংক অটোমেটিক Gmail Compose পেজে বদলে যাবে
+    document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
+      var email = a.getAttribute('href').replace('mailto:', '').split('?')[0].trim();
+      if (email) {
+        a.setAttribute('href', 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email));
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+
+    // ২) স্ক্রল করলে কার্ড/সেকশন নিচ থেকে ভেসে আসবে
+    var selectors = '.article-card, .sidebar-section, .journal-card-horizontal, .article-list-item, .submit-content, .about-content, .services-content, .category-section, .journal-header-card, .footer-col';
+    var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 }) : null;
+
+    function observeAll() {
+      document.querySelectorAll(selectors).forEach(function (el) {
+        if (el.classList.contains('reveal')) return;
+        el.classList.add('reveal');
+        if (io) io.observe(el);
+        else el.classList.add('revealed');
+      });
+    }
+    observeAll();
+
+    // পেজিনেশনে নতুন কার্ড রেন্ডার হলেও অ্যানিমেশন কাজ করবে
+    if ('MutationObserver' in window) {
+      var moTimer = null;
+      var mo = new MutationObserver(function () {
+        clearTimeout(moTimer);
+        moTimer = setTimeout(observeAll, 80);
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEnhancements);
+  } else {
+    initEnhancements();
+  }
+})();
