@@ -38,7 +38,13 @@
 <form class="submit-form" id="articleForm" action="#" method="post">
   <div class="form-group"><label>Full Name *</label><input type="text" id="fullName" required></div>
   <div class="form-group"><label>Email Address *</label><input type="email" id="email" required></div>
-  <div class="form-group"><label>Institution/Affiliation</label><input type="text" id="institution"></div>
+  <div class="form-group">
+  <label>Institution/Affiliation</label>
+  <div class="autocomplete-wrapper">
+    <input type="text" id="institution" autocomplete="off" placeholder="Start typing your institution name...">
+    <div class="autocomplete-list" id="institutionList"></div>
+  </div>
+</div>
   <div class="form-group"><label>Manuscript Title *</label><input type="text" id="title" required></div>
   <div class="form-group"><label>Submission Type</label>
     <select id="submissionType">
