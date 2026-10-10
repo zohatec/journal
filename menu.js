@@ -1,5 +1,14 @@
 // menu.js - Dynamic menu with Donate dropdown (click toggles on all devices, hover works on desktop)
 (function() {
+    // ===== ফেভিকন: menu.js সব পেজে লোড হয়, তাই এক জায়গায় দিলেই সব পেজে সেট হয়ে যাবে =====
+  (function () {
+    if (document.querySelector("link[rel='icon']")) return;
+    var link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/svg+xml';
+    link.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a2540'/%3E%3Ctext x='32' y='41' font-family='Georgia,serif' font-size='24' font-weight='bold' fill='%23ebc7b5' text-anchor='middle'%3EARC%3C/text%3E%3C/svg%3E";
+    document.head.appendChild(link);
+  })();
   function getMenuHTML() {
     return `
       <a href="index.html">Home</a>
