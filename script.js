@@ -765,7 +765,7 @@ function renderJournalMenu(journal) {
     }
   }
 });
-// ================== Gmail Compose + Scroll Reveal ==================
+// ================== Gmail Compose + Scroll Reveal (v2 — Pagination Fix) ==================
 (function () {
   function initEnhancements() {
 
@@ -779,34 +779,42 @@ function renderJournalMenu(journal) {
       }
     });
 
-    // ২) স্ক্রল করলে কার্ড/সেকশন নিচ থেকে ভেসে আসবে
+    // ২) স্ক্রল রিভিল — পেজিনেশনেও কাজ করবে
     var selectors = '.article-card, .sidebar-section, .journal-card-horizontal, .article-list-item, .submit-content, .about-content, .services-content, .category-section, .journal-header-card, .footer-col';
-    var io = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+
+    // খুব পুরনো ব্রাউজার হলে সব সরাসরি দেখাবে
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll(selectors).forEach(function (el) { el.classList.add('revealed'); });
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          io.unobserve(entry.target);
-        }
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        io.unobserve(el);
+        // ⭐ দুই ফ্রেম অপেক্ষা: ব্রাউজার আগে "লুকানো অবস্থা" আঁকবে (paint),
+        // তারপর "দেখাও" কমান্ড যাবে — তাহলে ট্রানজিশন ঠিকমতো চলে।
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            el.classList.add('revealed');
+          });
+        });
       });
-    }, { threshold: 0.08 }) : null;
+    }, { threshold: 0.08 });
 
     function observeAll() {
       document.querySelectorAll(selectors).forEach(function (el) {
         if (el.classList.contains('reveal')) return;
         el.classList.add('reveal');
-        if (io) io.observe(el);
-        else el.classList.add('revealed');
+        io.observe(el);
       });
     }
     observeAll();
 
-    // পেজিনেশনে নতুন কার্ড রেন্ডার হলেও অ্যানিমেশন কাজ করবে
+    // ⭐ নতুন কার্ড (পেজিনেশন/সার্চ) যুক্ত হওয়া মাত্রই ধরা পড়বে — কোনো দেরি নেই
     if ('MutationObserver' in window) {
-      var moTimer = null;
-      var mo = new MutationObserver(function () {
-        clearTimeout(moTimer);
-        moTimer = setTimeout(observeAll, 80);
-      });
+      var mo = new MutationObserver(function () { observeAll(); });
       mo.observe(document.body, { childList: true, subtree: true });
     }
   }
