@@ -1045,3 +1045,40 @@ body {
 @media (min-width: 1600px) {
   .two-columns { padding-left: 3rem; padding-right: 3rem; }
 }
+/* ========== জার্নাল ও আর্টিকেল কার্ড: নিশ্চিত অ্যানিমেশন (সব পেজে) ========== */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* জার্নাল কার্ড — তৈরি হওয়া মাত্রই অ্যানিমেশন শুরু */
+.journal-card-horizontal {
+  animation: cardIn 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+.journals-grid-view .journal-card-horizontal:nth-child(2) { animation-delay: 0.07s; }
+.journals-grid-view .journal-card-horizontal:nth-child(3) { animation-delay: 0.14s; }
+.journals-grid-view .journal-card-horizontal:nth-child(4) { animation-delay: 0.21s; }
+.journals-grid-view .journal-card-horizontal:nth-child(5) { animation-delay: 0.28s; }
+.journals-grid-view .journal-card-horizontal:nth-child(6) { animation-delay: 0.35s; }
+
+/* আর্টিকেল লিস্ট (articles.html-এর পেজিনেশনেও একই সমস্যা হতো — আগেই ঠিক) */
+.article-list-item {
+  animation: cardIn 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+.article-list-item:nth-child(2) { animation-delay: 0.05s; }
+.article-list-item:nth-child(3) { animation-delay: 0.10s; }
+.article-list-item:nth-child(4) { animation-delay: 0.15s; }
+.article-list-item:nth-child(5) { animation-delay: 0.20s; }
+.article-list-item:nth-child(6) { animation-delay: 0.25s; }
+
+/* পুরনো JS-রিভিল সিস্টেম এই কার্ডগুলোতে ঢুকলেও কিছু বদলাবে না (conflict এড়ানো) */
+.journal-card-horizontal.reveal,
+.article-list-item.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journal-card-horizontal,
+  .article-list-item { animation: none; }
+}
