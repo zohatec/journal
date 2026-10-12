@@ -165,7 +165,7 @@
 
     input.addEventListener('input', function () {
       var q = input.value.trim().toLowerCase();
-      if (q.length < 2) { hideList(); return; }
+      if (q.length < 1) { hideList(); return; }
       showList(UNIVERSITIES.filter(function (u) {
         return u.toLowerCase().indexOf(q) !== -1;
       }).slice(0, 8));
