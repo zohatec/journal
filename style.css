@@ -1082,3 +1082,33 @@ body {
   .journal-card-horizontal,
   .article-list-item { animation: none; }
 }
+/* ==================== FOOTER: SOCIAL ICONS ==================== */
+.footer-social {
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 0.2rem;
+}
+.footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #bdd3e8;
+  text-decoration: none;
+  font-size: 1.05rem;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+.footer-social a:hover {
+  color: #ffffff;
+  transform: translateY(-4px);
+}
+.footer-social a.social-facebook:hover { background: #1877F2; border-color: #1877F2; }
+.footer-social a.social-twitter:hover  { background: #0f1419; border-color: #0f1419; }
+.footer-social a.social-linkedin:hover { background: #0A66C2; border-color: #0A66C2; }
+@media (max-width: 650px) {
+  .footer-social { justify-content: center; }
+}
