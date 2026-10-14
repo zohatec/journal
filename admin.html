@@ -4,27 +4,66 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link rel="stylesheet" href="style.css">
 <style>
-  .admin-wrap { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-  .sub-card { background: white; border: 1px solid #eee; border-radius: 10px; padding: 1.2rem; margin-bottom: 1rem; }
-  .sub-card h3 { margin: 0.4rem 0 0.3rem 0; }
+  .admin-wrap { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem; }
+  .admin-header h2 { font-family: 'Lora', serif; color: #0a2540; }
+  .admin-actions { display: flex; gap: 0.6rem; }
+  .btn-view-site { background: #085f99; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-view-site:hover { background: #0a2540; }
+  .btn-logout { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: white; border: 1px solid #eef2f8; border-radius: 14px; padding: 1.1rem; text-align: center; color: #5b6e8c; font-size: 0.85rem; }
+  .stat-card span { display: block; font-size: 1.8rem; font-weight: 700; color: #0a2540; }
+  .stat-card.pending span { color: #856404; }
+  .stat-card.approved span { color: #1a7a3c; }
+  .admin-toolbar { display: flex; gap: 0.8rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .admin-toolbar input { flex: 1; min-width: 220px; padding: 0.7rem 1rem; border: 1px solid #cfdfed; border-radius: 10px; font-family: 'Inter', sans-serif; }
+  .filter-tabs { display: flex; gap: 0.4rem; }
+  .filter-tabs button { background: #f5f7fb; border: 1px solid #cfdfed; padding: 0.5rem 1rem; border-radius: 30px; cursor: pointer; font-size: 0.85rem; }
+  .filter-tabs button.active { background: #0a2540; color: #fff; border-color: #0a2540; }
+  .sub-card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+  .sub-card h3 { margin: 0.5rem 0 0.3rem 0; color: #1f3a4b; }
   .sub-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
+  .sub-abstract { font-size: 0.9rem; color: #2c4c6e; line-height: 1.5; margin-bottom: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
   .status-pending { background: #fff3cd; color: #856404; }
   .status-approved { background: #d4edda; color: #155724; }
-  .btn-row { margin-top: 0.8rem; display: flex; gap: 0.6rem; }
+  .type-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #eef2f8; color: #2c5282; }
+  .btn-row { margin-top: 0.8rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .btn-row a { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
   .btn-approve { background: #1a7a3c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  .btn-unpublish { background: #b8860b; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  .btn-view { background: #085f99; color: white; padding: 6px 14px; border-radius: 6px; }
   .btn-delete { background: #c4452c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-  .btn-logout { background: #555; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+  @media (max-width: 650px) { .stats-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <div class="admin-wrap">
   <div class="admin-header">
     <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
-    <button class="btn-logout" id="logoutBtn">Log Out</button>
+    <div class="admin-actions">
+      <a class="btn-view-site" href="index.html" target="_blank"><i class="fas fa-globe"></i> View Site</a>
+      <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+    </div>
   </div>
-  <div id="submissionsList">Loading...</div>
+
+  <div class="stats-row">
+    <div class="stat-card"><span id="statTotal">—</span>Total Submissions</div>
+    <div class="stat-card pending"><span id="statPending">—</span>Awaiting Approval</div>
+    <div class="stat-card approved"><span id="statApproved">—</span>Published on Site</div>
+  </div>
+
+  <div class="admin-toolbar">
+    <input type="text" id="searchBox" placeholder="Search by title, author or email...">
+    <div class="filter-tabs" id="filterTabs">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="pending">Pending</button>
+      <button data-filter="approved">Published</button>
+    </div>
+  </div>
+
+  <div id="submissionsList">Loading submissions...</div>
 </div>
 
 <script type="module">
@@ -32,19 +71,30 @@
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-	const firebaseConfig = {
-	  apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
-	  authDomain: "my-journal-a0eaa.firebaseapp.com",
-	  projectId: "my-journal-a0eaa",
-	  storageBucket: "my-journal-a0eaa.firebasestorage.app",
-	  messagingSenderId: "577249786861",
-	  appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
-	};
+  const firebaseConfig = {
+    apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+    authDomain: "my-journal-a0eaa.firebaseapp.com",
+    projectId: "my-journal-a0eaa",
+    storageBucket: "my-journal-a0eaa.firebasestorage.app",
+    messagingSenderId: "577249786861",
+    appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+  };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const container = document.getElementById("submissionsList");
+
+  let allSubs = [];
+  let currentFilter = "all";
+  let searchTerm = "";
+
+  function esc(s) {
+    if (s === null || s === undefined) return "";
+    return String(s).replace(/[&<>"']/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+    });
+  }
 
   onAuthStateChanged(auth, (user) => {
     if (!user) window.location.href = "admin-login.html";
@@ -56,6 +106,20 @@
     window.location.href = "admin-login.html";
   });
 
+  document.getElementById("searchBox").addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    render();
+  });
+
+  document.getElementById("filterTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-filter]");
+    if (!btn) return;
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll("#filterTabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    render();
+  });
+
   function extractFilePath(fileUrl) {
     const marker = "/main/";
     const idx = fileUrl.indexOf(marker);
@@ -65,66 +129,87 @@
   async function loadSubmissions() {
     const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
     const snapshot = await getDocs(q);
+    allSubs = [];
+    snapshot.forEach((d) => { const v = d.data(); v._id = d.id; allSubs.push(v); });
+    const approved = allSubs.filter(s => s.approved).length;
+    document.getElementById("statTotal").innerText = allSubs.length;
+    document.getElementById("statPending").innerText = allSubs.length - approved;
+    document.getElementById("statApproved").innerText = approved;
+    render();
+  }
 
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No Submissions.</p>";
+  function render() {
+    let list = allSubs;
+    if (currentFilter === "pending") list = list.filter(s => !s.approved);
+    if (currentFilter === "approved") list = list.filter(s => s.approved);
+    if (searchTerm) {
+      list = list.filter(s =>
+        (s.title || "").toLowerCase().includes(searchTerm) ||
+        (s.fullName || "").toLowerCase().includes(searchTerm) ||
+        (s.email || "").toLowerCase().includes(searchTerm));
+    }
+    if (!list.length) {
+      container.innerHTML = "<p style='color:#6b7a8a;padding:1rem;'>No submissions match.</p>";
       return;
     }
-
     container.innerHTML = "";
-    snapshot.forEach((docSnap) => {
-      const d = docSnap.data();
-      const id = docSnap.id;
-      const statusClass = d.approved ? "status-approved" : "status-pending";
-      const statusText = d.approved ? "Approved" : "Pending";
-
+    list.forEach((d) => {
       const card = document.createElement("div");
       card.className = "sub-card";
       card.innerHTML = `
-        <span class="status-badge ${statusClass}">${statusText}</span>
-        <h3>${d.title || "(Untitled)"}</h3>
-        <div class="sub-meta">${d.fullName || ""} · ${d.email || ""} ${d.category ? "· " + d.category : ""} ${d.submittedAt ? "· " + new Date(d.submittedAt).toLocaleDateString() : ""}</div>
-        <p>${d.abstract || ""}</p>
-        <a href="${d.fileUrl}" target="_blank">📄 See the PDF</a>
-        <div class="btn-row">
-          ${d.approved ? "" : `<button class="btn-approve" data-id="${id}">✅ Approve</button>`}
-          <button class="btn-delete" data-id="${id}" data-fileurl="${d.fileUrl}">🗑️ Delete</button>
+        <div>
+          <span class="status-badge ${d.approved ? "status-approved" : "status-pending"}">${d.approved ? "Published" : "Pending"}</span>
+          <span class="type-badge">${esc(d.submissionType || "")}</span>
         </div>
-      `;
+        <h3>${esc(d.title || "(Untitled)")}</h3>
+        <div class="sub-meta">${esc(d.fullName || "")} · ${esc(d.email || "")} ${d.category ? "· " + esc(d.category) : ""} ${d.submittedAt ? "· " + new Date(d.submittedAt).toLocaleDateString() : ""}</div>
+        ${d.abstract ? `<p class="sub-abstract">${esc(d.abstract)}</p>` : ""}
+        <a href="${esc(d.fileUrl || "#")}" target="_blank">📄 See the PDF</a>
+        <div class="btn-row">
+          ${d.approved
+            ? `<button class="btn-unpublish" data-id="${d._id}">⏸ Unpublish</button>
+               <a class="btn-view" href="submission-view.html?sub=${d._id}" target="_blank">👁 View on Site</a>`
+            : `<button class="btn-approve" data-id="${d._id}">✅ Approve & Publish</button>`}
+          <button class="btn-delete" data-id="${d._id}" data-fileurl="${esc(d.fileUrl || "")}">🗑️ Delete</button>
+        </div>`;
       container.appendChild(card);
     });
-
-    container.querySelectorAll(".btn-approve").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: true });
-        loadSubmissions();
-      });
-    });
-
-    container.querySelectorAll(".btn-delete").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        if (!confirm("Are you sure you want to delete this?")) return;
-        const id = btn.dataset.id;
-        const filePath = extractFilePath(btn.dataset.fileurl);
-
-        try {
-          if (filePath) {
-            const idToken = await auth.currentUser.getIdToken();
-            await fetch("https://journal-upload.ssbcpoint.workers.dev/delete", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ idToken, filePath }),
-            });
-          }
-          await deleteDoc(doc(db, "submissions", id));
-          loadSubmissions();
-        } catch (err) {
-          alert("There was a problem deleting it.");
-          console.error(err);
-        }
-      });
-    });
   }
+
+  container.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-id]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+
+    if (btn.classList.contains("btn-approve")) {
+      await updateDoc(doc(db, "submissions", id), { approved: true });
+      loadSubmissions();
+    }
+    else if (btn.classList.contains("btn-unpublish")) {
+      await updateDoc(doc(db, "submissions", id), { approved: false });
+      loadSubmissions();
+    }
+    else if (btn.classList.contains("btn-delete")) {
+      if (!confirm("Are you sure you want to delete this submission?")) return;
+      const filePath = extractFilePath(btn.dataset.fileurl);
+      try {
+        if (filePath) {
+          const idToken = await auth.currentUser.getIdToken();
+          await fetch("https://journal-upload.ssbcpoint.workers.dev/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken, filePath }),
+          });
+        }
+        await deleteDoc(doc(db, "submissions", id));
+        loadSubmissions();
+      } catch (err) {
+        alert("There was a problem deleting it.");
+        console.error(err);
+      }
+    }
+  });
 </script>
+<script src="footer.js"></script>
 </body>
 </html>
