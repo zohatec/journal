@@ -135,7 +135,7 @@
       "London School of Economics and Political Science (LSE)",
       "Delft University of Technology", "Technical University of Munich (TUM)",
       "Heidelberg University", "Sorbonne University",
-      "École Polytechnique Fédérale de Lausanne (EPFL)"
+      "École Polytechnique Fédérale de Lausanne (EPFL)", "Varendra University"
     ];
 
     var input = document.getElementById('institution');
@@ -193,6 +193,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
@@ -205,6 +206,7 @@ const firebaseConfig = {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
   const form = document.getElementById("articleForm");
   const statusMsg = document.getElementById("statusMsg");
@@ -225,6 +227,7 @@ const firebaseConfig = {
       await addDoc(collection(db, "submissions"), {
         fullName: document.getElementById("fullName").value,
         email: document.getElementById("email").value,
+		uid: (auth.currentUser ? auth.currentUser.uid : null),
         institution: document.getElementById("institution").value,
         title: document.getElementById("title").value,
         submissionType: document.getElementById("submissionType").value,
