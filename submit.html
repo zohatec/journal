@@ -239,6 +239,15 @@ const firebaseConfig = {
         submittedAt: new Date().toISOString(),
       });
 
+	        // ---- কনফার্মেশন ইমেইল (EmailJS) ----
+      emailjs.send("service_2d8znb7", "template_2l9t2j8", {
+        to_email: document.getElementById("email").value,
+        to_name: document.getElementById("fullName").value,
+        title: document.getElementById("title").value,
+        category: document.getElementById("category").value,
+        submission_type: document.getElementById("submissionType").value
+      }, "ttN27BmvjDkBRaCDP").catch(function (e2) { console.warn("Email failed:", e2); });
+		
       statusMsg.textContent = "Submission successful! Awaiting admin approval. Thank you....";
       form.reset();
     } catch (err) {
