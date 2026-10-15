@@ -1,22 +1,17 @@
 // ================================================================
-// site-submissions.js — Admin-এ Approved সাবমিশন মূল সাইটে দেখায়
-//   • journals-<cat>.html → "Journal" টাইপ, বিদ্যমান কার্ড-ডিজাইনেই
-//   • journals.html      → ক্যাটেগরি অনুযায়ী লিস্ট
-//   • articles.html      → "Article" টাইপের লিস্ট
-//   • কার্ডে ক্লিক → submission-view.html?sub=<id>
-//   (script.js / journals-data.js কিছুই বদলাতে হয় না)
+// site-submissions.js (v2) — Approved সাবমিশন মূল লিস্টের একদম উপরে
+//   • journals-<cat>.html → পেজিনেশন গ্রিডের একদম উপরে (শুধু ১ম পেজে)
+//   • journals.html      → পেজের একদম উপরে
+//   • articles.html      → আর্টিকেল লিস্টের একদম উপরে
+//   • কোনো আলাদা "New/Recent Submissions" সেকশন নেই
 // ================================================================
 (async function () {
 
-  // ---------- Firebase লোড ----------
   var appMod, fsMod;
   try {
     appMod = await import("https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js");
     fsMod  = await import("https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js");
-  } catch (e) {
-    console.error("site-submissions: Firebase load failed", e);
-    return;
-  }
+  } catch (e) { console.error("site-submissions: Firebase load failed", e); return; }
 
   var firebaseConfig = {
     apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
@@ -30,7 +25,6 @@
   var app = appMod.initializeApp(firebaseConfig);
   var db  = fsMod.getFirestore(app);
 
-  // ---------- হেল্পার ----------
   function esc(s) {
     if (s === null || s === undefined) return "";
     return String(s).replace(/[&<>"']/g, function (m) {
@@ -43,7 +37,6 @@
     catch (e) { return ""; }
   }
 
-  // slug ("arts") → ফর্মে ব্যবহৃত পূর্ণ নাম ("Arts & Culture")
   var CAT_NAMES = {
     arts: "Arts & Culture", comparative: "Comparative & International Studies",
     economics: "Economics & Business", education: "Education Studies",
@@ -54,7 +47,6 @@
     philosophy: "Philosophy & Ethics", digital: "Technology & Digital Studies"
   };
 
-  // সব approved সাবমিশন একবারে আনা (single query — ইনডেক্স লাগে না)
   async function fetchAllApproved() {
     try {
       var snap = await fsMod.getDocs(
@@ -67,18 +59,21 @@
       });
       return out;
     } catch (e) {
-      console.error("site-submissions: Firestore পড়া যায়নি (Rules দেখুন)", e);
+      console.error("site-submissions: Firestore read failed", e);
       return [];
     }
   }
 
   var all = await fetchAllApproved();
-  if (!all.length) return; // প্রকাশিত কিছু নেই — কিছুই বসানোর নেই
+  if (!all.length) return;
 
-  // বিদ্যমান জার্নাল কার্ডের হুবহু একই ডিজাইন
-  function journalCardHTML(s) {
+  var journalSubs = all.filter(function (s) { return s.submissionType === "Journal"; });
+  var articleSubs = all.filter(function (s) { return s.submissionType !== "Journal"; });
+
+  // বিল্ট-ইন কার্ডের হুবহু একই মার্কআপ — ডিজাইন/সাইজ একই থাকবে
+  function subCardHTML(s) {
     return `
-      <article class="journal-card-horizontal">
+      <article class="journal-card-horizontal" data-user-submission="1">
         <a href="submission-view.html?sub=${encodeURIComponent(s._id)}" class="journal-card-link-horizontal">
           <div class="card-image"><i class="fas fa-file-pdf"></i></div>
           <div class="card-details">
@@ -89,75 +84,90 @@
       </article>`;
   }
 
-  // ---------- ১) ক্যাটেগরি পেজ (journals-arts.html ইত্যাদি) ----------
+  function subArticleItemHTML(s) {
+    return `
+      <a href="submission-view.html?sub=${encodeURIComponent(s._id)}" target="_blank" rel="noopener noreferrer" class="article-list-item" data-user-submission="1">
+        <div class="article-item-icon"><i class="fas fa-file-pdf"></i></div>
+        <span class="article-item-title">${esc(s.title)}</span>
+        <i class="fas fa-external-link-alt article-item-arrow"></i>
+      </a>`;
+  }
+
+  // কাউন্টারে সাবমিশন সংখ্যা যোগ করে (নিজের লেখা হলে আর বাড়ায় না)
+  function makeBump(span, addN, isArticle) {
+    var last = null;
+    return function () {
+      if (!span || !addN) return;
+      var t = span.textContent;
+      if (t === last) return;
+      var m = t.match(/\d+/);
+      if (!m) return;
+      var n = parseInt(m[0], 10) + addN;
+      last = isArticle ? (n + " articles") : (n + " journal" + (n !== 1 ? "s" : ""));
+      span.textContent = last;
+    };
+  }
+
+  function isOurs(el) {
+    return !!(el && el.hasAttribute && el.hasAttribute("data-user-submission"));
+  }
+
+  // ---------- ১) ক্যাটেগরি পেজ: গ্রিডের একদম উপরে (শুধু ১ম পেজে) ----------
   var catMatch = location.pathname.match(/journals-([a-z]+)\.html/);
   if (catMatch && CAT_NAMES[catMatch[1]]) {
-    var slug = catMatch[1];
-    var subs = all.filter(function (s) {
-      return s.submissionType === "Journal" && s.category === CAT_NAMES[slug];
-    });
-    if (subs.length) {
-      var main = document.querySelector(".main-content");
-      if (main) {
-        main.insertAdjacentHTML("beforeend", `
-          <div class="section-header" style="margin-top:2.5rem;">
-            <h2><i class="fas fa-user-edit"></i> Recently Published Submissions</h2>
-            <div class="results-count">${subs.length} submission${subs.length !== 1 ? "s" : ""}</div>
-          </div>
-          <div class="journals-grid-view">
-            ${subs.map(journalCardHTML).join("")}
-          </div>`);
+    var subs = journalSubs.filter(function (s) { return s.category === CAT_NAMES[catMatch[1]]; });
+    var grid = document.getElementById("articlesContainer");
+    if (subs.length && grid) {
+      var cardsHTML = subs.map(subCardHTML).join("");
+      var bump = makeBump(document.getElementById("resultCount"), subs.length, false);
+
+      function pageOne() {
+        var h = location.hash;
+        return !h || h === "#page-1";
       }
+      function ensure() {
+        bump();
+        if (!pageOne()) return;                    // ২য় পেজের পর সাবমিশন কার্ড নেই
+        if (isOurs(grid.firstElementChild)) return; // আগেই বসানো আছে
+        grid.insertAdjacentHTML("afterbegin", cardsHTML);
+        var noRes = document.getElementById("noResultsMsg");
+        if (noRes) noRes.style.display = "none";
+      }
+      ensure();
+      // পেজিনেশনে গ্রিড নতুন করে আঁকলেও কার্ডগুলো আবার উপরে বসে যাবে
+      new MutationObserver(ensure).observe(grid, { childList: true });
     }
   }
 
-  // ---------- ২) All Journals পেজ (journals.html) ----------
+  // ---------- ২) journals.html: পেজের একদম উপরে ----------
   var allJournalsContainer = document.getElementById("allJournalsContainer");
-  if (allJournalsContainer) {
-    var journalSubs = all.filter(function (s) { return s.submissionType === "Journal"; });
-    if (journalSubs.length) {
-      var byCat = {};
-      journalSubs.forEach(function (s) {
-        var key = Object.keys(CAT_NAMES).filter(function (k) { return CAT_NAMES[k] === s.category; })[0] || "other";
-        (byCat[key] = byCat[key] || []).push(s);
-      });
-      var html = "";
-      Object.keys(byCat).forEach(function (k) {
-        var label = (k === "other") ? "Other Submissions" : CAT_NAMES[k];
-        html += `
-          <div class="category-section">
-            <h3><i class="fas fa-user-edit"></i> User Published — ${esc(label)}</h3>
-            <div class="journals-grid">
-              ${byCat[k].map(function (s) {
-                return `<a href="submission-view.html?sub=${encodeURIComponent(s._id)}" class="journal-name-link">${esc(s.title)}</a>`;
-              }).join("")}
-            </div>
-          </div>`;
-      });
-      allJournalsContainer.insertAdjacentHTML("afterend", html);
-    }
+  if (allJournalsContainer && journalSubs.length) {
+    allJournalsContainer.insertAdjacentHTML("beforebegin", `
+      <div class="category-section" id="userSubmittedJournals">
+        <h3><i class="fas fa-user-edit"></i> Submitted Journals</h3>
+        <div class="journals-grid">
+          ${journalSubs.map(function (s) {
+            return `<a href="submission-view.html?sub=${encodeURIComponent(s._id)}" class="journal-name-link">${esc(s.title)}</a>`;
+          }).join("")}
+        </div>
+      </div>`);
+    var bumpJ = makeBump(document.getElementById("resultCount"), journalSubs.length, false);
+    bumpJ();
+    new MutationObserver(bumpJ).observe(allJournalsContainer, { childList: true });
   }
 
-  // ---------- ৩) All Articles পেজ (articles.html) ----------
-  if (document.getElementById("allArticlesContainer")) {
-    var artSubs = all.filter(function (s) { return s.submissionType !== "Journal"; });
-    if (artSubs.length) {
-      var mainArt = document.querySelector(".main-content");
-      if (mainArt) {
-        mainArt.insertAdjacentHTML("beforeend", `
-          <div class="section-header" style="margin-top:2.5rem;">
-            <h2><i class="fas fa-user-edit"></i> Recently Published Articles</h2>
-            <div class="results-count">${artSubs.length} article${artSubs.length !== 1 ? "s" : ""}</div>
-          </div>
-          ${artSubs.map(function (s) {
-            return `<a href="submission-view.html?sub=${encodeURIComponent(s._id)}" class="article-list-item">
-                      <div class="article-item-icon"><i class="fas fa-file-pdf"></i></div>
-                      <span class="article-item-title">${esc(s.title)}</span>
-                      <i class="fas fa-external-link-alt article-item-arrow"></i>
-                    </a>`;
-          }).join("")}`);
-      }
+  // ---------- ৩) articles.html: লিস্টের একদম উপরে ----------
+  var allArticlesContainer = document.getElementById("allArticlesContainer");
+  if (allArticlesContainer && articleSubs.length) {
+    var itemsHTML = articleSubs.map(subArticleItemHTML).join("");
+    var bumpA = makeBump(document.getElementById("resultCount"), articleSubs.length, true);
+    function ensureA() {
+      bumpA();
+      if (isOurs(allArticlesContainer.firstElementChild)) return;
+      allArticlesContainer.insertAdjacentHTML("afterbegin", itemsHTML);
     }
+    ensureA();
+    new MutationObserver(ensureA).observe(allArticlesContainer, { childList: true });
   }
 
 })();
