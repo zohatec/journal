@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARC Journals — Submission</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .sub-view-container { max-width: 900px; margin: 2rem auto; background: white; border-radius: 24px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); padding: 2rem; }
+    .sub-type-badge { display: inline-block; background: #eef2f8; color: #2c5282; padding: 0.25rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.8rem; }
+    .sub-view-container h1 { font-family: 'Lora', serif; color: #0a2540; font-size: 1.8rem; margin-bottom: 0.6rem; }
+    .sub-author { font-size: 0.95rem; color: #4a627a; margin-bottom: 0.4rem; }
+    .sub-meta { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem; color: #5b6e8c; margin-bottom: 1.2rem; }
+    .sub-abstract { background: #fafcfd; border: 1px solid #eef2f8; border-radius: 16px; padding: 1.2rem 1.4rem; font-size: 0.95rem; line-height: 1.6; color: #2c4c6e; margin-bottom: 1.5rem; }
+    .pdf-btn { display: inline-flex; align-items: center; gap: 8px; background: #c4452c; color: white; text-decoration: none; padding: 0.8rem 1.8rem; border-radius: 40px; font-weight: 600; transition: background 0.2s; }
+    .pdf-btn:hover { background: #0a2540; }
+    .back-link { display: inline-block; margin-top: 2rem; color: #c4452c; text-decoration: none; font-weight: 500; }
+    @media (max-width: 650px) { .sub-view-container { padding: 1.2rem; margin: 1rem; } .sub-view-container h1 { font-size: 1.4rem; } }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
+    <a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a>
+    <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="admin-login.html" class="login-link"><i class="fas fa-user-shield"></i> Log In</a>
+  </div>
+  <nav class="main-nav">
+    <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+
+  <div class="hero-search" style="padding: 1.5rem;">
+    <h2 id="heroTitle" style="font-size: 1.6rem;">Published Submission</h2>
+    <div class="tagline" id="heroTagline">Approved by the editorial board</div>
+  </div>
+
+  <div class="sub-view-container">
+    <span class="sub-type-badge" id="subType">Submission</span>
+    <h1 id="subTitle">Loading...</h1>
+    <div class="sub-author" id="subAuthor"></div>
+    <div class="sub-meta" id="subMeta"></div>
+    <div class="sub-abstract" id="subAbstract"></div>
+    <a id="pdfLink" class="pdf-btn" href="#" target="_blank"><i class="fas fa-file-pdf"></i> View Full PDF</a>
+    <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+</div>
+
+<script src="menu.js"></script>
+<script src="script.js"></script>
+<script src="site-submissions.js"></script>
+<script src="footer.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+    authDomain: "my-journal-a0eaa.firebaseapp.com",
+    projectId: "my-journal-a0eaa",
+    storageBucket: "my-journal-a0eaa.firebasestorage.app",
+    messagingSenderId: "577249786861",
+    appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  function esc(s) {
+    if (s === null || s === undefined) return "";
+    return String(s).replace(/[&<>"']/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+    });
+  }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+    catch (e) { return ""; }
+  }
+  function notFound() {
+    document.getElementById("subTitle").innerText = "Submission not found";
+    document.getElementById("subAbstract").innerHTML = "<p>This submission does not exist or has not been published yet.</p>";
+    document.getElementById("pdfLink").style.display = "none";
+    document.getElementById("subType").style.display = "none";
+  }
+
+  const subId = new URLSearchParams(location.search).get("sub");
+  if (!subId) { notFound(); }
+  else {
+    getDoc(doc(db, "submissions", subId)).then((snap) => {
+      if (!snap.exists() || !snap.data().approved) { notFound(); return; }
+      const d = snap.data();
+
+      document.title = (d.title || "Submission") + " — ARC Journals";
+      document.getElementById("subType").innerText = d.submissionType || "Submission";
+      document.getElementById("subTitle").innerText = d.title || "(Untitled)";
+      // পরের ফেজে (প্রফাইল সিস্টেম) লেখকের নামটা প্রফাইল-লিংক হয়ে যাবে
+      document.getElementById("subAuthor").innerText = "By " + (d.fullName || "Anonymous");
+      document.getElementById("subMeta").innerHTML =
+        `<span><i class="fas fa-tag"></i> ${esc(d.category || "")}</span>` +
+        (d.institution ? `<span><i class="fas fa-university"></i> ${esc(d.institution)}</span>` : "") +
+        `<span><i class="far fa-calendar-alt"></i> ${fmtDate(d.submittedAt)}</span>`;
+      document.getElementById("subAbstract").innerText = d.abstract || "No abstract provided.";
+      const pdfLink = document.getElementById("pdfLink");
+      if (d.fileUrl) pdfLink.href = d.fileUrl; else pdfLink.style.display = "none";
+    }).catch(notFound);
+  }
+</script>
+</body>
+</html>
