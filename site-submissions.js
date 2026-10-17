@@ -72,10 +72,13 @@
 
   // বিল্ট-ইন কার্ডের হুবহু একই মার্কআপ — ডিজাইন/সাইজ একই থাকবে
   function subCardHTML(s) {
+    var media = (s.imageUrl && String(s.imageUrl).trim() !== "")
+      ? '<img src="' + esc(s.imageUrl) + '" alt="' + esc(s.title) + '">'
+      : '<i class="fas fa-file-pdf"></i>';
     return `
       <article class="journal-card-horizontal" data-user-submission="1">
         <a href="submission-view.html?sub=${encodeURIComponent(s._id)}" class="journal-card-link-horizontal">
-          <div class="card-image"><i class="fas fa-file-pdf"></i></div>
+          <div class="card-image">${media}</div>
           <div class="card-details">
             <h3 class="card-title">${esc(s.title)}</h3>
             <p class="card-meta">By ${esc(s.fullName || "Anonymous")} · ${fmtDate(s.submittedAt)}</p>
