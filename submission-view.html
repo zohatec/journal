@@ -42,6 +42,7 @@
 
   <div class="sub-view-container">
     <span class="sub-type-badge" id="subType">Submission</span>
+    <img id="subCover" alt="Cover image" style="display:none; width:100%; max-height:340px; object-fit:cover; border-radius:16px; margin:0.8rem 0 1rem; border:1px solid #eef2f8;">
     <h1 id="subTitle">Loading...</h1>
     <div class="sub-author" id="subAuthor"></div>
     <div class="sub-meta" id="subMeta"></div>
@@ -91,7 +92,13 @@
     getDoc(doc(db, "submissions", subId)).then((snap) => {
       if (!snap.exists() || !snap.data().approved) { notFound(); return; }
       const d = snap.data();
-
+      
+            if (d.imageUrl) {
+        const cover = document.getElementById("subCover");
+        cover.src = d.imageUrl;
+        cover.style.display = "block";
+      }
+      
       document.title = (d.title || "Submission") + " — ARC Journals";
       document.getElementById("subType").innerText = d.submissionType || "Submission";
       document.getElementById("subTitle").innerText = d.title || "(Untitled)";
