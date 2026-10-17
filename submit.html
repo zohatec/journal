@@ -228,6 +228,20 @@ const firebaseConfig = {
       const res = await fetch("https://journal-upload.ssbcpoint.workers.dev", { method: "POST", body: formData });
       const { fileUrl } = await res.json();
 
+		      // ---- কভার ইমেজ আপলোড (ঐচ্ছিক) ----
+      let imageUrl = "";
+      const imgFile = document.getElementById("coverImage")?.files[0];
+      if (imgFile) {
+        if (imgFile.size > 2 * 1024 * 1024) {
+          statusMsg.textContent = "Please! Select a cover image under 2MB.";
+          return;
+        }
+        const safeName = Date.now() + "_" + imgFile.name.replace(/[^\w.-]/g, "-");
+        const imgRef = ref(storage, "covers/" + safeName);
+        await uploadBytes(imgRef, imgFile);
+        imageUrl = await getDownloadURL(imgRef);
+      }
+
       await addDoc(collection(db, "submissions"), {
         fullName: document.getElementById("fullName").value,
         email: document.getElementById("email").value,
