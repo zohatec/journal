@@ -1,282 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ARC Journals</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<link rel="stylesheet" href="style.css"></head>
-<body>
-<div class="site-wrapper"><div class="top-bar"><span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span><a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a><a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a><a href="https://wa.me/8801712534626?text=Submission%20Inquiry" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a><a href="admin-login.html" class="login-link"><i class="fas fa-user-shield"></i> Log In</a></div>
-	<nav class="main-nav">
-	  <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
-	  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-	  <div class="nav-links" id="navLinks"></div>
-	</nav>
-<div class="hero-search"><h2>Submit Your Work</h2><div class="tagline">Share your legal scholarship with the world</div></div>
-<div class="two-columns">
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <h3><i class="fas fa-balance-scale"></i> Journals (A–Z)</h3>
-      <ul>
-          <li><a href="journals-arts.html"><i class="fas fa-building"></i> Arts & Culture</a></li>
-          <li><a href="journals-comparative.html"><i class="fas fa-chart-line"></i> Comparative & International Studies</a></li>
-          <li><a href="journals-economics.html"><i class="fas fa-industry"></i> Economics & Business</a></li>
-		  <li><a href="journals-education.html"><i class="fas fa-book"></i> Education Studies</a></li>
-		  <li><a href="journals-space.html"><i class="fas fa-brain"></i> Future & Space Studies</a></li>
-		  <li><a href="journals-health.html"><i class="fas fa-globe-americas"></i> Health, Psychology & Bioethics</a></li>
-		  <li><a href="journals-history.html"><i class="fas fa-hard-hat"></i> History & Memory Studies</a></li>
-		  <li><a href="journals-human.html"><i class="fas fa-exclamation-triangle"></i> Human Rights & Indigenous Studies</a></li>
-		  <li><a href="journals-inter.html"><i class="fas fa-cogs"></i> Interdisciplinary Studies</a></li>
-		  <li><a href="journals-law.html"><i class="fas fa-water"></i> Law & Environment</a></li>
-		  <li><a href="journals-justice.html"><i class="fas fa-file-contract"></i> Law & Justice</a></li>
-		  <li><a href="journals-migration.html"><i class="fas fa-globe-europe"></i> Migration & Geopolitics</a></li>
-		  <li><a href="journals-philosophy.html"><i class="fas fa-clipboard-check"></i> Philosophy & Ethics</a></li>
-		  <li><a href="journals-digital.html"><i class="fas fa-server"></i> Technology & Digital Studies</a></li>
-      </ul>
-    </div>
-  </aside>
-<div class="main-content"><div class="submit-content"><h3>Manuscript Submission Form</h3>
-<form class="submit-form" id="articleForm" action="#" method="post">
-  <div class="form-group"><label>Full Name *</label><input type="text" id="fullName" required></div>
-  <div class="form-group"><label>Email Address *</label><input type="email" id="email" required></div>
-  <div class="form-group">
-  <label>Institution/Affiliation</label>
-  <div class="autocomplete-wrapper">
-    <input type="text" id="institution" autocomplete="off" placeholder="Start typing your institution name...">
-    <div class="autocomplete-list" id="institutionList"></div>
-  </div>
-</div>
-  <div class="form-group"><label>Manuscript Title *</label><input type="text" id="title" required></div>
-  <div class="form-group"><label>Submission Type</label>
-    <select id="submissionType">
-      <option>Journal</option>
-	  <option>Article</option>
-      <option>Book Review</option>
-      <option>Case Note</option>
-      <option>Essay</option>
-    </select>
-  </div>
-  <div class="form-group"><label>Category *</label>
-    <select id="category" required>
-      <option value="">-- Select Category --</option>
-      <option>Arts & Culture</option>
-      <option>Comparative & International Studies</option>
-      <option>Economics & Business</option>
-      <option>Education Studies</option>
-      <option>Future & Space Studies</option>
-      <option>Health, Psychology & Bioethics</option>
-      <option>History & Memory Studies</option>
-      <option>Human Rights & Indigenous Studies</option>
-      <option>Interdisciplinary Studies</option>
-      <option>Law & Environment</option>
-      <option>Law & Justice</option>
-      <option>Migration & Geopolitics</option>
-      <option>Philosophy & Ethics</option>
-      <option>Technology & Digital Studies</option>
-    </select>
-  </div>
-  <div class="form-group"><label>Abstract (max 300 words)</label><textarea rows="4" id="abstract"></textarea></div>
-  <div class="form-group"><label>Upload Manuscript (PDF)</label><input type="file" id="fileInput" accept=".pdf" required></div>
-  <div class="form-group"><label>Cover Image (Optional — shown on the journal card)</label><input type="file" id="coverImage" accept="image/png, image/jpeg"></div>
-  <div class="form-group"><button type="submit">Submit for Review <i class="fas fa-paper-plane"></i></button></div>
-  <p id="statusMsg" style="margin-top:1rem;"></p>
-</form>
-<p style="margin-top:1rem; font-size:0.8rem;">* By submitting, you confirm this work is original and not under consideration elsewhere.</p></div>
-	</div>
-  </div>
-</div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Your Article — ARC Journals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 
-<script>
-  // ===== Institution Auto-Suggest =====
-  (function () {
-    var UNIVERSITIES = [
-      "University of Rajshahi", "University of Dhaka",
-      "Bangladesh University of Engineering and Technology (BUET)",
-      "University of Chittagong", "Jahangirnagar University", "Khulna University",
-      "Rajshahi University of Engineering & Technology (RUET)",
-      "Chittagong University of Engineering & Technology (CUET)",
-      "Khulna University of Engineering & Technology (KUET)",
-      "Shahjalal University of Science and Technology (SUST)",
-      "Islamic University, Bangladesh", "University of Barishal",
-      "Bangladesh Agricultural University", "Sylhet Agricultural University",
-      "Bangabandhu Sheikh Mujibur Rahman Agricultural University",
-      "Mawlana Bhashani Science and Technology University",
-      "Hajee Mohammad Danesh Science & Technology University",
-      "Noakhali Science and Technology University",
-      "Pabna University of Science and Technology",
-      "Rangamati Science and Technology University",
-      "Jatiya Kabi Kazi Nazrul Islam University",
-      "Begum Rokeya University, Rangpur", "Comilla University",
-      "Bangabandhu Sheikh Mujibur Rahman Science and Technology University",
-      "Bangabandhu Sheikh Mujibur Rahman Maritime University",
-      "BRAC University", "North South University",
-      "Independent University, Bangladesh (IUB)",
-      "Ahsanullah University of Science and Technology (AUST)",
-      "East West University", "United International University (UIU)",
-      "Daffodil International University",
-      "American International University-Bangladesh (AIUB)",
-      "University of Liberal Arts Bangladesh (ULAB)", "Stamford University Bangladesh",
-      "Massachusetts Institute of Technology (MIT)", "Harvard University",
-      "Stanford University", "University of Oxford", "University of Cambridge",
-      "California Institute of Technology (Caltech)", "ETH Zurich",
-      "University of Chicago", "University College London (UCL)",
-      "Imperial College London", "Princeton University", "Yale University",
-      "Columbia University", "University of Pennsylvania", "Johns Hopkins University",
-      "Cornell University", "University of Michigan", "Duke University",
-      "Northwestern University", "New York University (NYU)",
-      "University of California, Berkeley", "University of California, Los Angeles (UCLA)",
-      "University of Toronto", "McGill University", "University of British Columbia",
-      "University of Melbourne", "University of Sydney",
-      "Australian National University (ANU)", "National University of Singapore (NUS)",
-      "Nanyang Technological University (NTU)", "University of Hong Kong",
-      "Hong Kong University of Science and Technology", "Tsinghua University",
-      "Peking University", "Fudan University", "Shanghai Jiao Tong University",
-      "University of Tokyo", "Kyoto University", "Seoul National University",
-      "KAIST", "Universiti Malaya", "University of Edinburgh",
-      "University of Manchester", "King's College London",
-      "London School of Economics and Political Science (LSE)",
-      "Delft University of Technology", "Technical University of Munich (TUM)",
-      "Heidelberg University", "Sorbonne University",
-      "École Polytechnique Fédérale de Lausanne (EPFL)", "Varendra University"
-    ];
+  <!-- EmailJS SDK (for confirmation email) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-    var input = document.getElementById('institution');
-    var listEl = document.getElementById('institutionList');
-    if (!input || !listEl) return;
-    var activeIndex = -1;
-
-    function hideList() { listEl.classList.remove('show'); activeIndex = -1; }
-
-    function showList(items) {
-      listEl.innerHTML = '';
-      if (!items.length) { hideList(); return; }
-      items.forEach(function (u) {
-        var div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.textContent = u;
-        div.addEventListener('mousedown', function (e) {
-          e.preventDefault();
-          input.value = u;
-          hideList();
-        });
-        listEl.appendChild(div);
-      });
-      activeIndex = -1;
-      listEl.classList.add('show');
+  <style>
+    .submit-wrap { max-width: 880px; margin: 2.5rem auto 4.5rem; padding: 0 1.25rem; }
+    .submit-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 14px; padding: 2rem; box-shadow: 0 6px 26px rgba(20,30,60,.08); }
+    .submit-card h2 { margin: 0 0 .3rem; font-family: 'Lora', serif; font-size: 1.5rem; color: #1c2b4a; }
+    .submit-card .form-intro { margin: 0 0 1.5rem; color: #66707f; font-size: .93rem; line-height: 1.6; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.15rem 1.3rem; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-weight: 600; font-size: .88rem; margin-bottom: .45rem; color: #25355a; }
+    .form-group label .req { color: #c0392b; }
+    .form-group input[type="text"], .form-group input[type="email"], .form-group select, .form-group textarea {
+      width: 100%; padding: .72rem .9rem; border: 1px solid #d3d8e2; border-radius: 9px;
+      font: inherit; font-size: .93rem; background: #fbfcfe; color: #222; transition: border-color .15s, box-shadow .15s;
     }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #2a4a8d; background: #fff; box-shadow: 0 0 0 3px rgba(42,74,141,.13);
+    }
+    .form-group textarea { min-height: 140px; resize: vertical; line-height: 1.6; }
+    .form-group input[type="file"] { width: 100%; padding: .55rem .7rem; border: 1px dashed #c2c9d6; border-radius: 9px; background: #fafbfd; font-size: .88rem; color: #455; cursor: pointer; }
+    .form-group input[type="file"]::-webkit-file-upload-button { border: none; background: #2a4a8d; color: #fff; padding: .42rem .85rem; border-radius: 7px; cursor: pointer; font: inherit; font-size: .84rem; }
+    .file-hint { font-size: .78rem; color: #8a92a1; margin-top: .38rem; line-height: 1.5; }
+    .image-preview { display: none; margin-top: .6rem; align-items: center; gap: .85rem; background: #f6f8fc; border: 1px solid #e3e7f0; border-radius: 10px; padding: .55rem .7rem; }
+    .image-preview img { width: 76px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid #dde; }
+    .image-preview .p-name { font-size: .82rem; color: #3a4763; word-break: break-all; }
+    .image-preview button { margin-top: .3rem; border: none; background: #eef1f7; color: #55627e; border-radius: 7px; padding: .25rem .7rem; font: inherit; font-size: .76rem; cursor: pointer; }
+    .image-preview button:hover { background: #e2e7f2; }
+    #submitBtn { margin-top: 1.7rem; width: 100%; background: #1f3d7a; color: #fff; border: none; padding: .9rem 2rem; border-radius: 11px; font: inherit; font-size: 1.02rem; font-weight: 600; cursor: pointer; transition: background .18s, transform .12s; }
+    #submitBtn:hover:not(:disabled) { background: #16305f; }
+    #submitBtn:active:not(:disabled) { transform: scale(.995); }
+    #submitBtn:disabled { opacity: .62; cursor: not-allowed; }
+    .status-box { display: none; margin-top: 1.3rem; padding: 1rem 1.15rem; border-radius: 11px; font-size: .94rem; line-height: 1.75; border: 1px solid transparent; }
+    .status-box.loading { display: block; background: #eef4ff; border-color: #bfd6f9; color: #1d4ed8; }
+    .status-box.success { display: block; background: #ecf9f0; border-color: #b9e4c7; color: #15803d; }
+    .status-box.error { display: block; background: #fdeeee; border-color: #f2c2c2; color: #b91c1c; }
+    .status-box code { background: rgba(0,0,0,.06); padding: .1rem .4rem; border-radius: 5px; font-size: .85em; word-break: break-all; }
+    .status-box a { color: inherit; font-weight: 700; text-decoration: underline; }
+    .autosuggest-wrap { position: relative; }
+    #instSuggestions { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ccd3e0; border-top: none; border-radius: 0 0 10px 10px; box-shadow: 0 12px 26px rgba(20,30,60,.14); z-index: 60; max-height: 275px; overflow-y: auto; }
+    .sug-item { padding: .58rem .95rem; cursor: pointer; font-size: .9rem; color: #2d3a56; }
+    .sug-item:hover, .sug-item.active { background: #eef4ff; }
+    .submit-note { margin-top: 1rem; font-size: .8rem; color: #8a92a1; text-align: center; line-height: 1.6; }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .submit-card { padding: 1.3rem 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
 
-    input.addEventListener('input', function () {
-      var q = input.value.trim().toLowerCase();
-      if (q.length < 1) { hideList(); return; }
-      showList(UNIVERSITIES.filter(function (u) {
-        return u.toLowerCase().indexOf(q) !== -1;
-      }).slice(0, 8));
-    });
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
+    <a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a>
+    <a href="https://wa.me/8801712534626?text=Journal%20Submission%20Inquiry" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="admin-login.html" class="login-link"><i class="fas fa-user-shield"></i> Log In</a>
+  </div>
 
-    input.addEventListener('keydown', function (e) {
-      var items = listEl.querySelectorAll('.autocomplete-item');
-      if (!items.length) return;
-      if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; }
-      else if (e.key === 'Enter') {
-        if (activeIndex >= 0) { e.preventDefault(); input.value = items[activeIndex].textContent; hideList(); }
-        return;
-      }
-      else if (e.key === 'Escape') { hideList(); return; }
-      else return;
-      items.forEach(function (it, i) { it.classList.toggle('active', i === activeIndex); });
-    });
+  <nav class="main-nav">
+    <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
 
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.autocomplete-wrapper')) hideList();
-    });
-  })();
-</script>
+  <div class="hero-search">
+    <h2>Submit Your Article</h2>
+    <div class="tagline">Fill in the details below — our editorial team will review your submission</div>
+  </div>
+
+  <div class="submit-wrap">
+    <form id="submitForm" class="submit-card" novalidate>
+      <h2><i class="fas fa-file-upload"></i> Article Submission Form</h2>
+      <p class="form-intro">Fields marked with a star (<span class="req">*</span>) are required. A cover image is optional.</p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fullName">Full Name <span class="req">*</span></label>
+          <input type="text" id="fullName" placeholder="e.g. Md. Rakib Hasan" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="e.g. rakib@example.com" autocomplete="email">
+        </div>
+        <div class="form-group autosuggest-wrap">
+          <label for="institution">Institution / University</label>
+          <input type="text" id="institution" placeholder="Start typing... e.g. Rajshahi" autocomplete="off">
+          <div id="instSuggestions"></div>
+          <div class="file-hint">Suggestions appear after typing 1 character — if yours is not listed, just type it in</div>
+        </div>
+        <div class="form-group">
+          <label for="category">Category <span class="req">*</span></label>
+          <select id="category">
+            <option value="">— Select a category —</option>
+            <option>Arts &amp; Culture</option>
+            <option>Comparative &amp; International Studies</option>
+            <option>Economics &amp; Business</option>
+            <option>Education Studies</option>
+            <option>Future &amp; Space Studies</option>
+            <option>Health, Psychology &amp; Bioethics</option>
+            <option>History &amp; Memory Studies</option>
+            <option>Human Rights &amp; Indigenous Studies</option>
+            <option>Interdisciplinary Studies</option>
+            <option>Law &amp; Environment</option>
+            <option>Law &amp; Justice</option>
+            <option>Migration &amp; Geopolitics</option>
+            <option>Philosophy &amp; Ethics</option>
+            <option>Technology &amp; Digital Studies</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label for="title">Article Title <span class="req">*</span></label>
+          <input type="text" id="title" placeholder="e.g. Climate Justice and Coastal Communities in Bangladesh">
+        </div>
+        <div class="form-group full">
+          <label for="abstract">Abstract <span class="req">*</span></label>
+          <textarea id="abstract" placeholder="Write a short summary of your article (at least 20 characters)"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="pdfFile">Article PDF <span class="req">*</span></label>
+          <input type="file" id="pdfFile" accept=".pdf,application/pdf">
+          <div class="file-hint">PDF files only · Maximum size 20 MB</div>
+        </div>
+        <div class="form-group">
+          <label for="imageFile">Cover Image (optional)</label>
+          <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+          <div class="file-hint">JPG / PNG / WebP · Maximum size 5 MB</div>
+          <div class="image-preview" id="imagePreview">
+            <img id="previewImg" alt="Cover preview">
+            <div>
+              <div class="p-name" id="previewName"></div>
+              <button type="button" id="removeImage"><i class="fas fa-times"></i> Remove image</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Submit Article</button>
+      <div id="statusBox" class="status-box" role="status" aria-live="polite"></div>
+    </form>
+    <p class="submit-note">Once approved by the editor, your article will be published on its category page.</p>
+  </div>
+
+</div>
+
+<script src="journals-data.js"></script>
+<script src="menu.js"></script>
+<script src="script.js"></script>
+<script src="footer.js"></script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
-  authDomain: "my-journal-a0eaa.firebaseapp.com",
-  projectId: "my-journal-a0eaa",
-  storageBucket: "my-journal-a0eaa.firebasestorage.app",
-  messagingSenderId: "577249786861",
-  appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
-};
-
+  /* ---------------- Firebase ---------------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+    authDomain: "my-journal-a0eaa.firebaseapp.com",
+    projectId: "my-journal-a0eaa",
+    storageBucket: "my-journal-a0eaa.firebasestorage.app",
+    messagingSenderId: "577249786861",
+    appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+  };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app);
-  const storage = getStorage(app);
+  const auth = getAuth(app); // casual users may not be logged in — currentUser can be null, that is fine
 
-  const form = document.getElementById("articleForm");
-  const statusMsg = document.getElementById("statusMsg");
+  /* ---------------- Config ---------------- */
+  const WORKER_URL = "https://journal-upload.ssbcpoint.workers.dev";
+  const WORKER_FILE_FIELD = "file"; // if your Worker expects a different field name (e.g. "pdf"), change it here
+  const UPLOAD_TIMEOUT_MS = 90000; // 90 seconds
+
+  // NOTE: Verify this Public Key in EmailJS Dashboard -> Account -> General
+  const EMAILJS_PUBLIC_KEY = "ttN27BmvyDkBRaCDP";
+  const EMAILJS_SERVICE_ID = "service_2d8znb7";
+  const EMAILJS_TEMPLATE_ID = "template_2l9t2j8";
+
+  let emailjsReady = false;
+  try {
+    if (typeof emailjs !== "undefined") {
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+      emailjsReady = true;
+    } else {
+      console.warn("[ARC] EmailJS SDK not loaded — email will be skipped, submission still works.");
+    }
+  } catch (e) {
+    console.warn("[ARC] EmailJS init failed:", e);
+  }
+
+  /* ---------------- Elements ---------------- */
+  const form = document.getElementById("submitForm");
+  const fullNameEl = document.getElementById("fullName");
+  const emailEl = document.getElementById("email");
+  const institutionEl = document.getElementById("institution");
+  const categoryEl = document.getElementById("category");
+  const titleEl = document.getElementById("title");
+  const abstractEl = document.getElementById("abstract");
+  const pdfInput = document.getElementById("pdfFile");
+  const imageInput = document.getElementById("imageFile");
+  const imagePreview = document.getElementById("imagePreview");
+  const previewImg = document.getElementById("previewImg");
+  const previewName = document.getElementById("previewName");
+  const removeImageBtn = document.getElementById("removeImage");
+  const submitBtn = document.getElementById("submitBtn");
+  const statusBox = document.getElementById("statusBox");
+  const originalBtnHtml = submitBtn.innerHTML;
+
+  /* ---------------- Helpers ---------------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function fmtSize(bytes) {
+    return bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + " MB" : Math.round(bytes / 1024) + " KB";
+  }
+  function setStatus(type, html) {
+    statusBox.className = "status-box " + type;
+    statusBox.innerHTML = html;
+    if (type === "error") statusBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  function hideStatus() { statusBox.className = "status-box"; statusBox.innerHTML = ""; }
+
+  function fetchWithTimeout(url, options, ms) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+  }
+
+  /* Uploads a file to the Worker — handles JSON or plain-text responses,
+     and converts any failure into a clear English error message (never hangs silently). */
+  async function uploadToWorker(file, label) {
+    const fd = new FormData();
+    fd.append(WORKER_FILE_FIELD, file, file.name);
+
+    let res;
+    try {
+      res = await fetchWithTimeout(WORKER_URL, { method: "POST", body: fd }, UPLOAD_TIMEOUT_MS);
+    } catch (err) {
+      if (err.name === "AbortError") {
+        throw new Error(label + " upload is taking longer than " + (UPLOAD_TIMEOUT_MS / 1000) + " seconds. Please check your internet connection, or try a smaller file.");
+      }
+      throw new Error(label + " upload failed (network/server error). Details: " + err.message);
+    }
+
+    if (!res.ok) {
+      let errText = "";
+      try { errText = (await res.text()).slice(0, 200); } catch (e) {}
+      throw new Error(label + " upload failed — server returned code " + res.status + (errText ? ". Server said: " + esc(errText) : ""));
+    }
+
+    const text = (await res.text()).trim();
+    let url = null;
+    try {
+      const j = JSON.parse(text);
+      url = (typeof j === "string") ? j : (j.url || j.fileUrl || j.path || j.link || j.data || null);
+    } catch (e) { url = text; }
+
+    if (!url || !/^https?:\/\//i.test(url)) {
+      throw new Error("Could not read the uploaded " + label.toLowerCase() + " URL from the server response. Response: " + esc(text.slice(0, 150)));
+    }
+    return url;
+  }
+
+  /* ---------------- Validation ---------------- */
+  function validateForm() {
+    if (!fullNameEl.value.trim()) return "Please enter your full name.";
+    const ev = emailEl.value.trim();
+    if (!ev || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ev)) return "Please enter a valid email address.";
+    if (!categoryEl.value) return "Please select a category.";
+    if (!titleEl.value.trim()) return "Please enter the article title.";
+    if (abstractEl.value.trim().length < 20) return "The abstract must be at least 20 characters long.";
+
+    const pdf = pdfInput.files[0];
+    if (!pdf) return "Please select the PDF file of your article.";
+    if (pdf.size > 20 * 1048576) return "The PDF must be smaller than 20 MB (current size: " + fmtSize(pdf.size) + ").";
+    if (pdf.type && pdf.type !== "application/pdf" && !pdf.name.toLowerCase().endsWith(".pdf")) return "The article file must be a PDF.";
+
+    const img = imageInput.files[0];
+    if (img) {
+      if (!img.type.startsWith("image/")) return "The cover image must be an image file (JPG/PNG/WebP).";
+      if (img.size > 5 * 1048576) return "The cover image must be smaller than 5 MB (current size: " + fmtSize(img.size) + ").";
+    }
+    return null; // all good
+  }
+
+  /* ---------------- Image preview ---------------- */
+  function clearImage() {
+    imageInput.value = "";
+    imagePreview.style.display = "none";
+    previewImg.src = "";
+  }
+  imageInput.addEventListener("change", () => {
+    const f = imageInput.files[0];
+    hideStatus();
+    if (!f) { clearImage(); return; }
+    if (!f.type.startsWith("image/")) {
+      setStatus("error", '<i class="fas fa-exclamation-circle"></i> The cover image must be an image file (JPG/PNG/WebP).');
+      clearImage(); return;
+    }
+    if (f.size > 5 * 1048576) {
+      setStatus("error", '<i class="fas fa-exclamation-circle"></i> The cover image must be smaller than 5 MB (current size: ' + fmtSize(f.size) + '). Please choose a smaller image.');
+      clearImage(); return;
+    }
+    previewImg.src = URL.createObjectURL(f);
+    previewName.textContent = f.name + " · " + fmtSize(f.size);
+    imagePreview.style.display = "flex";
+  });
+  removeImageBtn.addEventListener("click", clearImage);
+
+  /* ---------------- University autosuggest ---------------- */
+  const UNIVERSITIES = [
+    "University of Dhaka", "University of Rajshahi", "University of Chittagong", "University of Khulna",
+    "University of Barishal", "Shahjalal University of Science and Technology (SUST)", "Jahangirnagar University",
+    "Bangladesh University of Engineering and Technology (BUET)", "Rajshahi University of Engineering and Technology (RUET)",
+    "Chittagong University of Engineering and Technology (CUET)", "Khulna University of Engineering and Technology (KUET)",
+    "Islamic University, Bangladesh", "National University, Bangladesh", "Bangladesh Open University",
+    "Bangabandhu Sheikh Mujibur Rahman Science and Technology University", "Jashore University of Science and Technology (JUST)",
+    "Pabna University of Science and Technology (PUST)", "Begum Rokeya University, Rangpur", "Comilla University",
+    "Jagan Nath University, Dhaka", "Noakhali Science and Technology University (NSTU)",
+    "Hajee Mohammad Danesh Science and Technology University (HSTU)", "Mawlana Bhashani Science and Technology University (MBSTU)",
+    "Patuakhali Science and Technology University (PSTU)", "Rangamati Science and Technology University (RMSTU)",
+    "Bangabandhu Sheikh Mujibur Rahman Maritime University", "Bangladesh University of Professionals (BUP)",
+    "National Defence University (NDU)", "Bangladesh Agricultural University (BAU)", "Sher-e-Bangla Agricultural University (SAU)",
+    "Bangabandhu Sheikh Mujibur Rahman Agricultural University (BSMRAU)", "Sylhet Agricultural University",
+    "Chittagong Veterinary and Animal Sciences University (CVASU)", "Khulna Agricultural University (KAU)",
+    "Bangabandhu Sheikh Mujib Medical University (BSMMU)", "Bangladesh University of Textiles (BUTex)",
+    "Military Institute of Science and Technology (MIST)", "Bangladesh Army International University of Science and Technology (BAIUST)",
+    "Bangladesh Army University of Engineering and Technology (BAUET)", "Exim Bank Agricultural University Bangladesh",
+    "North South University (NSU)", "BRAC University", "Independent University, Bangladesh (IUB)",
+    "American International University-Bangladesh (AIUB)", "East West University (EWU)", "United International University (UIU)",
+    "Daffodil International University (DIU)", "Ahsanullah University of Science and Technology (AUST)",
+    "University of Liberal Arts Bangladesh (ULAB)", "United University", "Eastern University", "Stamford University Bangladesh",
+    "State University of Bangladesh", "Northern University Bangladesh", "Presidency University", "University of Asia Pacific (UAP)",
+    "Victoria University of Bangladesh", "World University of Bangladesh", "Green University of Bangladesh",
+    "University of South Asia", "Manarat International University", "IUBAT International University of Business Agriculture and Technology",
+    "Primeasia University", "Southeast University", "Central Women's University", "University of Development Alternative (UODA)",
+    "Darul Ihsan University", "Bangladesh University of Business and Technology (BUBT)", "Royal University of Dhaka",
+    "Gono University", "Atish Dipankar University of Science and Technology", "City University, Bangladesh",
+    "Uttara University", "Fareast International University", "University of Global Village (UGV)", "Asian University for Women (AUW)",
+    "International Islamic University Chittagong (IIUC)", "Premier University, Chattogram", "East Delta University",
+    "Southern University Bangladesh", "BGC Trust University Bangladesh", "University of Science and Technology Chittagong (USTC)",
+    "Leading University, Sylhet", "Metropolitan University, Sylhet", "Sylhet International University",
+    "North East University Bangladesh (NEUB)",
+    "Harvard University", "University of Oxford", "University of Cambridge", "Stanford University",
+    "Massachusetts Institute of Technology (MIT)", "University of Toronto", "Monash University", "University of Melbourne"
+  ];
+
+  const sugBox = document.getElementById("instSuggestions");
+  let sugActive = -1;
+
+  function renderSuggestions(q) {
+    sugActive = -1;
+    if (!q) { sugBox.style.display = "none"; sugBox.innerHTML = ""; return; }
+    const ql = q.toLowerCase();
+    const list = UNIVERSITIES.filter(u => u.toLowerCase().includes(ql)).slice(0, 8);
+    if (!list.length) { sugBox.style.display = "none"; sugBox.innerHTML = ""; return; }
+    sugBox.innerHTML = list.map(u => '<div class="sug-item" data-val="' + esc(u) + '">' + esc(u) + "</div>").join("");
+    sugBox.style.display = "block";
+  }
+
+  institutionEl.addEventListener("input", () => renderSuggestions(institutionEl.value.trim()));
+  institutionEl.addEventListener("blur", () => setTimeout(() => { sugBox.style.display = "none"; }, 150));
+  institutionEl.addEventListener("keydown", (e) => {
+    const items = sugBox.querySelectorAll(".sug-item");
+    if (e.key === "Escape") { sugBox.style.display = "none"; return; }
+    if (!items.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); sugActive = Math.min(sugActive + 1, items.length - 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); sugActive = Math.max(sugActive - 1, 0); }
+    else if (e.key === "Enter" && sugActive >= 0) {
+      e.preventDefault();
+      institutionEl.value = items[sugActive].dataset.val;
+      sugBox.style.display = "none";
+      return;
+    } else { return; }
+    items.forEach((it, i) => it.classList.toggle("active", i === sugActive));
+  });
+  sugBox.addEventListener("mousedown", (e) => {
+    const item = e.target.closest(".sug-item");
+    if (item) {
+      institutionEl.value = item.dataset.val;
+      sugBox.style.display = "none";
+      institutionEl.focus();
+    }
+  });
+
+  /* ---------------- Submit flow ----------------
+     Each step shows its own status, failures show the real reason in a red box,
+     and an email failure never blocks the submission. It will never hang on "Submitting..." silently. */
+  let submitting = false;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const file = document.getElementById("fileInput").files[0];
-    if (!file) { statusMsg.textContent = "Please! Select a PDF File"; return; }
+    if (submitting) return;
 
-    statusMsg.textContent = "Submitting, please wait a moment...";
+    const vErr = validateForm();
+    if (vErr) {
+      setStatus("error", '<i class="fas fa-exclamation-circle"></i> ' + vErr);
+      return;
+    }
+
+    submitting = true;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("https://journal-upload.ssbcpoint.workers.dev", { method: "POST", body: formData });
-      const { fileUrl } = await res.json();
+      /* Step 1: upload PDF */
+      setStatus("loading", '<i class="fas fa-spinner fa-spin"></i> <b>Step 1 of 4:</b> Uploading your PDF... <br><small>This can take 1-2 minutes depending on file size and connection — please do not close this page</small>');
+      console.log("[ARC submit] Step 1: PDF upload started");
+      const pdfUrl = await uploadToWorker(pdfInput.files[0], "PDF");
+      console.log("[ARC submit] PDF upload done:", pdfUrl);
 
-		      // ---- কভার ইমেজ আপলোড (ঐচ্ছিক) ----
-      let imageUrl = "";
-      const imgFile = document.getElementById("coverImage")?.files[0];
+      /* Step 2: upload cover image (if provided) */
+      let imageUrl = null;
+      const imgFile = imageInput.files[0];
       if (imgFile) {
-        if (imgFile.size > 2 * 1024 * 1024) {
-          statusMsg.textContent = "Please! Select a cover image under 2MB.";
-          return;
-        }
-        const safeName = Date.now() + "_" + imgFile.name.replace(/[^\w.-]/g, "-");
-        const imgRef = ref(storage, "covers/" + safeName);
-        await uploadBytes(imgRef, imgFile);
-        imageUrl = await getDownloadURL(imgRef);
+        setStatus("loading", '<i class="fas fa-spinner fa-spin"></i> <b>Step 2 of 4:</b> Uploading cover image (' + esc(fmtSize(imgFile.size)) + ')...');
+        console.log("[ARC submit] Step 2: image upload started");
+        imageUrl = await uploadToWorker(imgFile, "Cover image");
+        console.log("[ARC submit] Image upload done:", imageUrl);
+      } else {
+        console.log("[ARC submit] Step 2: no cover image provided — skipped");
       }
 
-      await addDoc(collection(db, "submissions"), {
-        fullName: document.getElementById("fullName").value,
-        email: document.getElementById("email").value,
-		uid: (auth.currentUser ? auth.currentUser.uid : null),
-        institution: document.getElementById("institution").value,
-        title: document.getElementById("title").value,
-        submissionType: document.getElementById("submissionType").value,
-        category: document.getElementById("category").value,
-		approved: false,
-        abstract: document.getElementById("abstract").value,
-        fileUrl,
-		imageUrl: imageUrl || null,
-        submittedAt: new Date().toISOString(),
+      /* Step 3: save to Firestore */
+      setStatus("loading", '<i class="fas fa-spinner fa-spin"></i> <b>Step 3 of 4:</b> Saving your submission to the database...');
+      console.log("[ARC submit] Step 3: Firestore save started");
+      const docRef = await addDoc(collection(db, "submissions"), {
+        title: titleEl.value.trim(),
+        fullName: fullNameEl.value.trim(),
+        email: emailEl.value.trim(),
+        institution: institutionEl.value.trim() || null,
+        category: categoryEl.value,
+        abstract: abstractEl.value.trim(),
+        fileUrl: pdfUrl,
+        imageUrl: imageUrl || null,
+        approved: false,
+        submittedAt: Date.now(),
+        uid: (auth.currentUser ? auth.currentUser.uid : null)
       });
+      console.log("[ARC submit] Firestore save done, id:", docRef.id);
 
-	        // ---- কনফার্মেশন ইমেইল (EmailJS) ----
-      emailjs.send("service_2d8znb7", "template_2l9t2j8", {
-        to_email: document.getElementById("email").value,
-        to_name: document.getElementById("fullName").value,
-        title: document.getElementById("title").value,
-        category: document.getElementById("category").value,
-        submission_type: document.getElementById("submissionType").value
-      }, "ttN27BmvjDkBRaCDP").catch(function (e2) { console.warn("Email failed:", e2); });
-		
-      statusMsg.textContent = "Submission successful! Awaiting admin approval. Thank you....";
+      /* Step 4: confirmation email (failure does NOT block the submission) */
+      let emailNote = "";
+      const viewLink = new URL("submission-view.html?sub=" + docRef.id, location.href).href;
+      if (emailjsReady) {
+        try {
+          setStatus("loading", '<i class="fas fa-spinner fa-spin"></i> <b>Step 4 of 4:</b> Sending confirmation email...');
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            to_email: emailEl.value.trim(),
+            email: emailEl.value.trim(),
+            recipient: emailEl.value.trim(),
+            full_name: fullNameEl.value.trim(),
+            fullName: fullNameEl.value.trim(),
+            name: fullNameEl.value.trim(),
+            user_name: fullNameEl.value.trim(),
+            title: titleEl.value.trim(),
+            article_title: titleEl.value.trim(),
+            subject: titleEl.value.trim(),
+            category: categoryEl.value,
+            institution: institutionEl.value.trim(),
+            submission_id: docRef.id,
+            view_link: viewLink,
+            link: viewLink,
+            message: "Dear " + fullNameEl.value.trim() + ", your submission '" + titleEl.value.trim() + "' has been received successfully. It will be published on ARC Journals after editorial approval."
+          });
+          emailNote = "A confirmation email has been sent to you.";
+          console.log("[ARC submit] Confirmation email sent");
+        } catch (emailErr) {
+          console.error("[ARC submit] Email failed:", emailErr);
+          emailNote = "Note: the confirmation email could not be sent, but your submission was received successfully.";
+        }
+      } else {
+        emailNote = "Note: the email service is currently unavailable, but your submission was received successfully.";
+      }
+
+      /* Success */
+      setStatus("success",
+        '<i class="fas fa-check-circle"></i> <b>Submission successful!</b><br>' +
+        'Your submission ID is: <code>' + docRef.id + '</code><br>' +
+        emailNote + '<br>' +
+        '<a href="submission-view.html?sub=' + docRef.id + '"><i class="fas fa-external-link-alt"></i> View your submission</a><br>' +
+        '<small>It will appear on the category page once approved by the editor.</small>');
+
       form.reset();
+      clearImage();
+      window.scrollTo({ top: form.offsetTop - 100, behavior: "smooth" });
+
     } catch (err) {
-      statusMsg.textContent = "Something went wrong. Please try again...";
-      console.error(err);
+      /* Failure — show the real reason in a red box */
+      console.error("[ARC submit] Failed:", err);
+      let msg = err && err.message ? err.message : String(err);
+      if (/permission|PERMISSION|unauthorized|Unauthenticated/i.test(msg)) {
+        msg = "The database refused to save the data (Firestore Security Rules issue). Please contact the administrator. Details: " + msg;
+      }
+      setStatus("error",
+        '<i class="fas fa-times-circle"></i> <b>Submission failed:</b><br>' + esc(msg) +
+        '<br><small>Please copy or screenshot this red message and report it so we can fix it quickly. The button is active again — you can retry.</small>');
+    } finally {
+      submitting = false;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHtml;
     }
   });
 </script>
-	<script src="menu.js"></script>
-	<script src="script.js"></script>
-	<script src="site-submissions.js"></script>
-	<script src="footer.js"></script>
 </body>
 </html>
