@@ -1,5 +1,5 @@
 /* =====================================================================
-   ARC Journals — site-submissions.js  (v6 — page-walk takeover)
+   ARC Journals — site-submissions.js  (v7 — page-walk takeover + bar preservation)
    ===================================================================== */
 
 (function () {
@@ -8,7 +8,7 @@
   if (window.__ARC_SUBMISSIONS_LOADED) return; /* double-load guard */
   window.__ARC_SUBMISSIONS_LOADED = true;
 
-  var VERSION = "v6";
+  var VERSION = "v7";
 
   /* URL slug → exact category name used by the submit form */
   var CAT_NAMES = {
@@ -147,9 +147,12 @@
       ".arc-note{margin-top:.8rem;font-size:.82rem;color:#8a92a1;line-height:1.6;}",
       ".arc-note a{color:#1f3d7a;font-weight:600;}",
       ".arc-walking{opacity:.4 !important;pointer-events:none;transition:opacity .2s;}",
-      ".arc-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;margin:0 3px;border:1px solid #d5dbe6;border-radius:50%;background:#fff;color:#3a4763;font:600 .88rem 'Inter',sans-serif;text-decoration:none;cursor:pointer;transition:all .15s;}",
+      ".arc-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 14px;margin:0 4px;border:1px solid #d5dbe6;border-radius:999px;background:#fff;color:#3a4763;font:600 .88rem 'Inter',sans-serif;text-decoration:none;cursor:pointer;transition:all .15s;}",
       ".arc-page-btn:hover{border-color:#1f3d7a;color:#1f3d7a;}",
       ".arc-page-btn.arc-active{background:#1f3d7a;border-color:#1f3d7a;color:#fff;}",
+      ".arc-page-btn.arc-disabled{opacity:.45;pointer-events:none;cursor:default;}",
+      ".arc-page-btn.arc-dots{border-color:transparent;background:transparent;pointer-events:none;min-width:26px;color:#8a92a1;}",
+      "#pagination .arc-active{background:#1f3d7a !important;border-color:#1f3d7a !important;color:#fff !important;}",
       "@media (max-width:640px){.us-grid{grid-template-columns:1fr;}}"
     ].join("");
     document.head.appendChild(style);
@@ -279,6 +282,327 @@
   }
 
   /* =====================================================================
+     v7 — pagination preservation helpers
+     The site's own bar (‹ Previous · pills · Next ›) is never rebuilt:
+     we restore its exact HTML, re-wire clicks, clone REAL buttons when
+     extra pages are needed, and mirror the site's own active/disabled
+     styling. Structure-agnostic: flat bars, <ul><li> bars, buttons or
+     anchors, any class names — all preserved.
+     ===================================================================== */
+  var barProtoHTML = "";
+  function captureBarProto() {
+    var p = getPag();
+    if (p && p.innerHTML && String(p.innerHTML).trim() && !barProtoHTML) {
+      barProtoHTML = p.innerHTML;
+      dbg("bar: page-1 snapshot captured (" + p.querySelectorAll("a,button").length + " button node(s))");
+    }
+  }
+
+  function normText(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
+  function isNumericText(s) { return /^\d{1,3}$/.test(normText(s)); }
+
+  function depthIn(root, el) {
+    var d = 0, p = el.parentNode;
+    while (p && p !== root) { d++; p = p.parentNode; }
+    return d;
+  }
+
+  function deepestNumericEl(root) {
+    if (!root) return null;
+    var best = null, bestD = -1;
+    var els = root.querySelectorAll("*");
+    for (var i = 0; i < els.length; i++) {
+      if (!isNumericText(els[i].textContent)) continue;
+      var d = depthIn(root, els[i]);
+      if (d > bestD) { best = els[i]; bestD = d; }
+    }
+    if (best) return best;
+    return isNumericText(root.textContent) ? root : null;
+  }
+
+  function setUnitLabel(unit, label) {
+    var best = null, bestD = -1;
+    var tw = document.createTreeWalker(unit, NodeFilter.SHOW_TEXT, null, false);
+    var n;
+    while ((n = tw.nextNode())) {
+      if (isNumericText(n.textContent)) {
+        var d = 0, p = n.parentElement;
+        while (p && p !== unit) { d++; p = p.parentElement; }
+        if (d > bestD) { best = n; bestD = d; }
+      }
+    }
+    if (best) best.textContent = String(label);
+    else unit.textContent = String(label);
+  }
+
+  function findActiveMech(root, numUnits) {
+    var pool = [];
+    var all = root.querySelectorAll("*");
+    var i, z;
+    for (i = 0; i < all.length; i++) {
+      var e = all[i];
+      var inUnit = false;
+      for (z = 0; z < numUnits.length; z++) {
+        if (numUnits[z] === e || (numUnits[z].contains && numUnits[z].contains(e))) { inUnit = true; break; }
+      }
+      if (e.classList) {
+        for (var c = 0; c < e.classList.length; c++) {
+          var cn = e.classList[c];
+          if (cn === "pagination" || cn === "arc-active") continue;
+          if (/(^|[-_: ])(is-)?(active|current|selected)([-_: ]|$)/i.test(cn)) pool.push({ type: "class", name: cn, el: e, inUnit: inUnit });
+        }
+      }
+      if (e.getAttribute && e.getAttribute("aria-current")) pool.push({ type: "aria", name: "aria-current", el: e, inUnit: inUnit });
+    }
+    var use = [];
+    for (i = 0; i < pool.length; i++) if (pool[i].inUnit) use.push(pool[i]);
+    if (!use.length) for (i = 0; i < pool.length; i++) if (pool[i].type !== "aria") use.push(pool[i]);
+    if (!use.length) use = pool;
+    if (!use.length) return { type: "arc", name: "arc-active", el: null };
+    var best = use[0];
+    for (var k = 1; k < use.length; k++) if (depthIn(root, use[k].el) > depthIn(root, best.el)) best = use[k];
+    return best;
+  }
+
+  function analyzePagination(root) {
+    if (!root) return null;
+    var leaves = [];
+    var els = root.querySelectorAll("*");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (!isNumericText(el.textContent)) continue;
+      var hasInner = false;
+      var sub = el.querySelectorAll("*");
+      for (var j = 0; j < sub.length; j++) {
+        if (isNumericText(sub[j].textContent)) { hasInner = true; break; }
+      }
+      if (!hasInner) leaves.push(el);
+    }
+    /* prefer interactive leaves (real buttons) over text counters like "Page 1 of 3" */
+    var inter = [];
+    for (var v = 0; v < leaves.length; v++) if (/^(A|BUTTON)$/.test(leaves[v].tagName)) inter.push(leaves[v]);
+    if (inter.length) leaves = inter;
+    if (!leaves.length) return null;
+
+    var listContainer = leaves[0].parentNode;
+    while (listContainer && listContainer !== root && listContainer !== document.body) {
+      var ok = true;
+      for (var k = 0; k < leaves.length; k++) if (!listContainer.contains(leaves[k])) { ok = false; break; }
+      if (ok) break;
+      listContainer = listContainer.parentNode;
+    }
+    if (!listContainer) listContainer = root;
+
+    /* degenerate case: with a SINGLE number leaf the common ancestor is
+       its own wrapper (e.g. the <li> itself), which turns the whole <ul>
+       into the prev/next "unit". Climb up while the container has exactly
+       one element child and its parent still holds every leaf. */
+    function containsAllLeaves(el) {
+      for (var q3 = 0; q3 < leaves.length; q3++) if (!el.contains(leaves[q3])) return false;
+      return true;
+    }
+    while (listContainer.parentNode && listContainer.parentNode !== root.parentNode &&
+           listContainer.children && listContainer.children.length === 1 &&
+           containsAllLeaves(listContainer.parentNode)) {
+      listContainer = listContainer.parentNode;
+    }
+
+    function unitOf(x) {
+      var u = x;
+      while (u && u.parentNode && u.parentNode !== listContainer && u.parentNode !== root) u = u.parentNode;
+      return u || x;
+    }
+
+    var raw = [];
+    for (var m = 0; m < leaves.length; m++) if (raw.indexOf(unitOf(leaves[m])) === -1) raw.push(unitOf(leaves[m]));
+    /* drop units that hold more than one number (e.g. "Page 1 of 3" counters) */
+    var numUnits = [];
+    for (var g = 0; g < raw.length; g++) {
+      var cnt = 0;
+      for (var L = 0; L < leaves.length; L++) if (raw[g] === leaves[L] || raw[g].contains(leaves[L])) cnt++;
+      if (cnt <= 1) numUnits.push(raw[g]);
+    }
+    if (!numUnits.length) return null;
+
+    function dirUnits(re, exclude) {
+      var found = [], out = [];
+      var e2 = root.querySelectorAll("a,button,span,li,div,p");
+      for (var i2 = 0; i2 < e2.length; i2++) {
+        var t = normText(e2[i2].textContent);
+        if (!t || t.length > 24 || isNumericText(t) || !re.test(t)) continue;
+        var hasNum = false;
+        var s2 = e2[i2].querySelectorAll("*");
+        for (var j2 = 0; j2 < s2.length; j2++) if (isNumericText(s2[j2].textContent)) { hasNum = true; break; }
+        if (!hasNum) found.push(e2[i2]);
+      }
+      for (var f = 0; f < found.length; f++) {
+        var u2 = unitOf(found[f]);
+        if (out.indexOf(u2) === -1 && numUnits.indexOf(u2) === -1 && exclude.indexOf(u2) === -1) out.push(u2);
+      }
+      return out;
+    }
+    var prevUnits = dirUnits(/prev|‹|«/i, []);
+    var nextUnits = dirUnits(/next|›|»/i, prevUnits);
+
+    return {
+      numUnits: numUnits,
+      prevUnits: prevUnits,
+      nextUnits: nextUnits,
+      activeMech: findActiveMech(root, numUnits)
+    };
+  }
+
+  function cleanUnit(unit, mech) {
+    if (!unit) return;
+    unit.removeAttribute("id");
+    unit.style.display = "";
+    unit.style.opacity = "";
+    unit.style.pointerEvents = "";
+    if (unit.classList) {
+      unit.classList.remove("arc-active");
+      if (mech && mech.type === "class") unit.classList.remove(mech.name);
+    }
+    var all = unit.querySelectorAll("*");
+    for (var i = 0; i < all.length; i++) {
+      all[i].removeAttribute("id");
+      if (all[i].classList) {
+        all[i].classList.remove("arc-active");
+        if (mech && mech.type === "class") all[i].classList.remove(mech.name);
+      }
+      if (all[i].getAttribute && all[i].getAttribute("aria-current")) all[i].removeAttribute("aria-current");
+    }
+  }
+
+  function applyActive(pag, unit, mech) {
+    if (!pag) return;
+    var name = mech && mech.type === "class" ? mech.name : "arc-active";
+    var all = pag.querySelectorAll("*");
+    for (var i = 0; i < all.length; i++) all[i].classList.remove(name);
+    if (mech && mech.type === "aria") {
+      for (var j = 0; j < all.length; j++) {
+        if (all[j].getAttribute && all[j].getAttribute("aria-current")) all[j].removeAttribute("aria-current");
+      }
+    }
+    if (!unit) return;
+    var target = null;
+    if (mech && mech.el && mech.el.tagName) {
+      var tag = mech.el.tagName;
+      if (unit.tagName === tag) target = unit;
+      else { var q = unit.querySelectorAll(tag); target = q.length ? q[0] : null; }
+    }
+    if (!target) target = deepestNumericEl(unit) || unit;
+    if (mech && mech.type === "aria") target.setAttribute("aria-current", "page");
+    else target.classList.add(name);
+  }
+
+  function detectDisabledIn(unit) {
+    if (!unit) return null;
+    var els = [unit];
+    try { els = els.concat(Array.prototype.slice.call(unit.querySelectorAll("*"))); } catch (e) {}
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i];
+      if (!e.getAttribute) continue;
+      if (e.hasAttribute("disabled")) return { type: "attr", tag: e.tagName };
+      var cls = e.getAttribute("class") || "";
+      var mm = cls.match(/(?:^|\s)(disabled|is-disabled|inactive|deactivated)(?:\s|$)/i);
+      if (mm) return { type: "class", name: mm[1], tag: e.tagName };
+      if (e.getAttribute("aria-disabled") === "true") return { type: "aria", tag: e.tagName };
+      if (e.style && (e.style.display === "none" || e.style.visibility === "hidden")) return { type: "hide", tag: e.tagName };
+    }
+    try {
+      if (unit.ownerDocument && unit.ownerDocument.contains(unit)) {
+        var probe = [unit];
+        var inner = unit.querySelector("a,button");
+        if (inner) probe.push(inner);
+        for (var p2 = 0; p2 < probe.length; p2++) {
+          var cs = window.getComputedStyle(probe[p2]);
+          if (cs.pointerEvents === "none" || parseFloat(cs.opacity || "1") < 0.65) return { type: "inline", tag: probe[p2].tagName };
+        }
+      }
+    } catch (e2) {}
+    return null;
+  }
+
+  function applyDisabled(unit, mech, on) {
+    if (!unit) return;
+    var el = null;
+    if (mech && mech.tag) {
+      if (unit.tagName === mech.tag) el = unit;
+      else { var q = unit.querySelectorAll(mech.tag); el = q.length ? q[0] : null; }
+    }
+    if (!el) el = (unit.querySelector && unit.querySelector("a,button")) || unit;
+    if (!mech) { el.style.opacity = on ? ".45" : ""; el.style.pointerEvents = on ? "none" : ""; return; }
+    if (mech.type === "attr") { if (on) el.setAttribute("disabled", ""); else el.removeAttribute("disabled"); }
+    else if (mech.type === "class") { if (on) el.classList.add(mech.name); else el.classList.remove(mech.name); }
+    else if (mech.type === "aria") { el.setAttribute("aria-disabled", on ? "true" : "false"); }
+    else if (mech.type === "hide") { el.style.display = on ? "none" : ""; }
+    else { el.style.opacity = on ? ".45" : ""; el.style.pointerEvents = on ? "none" : ""; }
+  }
+
+  function updatePageHint(pag, cur, total) {
+    try {
+      var tw = document.createTreeWalker(pag, NodeFilter.SHOW_TEXT, null, false);
+      var n;
+      while ((n = tw.nextNode())) {
+        if (/page\s+\d+(\s+of\s+\d+)?/i.test(n.textContent || "")) {
+          n.textContent = n.textContent.replace(/page\s+\d+(\s+of\s+\d+)?/i, "Page " + cur + " of " + total);
+        }
+      }
+    } catch (e) {}
+  }
+
+  /* fallback bar (only when the site itself shows no pagination at all):
+     same visual language as the site — ‹ Previous · pills · Next › */
+  function arcBarEngine(pag, pages, goTo) {
+    ensureStyles();
+    function paint(cur) {
+      pag.innerHTML = "";
+      var pv = document.createElement("a");
+      pv.className = "arc-page-btn" + (cur <= 1 ? " arc-disabled" : "");
+      pv.textContent = "‹ Previous";
+      pv.setAttribute("data-arc-page", "prev");
+      if (cur > 1) {
+        pv.setAttribute("href", "#page-" + (cur - 1));
+        pv.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); goTo(cur - 1); });
+      }
+      pag.appendChild(pv);
+      function num(n) {
+        var a = document.createElement("a");
+        a.className = "arc-page-btn" + (n === cur ? " arc-active" : "");
+        a.textContent = String(n);
+        a.setAttribute("data-arc-page", String(n));
+        a.setAttribute("href", "#page-" + n);
+        a.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); goTo(n); });
+        pag.appendChild(a);
+      }
+      function dots() {
+        var s = document.createElement("span");
+        s.className = "arc-page-btn arc-dots";
+        s.textContent = "…";
+        pag.appendChild(s);
+      }
+      if (pages <= 10) { for (var p = 1; p <= pages; p++) num(p); }
+      else {
+        num(1);
+        if (cur > 4) dots();
+        for (var m = Math.max(2, cur - 2); m <= Math.min(pages - 1, cur + 2); m++) num(m);
+        if (cur < pages - 3) dots();
+        num(pages);
+      }
+      var nx = document.createElement("a");
+      nx.className = "arc-page-btn" + (cur >= pages ? " arc-disabled" : "");
+      nx.textContent = "Next ›";
+      nx.setAttribute("data-arc-page", "next");
+      if (cur < pages) {
+        nx.setAttribute("href", "#page-" + (cur + 1));
+        nx.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); goTo(cur + 1); });
+      }
+      pag.appendChild(nx);
+    }
+    return { paint: paint };
+  }
+
+  /* =====================================================================
      THE WALK — snapshot every static page using the site's own
      navigation (synthetic hashchange → real hash → button click).
      No guessing about script.js internals: we simply watch whether the
@@ -324,12 +648,14 @@
     /* snapshot the initially-rendered page first (no navigation needed) */
     var startPage = Math.min(Math.max(initialPage || 1, 1), target);
     snapshots[startPage] = container.innerHTML;
+    if (startPage === 1) captureBarProto();
     dbg("walk: page " + startPage + " snapshotted (initial render, " + container.children.length + " cards)");
 
     var savedScrollY = window.pageYOffset || 0;
     container.classList.add("arc-walking");
     try {
       for (var p = 1; p <= target; p++) {
+        if (p === 1) captureBarProto(); /* page-1 state of the bar = our prototype */
         if (snapshots[p]) continue;
         var ok = false;
         /* locked method first; if it fails for THIS page (e.g. the button is
@@ -399,7 +725,7 @@
         var par = n.parentElement;
         if (!par || !n.textContent.trim()) return NodeFilter.FILTER_REJECT;
         if (par.closest("a") || par.closest("h1,h2,h3,h4,h5,h6")) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER.ACCEPT;
+        return NodeFilter.FILTER_ACCEPT;
       }
     });
     var texts = [];
@@ -459,22 +785,31 @@
     var nrm = document.getElementById("noResultsMsg");
     if (nrm) nrm.style.display = "none";
 
-    /* capture the bar's button design + active class BEFORE rebuilding */
-    var activeClass = detectActiveClass(pag);
-    var btnTemplate = null;
-    if (pag) {
-      var els = pag.querySelectorAll("a,button,span,li");
-      for (var b = 0; b < els.length; b++) {
-        var t = (els[b].textContent || "").trim();
-        if (/^\d{1,3}$/.test(t)) {
-          btnTemplate = els[b].cloneNode(true);
-          btnTemplate.removeAttribute("id");
-          btnTemplate.removeAttribute("data-arc-page");
-          btnTemplate.classList.remove(activeClass);
-          break;
-        }
-      }
-    }
+    /* =================================================================
+       v7 — PRESERVE the site's own pagination bar (‹ Previous · pills ·
+       Next ›). We never rebuild it from scratch: we restore the exact
+       HTML the site rendered, re-wire the clicks to OUR merged pages,
+       clone REAL page buttons when extra pages are needed, mirror the
+       site's own active/disabled styling and keep ‹ Previous / Next ›
+       fully working. This is why the bar now looks identical to the
+       pages that have no submissions.
+       ================================================================= */
+    var protoHTML = barProtoHTML || (pag ? pag.innerHTML : "") || "";
+    var protoRoot = document.createElement("div");
+    protoRoot.innerHTML = protoHTML;
+    var protoAnalysis = analyzePagination(protoRoot);
+    var activeMech = (protoAnalysis && protoAnalysis.activeMech)
+      ? protoAnalysis.activeMech
+      : { type: "arc", name: "arc-active", el: null };
+    var prevMech = (protoAnalysis && protoAnalysis.prevUnits.length)
+      ? detectDisabledIn(protoAnalysis.prevUnits[0]) : null;
+    var nextMech = null;
+    var liveA = analyzePagination(pag);
+    if (liveA && liveA.nextUnits.length) nextMech = detectDisabledIn(liveA.nextUnits[0]);
+    if (!nextMech && protoAnalysis && protoAnalysis.nextUnits.length) nextMech = detectDisabledIn(protoAnalysis.nextUnits[0]);
+    dbg("bar: " + (protoAnalysis
+      ? protoAnalysis.numUnits.length + " page button(s) · prev:" + protoAnalysis.prevUnits.length + " · next:" + protoAnalysis.nextUnits.length + " · active=" + activeMech.type + (activeMech.name ? "/" + activeMech.name : "")
+      : "no site bar found — arc design will be used"));
 
     if (!pag) {
       pag = document.createElement("div");
@@ -483,66 +818,123 @@
       container.parentNode.insertBefore(pag, container.nextSibling);
     }
 
-    var current = 1;
+    var current = Math.min(Math.max(initialPage || 1, 1), pages);
     var pagSuppress = false;
 
-    function mkBtn(label, page, isCurrent, disabled) {
-      var el;
-      if (btnTemplate) {
-        el = btnTemplate.cloneNode(true);
-        el.removeAttribute("id");
-      } else {
-        el = document.createElement("a");
-        el.className = "arc-page-btn";
-      }
-      el.setAttribute("data-arc-page", String(page || "e"));
-      el.textContent = label;
-      el.classList.remove(activeClass);
-      if (disabled) {
-        el.style.opacity = ".45";
-        el.style.pointerEvents = "none";
-      } else {
-        el.style.cursor = "pointer";
-        el.style.opacity = "";
-        el.style.pointerEvents = "";
-        if (el.tagName === "A") el.setAttribute("href", "#page-" + page);
-        (function (pg) {
-          el.addEventListener("click", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            go(pg, true);
-          });
-        })(page);
-      }
-      if (isCurrent) el.classList.add(activeClass);
-      pag.appendChild(el);
+    function wireNum(unit, n) {
+      unit.setAttribute("data-arc-page", String(n));
+      unit.style.cursor = "pointer";
+      var aEl = unit.matches("a") ? unit : unit.querySelector("a");
+      if (aEl) aEl.setAttribute("href", "#page-" + n);
+      unit.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        goTo(n, true);
+      });
     }
 
-    function buildBar(cur) {
-      pag.innerHTML = "";
+    function wireDots(unit) {
+      unit.style.cursor = "default";
+      unit.style.opacity = ".45";
+      unit.style.pointerEvents = "none";
+      var aEl = unit.matches("a") ? unit : unit.querySelector("a");
+      if (aEl) aEl.removeAttribute("href");
+    }
+
+    function wireDir(unit, dir, cur) {
+      var t = dir < 0 ? cur - 1 : cur + 1;
+      var on = t >= 1 && t <= pages;
+      unit.setAttribute("data-arc-page", dir < 0 ? "prev" : "next");
+      var aEl = unit.matches("a") ? unit : unit.querySelector("a");
+      if (aEl) { if (on) aEl.setAttribute("href", "#page-" + t); else aEl.removeAttribute("href"); }
+      applyDisabled(unit, dir < 0 ? prevMech : nextMech, !on);
+      unit.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (on) goTo(t, true);
+      });
+    }
+
+    function buildSiteBar(cur) {
+      pag.innerHTML = protoHTML;                       /* the site's exact design */
+      var a = analyzePagination(pag);
+      if (!a || !a.numUnits.length) { arcEngine.paint(cur); return; }
+      var labels = [];
+      for (var li = 0; li < a.numUnits.length; li++) {
+        labels.push(parseInt(normText((deepestNumericEl(a.numUnits[li]) || a.numUnits[li]).textContent), 10) || 0);
+      }
+      var lastUnit = a.numUnits[a.numUnits.length - 1];
+      var maxLabel = Math.max.apply(null, labels);
+      var allUnits = a.numUnits.slice();
+
       if (pages <= 10) {
-        for (var p = 1; p <= pages; p++) mkBtn(String(p), p, p === cur, false);
+        for (var h = 0; h < a.numUnits.length; h++) {
+          if (!labels[h]) continue;
+          if (labels[h] > pages) a.numUnits[h].style.display = "none"; /* merged list needs fewer pages */
+          else wireNum(a.numUnits[h], labels[h]);
+        }
+        if (pages > maxLabel) {
+          /* extra merged pages: clone the site's OWN last button */
+          var parent = lastUnit.parentNode, ref = lastUnit.nextSibling;
+          for (var p = maxLabel + 1; p <= pages; p++) {
+            var c = lastUnit.cloneNode(true);
+            cleanUnit(c, activeMech);
+            setUnitLabel(c, p);
+            parent.insertBefore(c, ref);
+            wireNum(c, p);
+            allUnits.push(c);
+          }
+        }
       } else {
-        mkBtn("1", 1, cur === 1, false);
-        if (cur > 4) mkBtn("…", 0, false, true);
-        for (var m = Math.max(2, cur - 2); m <= Math.min(pages - 1, cur + 2); m++) mkBtn(String(m), m, m === cur, false);
-        if (cur < pages - 3) mkBtn("…", 0, false, true);
-        mkBtn(String(pages), pages, cur === pages, false);
+        /* many pages: windowed set [1 … cur-2..cur+2 … last], still from
+           the site's own button design */
+        var parent2 = lastUnit.parentNode, ref2 = lastUnit.nextSibling;
+        for (var r = 0; r < a.numUnits.length; r++) a.numUnits[r].remove();
+        var seq = [1];
+        if (cur > 4) seq.push(0);
+        for (var m = Math.max(2, cur - 2); m <= Math.min(pages - 1, cur + 2); m++) seq.push(m);
+        if (cur < pages - 3) seq.push(0);
+        seq.push(pages);
+        for (var s = 0; s < seq.length; s++) {
+          var c2 = lastUnit.cloneNode(true);
+          cleanUnit(c2, activeMech);
+          setUnitLabel(c2, seq[s] || "…");
+          parent2.insertBefore(c2, ref2);
+          if (seq[s]) { wireNum(c2, seq[s]); allUnits.push(c2); }
+          else wireDots(c2);
+        }
       }
-    }
-    function safeBuildBar(cur) {
-      pagSuppress = true;
-      try { buildBar(cur); } finally { setTimeout(function () { pagSuppress = false; }, 60); }
+
+      for (var pv = 0; pv < a.prevUnits.length; pv++) wireDir(a.prevUnits[pv], -1, cur);
+      for (var nx = 0; nx < a.nextUnits.length; nx++) wireDir(a.nextUnits[nx], 1, cur);
+
+      var curUnit = null;
+      for (var q = 0; q < allUnits.length; q++) {
+        if (parseInt(allUnits[q].getAttribute("data-arc-page"), 10) === cur) { curUnit = allUnits[q]; break; }
+      }
+      applyActive(pag, curUnit, activeMech);
+      updatePageHint(pag, cur, pages);
     }
 
-    function go(p, userAction) {
+    var arcEngine = arcBarEngine(pag, pages, function (p) { goTo(p, true); });
+
+    function paintBar(cur) {
+      if (protoAnalysis && protoAnalysis.numUnits.length) buildSiteBar(cur);
+      else arcEngine.paint(cur);
+    }
+    function safePaint(cur) {
+      pagSuppress = true;
+      try { paintBar(cur); } finally { setTimeout(function () { pagSuppress = false; }, 60); }
+    }
+
+    function goTo(p, userAction) {
       p = Math.min(Math.max(1, p), pages);
       current = p;
       container.innerHTML = "";
       for (var i = (p - 1) * SUBS_PER_PAGE; i < p * SUBS_PER_PAGE && i < allCards.length; i++) {
         container.appendChild(allCards[i]);
       }
-      safeBuildBar(p);
+      safePaint(p);
       try { history.replaceState(history.state, "", location.pathname + location.search + "#page-" + p); } catch (e) {}
       if (userAction) {
         try { window.scrollTo({ top: container.getBoundingClientRect().top + window.pageYOffset - 130, behavior: "smooth" }); } catch (e) {}
@@ -564,7 +956,7 @@
        our handler runs), restore ours right after */
     new MutationObserver(function () {
       if (pagSuppress) return;
-      if (!pag.querySelector("[data-arc-page]")) safeBuildBar(current);
+      if (!pag.querySelector("[data-arc-page]")) safePaint(current);
     }).observe(pag, { childList: true, subtree: true });
 
     /* browser back/forward or manual #page-N edits: script.js renders
@@ -572,12 +964,12 @@
        overwrites it with the merged view. Same event tick, no flicker. */
     window.addEventListener("hashchange", function () {
       var p = parseHash();
-      if (p >= 1) go(p, false); /* ignore unrelated hash changes (anchors etc.) */
+      if (p >= 1) goTo(p, false); /* ignore unrelated hash changes (anchors etc.) */
     });
 
-    var startPage = Math.min(Math.max(initialPage || 1, 1), pages);
-    go(startPage, false);
-    dbg("takeover: done — " + allCards.length + " cards (" + subs.length + " submissions + " + staticNodes.length + " journals), " + pages + " page(s), showing page " + startPage + (template ? "" : " [built design]"));
+    goTo(current, false);
+    dbg("takeover: done — " + allCards.length + " cards (" + subs.length + " submissions + " + staticNodes.length + " journals), " + pages + " page(s), showing page " + current +
+      " · bar: " + (protoAnalysis && protoAnalysis.numUnits.length ? "site design preserved (prev/next kept)" : "arc design"));
     return true;
   }
 
@@ -606,8 +998,16 @@
     if (!template) { dbg("fallback B: no card template (empty grid)"); return false; }
 
     var placeholder = makePlaceholder(String(CAT_NAMES[slug] || "A").charAt(0));
-    var staticMax = maxPageNumber(pag);
-    var activeClass = staticMax > 0 ? detectActiveClass(pag) : "arc-active";
+    var A = analyzePagination(pag);
+    var staticMax = 0;
+    if (A) {
+      for (var sm = 0; sm < A.numUnits.length; sm++) {
+        var sn = parseInt(normText((deepestNumericEl(A.numUnits[sm]) || A.numUnits[sm]).textContent), 10) || 0;
+        if (sn > staticMax) staticMax = sn;
+      }
+    }
+    if (!staticMax) staticMax = maxPageNumber(pag);
+    var activeMech = (A && A.activeMech) ? A.activeMech : { type: "arc", name: "arc-active", el: null };
     var myPages = Math.ceil(subs.length / SUBS_PER_PAGE);
     ensureStyles();
 
@@ -617,10 +1017,7 @@
       container.innerHTML = "";
       var start = (p - 1) * SUBS_PER_PAGE;
       for (var i = start; i < start + SUBS_PER_PAGE && i < subs.length; i++) container.appendChild(makeCard(subs[i]));
-      var btns = pag.querySelectorAll("a,button,span,li");
-      for (var b = 0; b < btns.length; b++) btns[b].classList.remove(activeClass);
-      var mine = pag.querySelector('[data-arc-page="' + p + '"]');
-      if (mine) mine.classList.add(activeClass);
+      applyActive(pag, pag.querySelector('[data-arc-page="' + p + '"]'), activeMech);
       try { window.scrollTo({ top: container.getBoundingClientRect().top + window.pageYOffset - 130, behavior: "smooth" }); } catch (e) {}
       dbg("fallback B: rendered submission page " + p);
     }
@@ -634,7 +1031,8 @@
     if (countEl) new MutationObserver(bumpCount).observe(countEl, { childList: true, characterData: true, subtree: true });
 
     if (staticMax > 0) {
-      /* append extra page buttons after the last static one */
+      /* append extra page buttons after the last static one — cloned
+         from the site's OWN button so the design matches exactly */
       var pagSuppress = false;
       function appendMyButtons() {
         if (!pag || pagSuppress) return;
@@ -642,32 +1040,29 @@
         try {
           var old = pag.querySelectorAll("[data-arc-page]");
           for (var i = 0; i < old.length; i++) old[i].remove();
-          var numBtns = [];
-          var els = pag.querySelectorAll("a,button,span,li");
-          for (var j = 0; j < els.length; j++) {
-            var t = (els[j].textContent || "").trim();
-            if (/^\d{1,3}$/.test(t) && !els[j].hasAttribute("data-arc-page")) numBtns.push(els[j]);
-          }
-          if (!numBtns.length) return;
-          var anchor = numBtns[numBtns.length - 1];
+          var AA = analyzePagination(pag);
+          if (!AA || !AA.numUnits.length) return;
+          var lastU = AA.numUnits[AA.numUnits.length - 1];
+          var lastLabel = parseInt(normText((deepestNumericEl(lastU) || lastU).textContent), 10) || 0;
+          var parent = lastU.parentNode, ref = lastU.nextSibling;
           for (var p = 1; p <= myPages; p++) {
-            var btn = numBtns[0].cloneNode(true);
-            btn.setAttribute("data-arc-page", String(p));
-            btn.removeAttribute("id");
-            btn.classList.remove(activeClass);
-            btn.style.cursor = "pointer";
-            btn.textContent = String(staticMax + p);
+            var u = lastU.cloneNode(true);
+            cleanUnit(u, AA.activeMech);
+            setUnitLabel(u, lastLabel + p);
+            u.setAttribute("data-arc-page", String(p));
+            u.style.cursor = "pointer";
+            var aEl = u.matches("a") ? u : u.querySelector("a");
+            if (aEl) aEl.setAttribute("href", "#page-" + (lastLabel + p));
             (function (page) {
-              btn.addEventListener("click", function (e) {
+              u.addEventListener("click", function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 renderMyPage(page);
               });
             })(p);
-            anchor.parentNode.insertBefore(btn, anchor.nextSibling);
-            anchor = btn;
+            parent.insertBefore(u, ref);
           }
-          dbg("fallback B: appended " + myPages + " page button(s) after static page " + staticMax);
+          dbg("fallback B: appended " + myPages + " page button(s) after static page " + lastLabel + " (site button design cloned)");
         } finally {
           setTimeout(function () { pagSuppress = false; }, 80);
         }
@@ -708,24 +1103,13 @@
       pag.id = "pagination";
       container.parentNode.insertBefore(pag, container.nextSibling);
     }
-    pag.innerHTML = "";
     function renderP(p) {
       container.innerHTML = "";
       var start = (p - 1) * SUBS_PER_PAGE;
       for (var i = start; i < start + SUBS_PER_PAGE && i < all.length; i++) container.appendChild(all[i]);
-      var btns = pag.querySelectorAll(".arc-page-btn");
-      for (var b = 0; b < btns.length; b++) btns[b].classList.toggle("arc-active", parseInt(btns[b].textContent, 10) === p);
+      engine.paint(p);
     }
-    for (var p2 = 1; p2 <= pages; p2++) {
-      (function (page) {
-        var a = document.createElement("a");
-        a.className = "arc-page-btn";
-        a.setAttribute("data-arc-page", String(page));
-        a.textContent = String(page);
-        a.addEventListener("click", function (e) { e.preventDefault(); renderP(page); });
-        pag.appendChild(a);
-      })(p2);
-    }
+    var engine = arcBarEngine(pag, pages, renderP);
     renderP(1);
     dbg("fallback B: built full pagination (" + pages + " pages, " + all.length + " cards)");
     return true;
@@ -866,6 +1250,7 @@
       var snapshots = null;
       if (targetPages <= 1) {
         snapshots = [null, (getContainer() || container).innerHTML];
+        captureBarProto();
         dbg("single page — no walk needed");
       } else {
         snapshots = await walkPages(targetPages, initialPage);
