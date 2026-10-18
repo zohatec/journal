@@ -1,5 +1,5 @@
 /* =====================================================================
-   ARC Journals — site-submissions.js  (v8 — page-walk takeover + bar preservation + strict 6-per-page)
+   ARC Journals — site-submissions.js  (v9 — clickable author names + auto account button)
    ===================================================================== */
 
 (function () {
@@ -8,7 +8,18 @@
   if (window.__ARC_SUBMISSIONS_LOADED) return; /* double-load guard */
   window.__ARC_SUBMISSIONS_LOADED = true;
 
-  var VERSION = "v8";
+  var VERSION = "v9";
+
+  /* v9: load the floating account button (login / my profile).
+     Runs on EVERY page that includes site-submissions.js — if
+     profile-auth.js is not uploaded yet, it fails silently. */
+  (function loadArcAuth() {
+    if (document.getElementById("arcAuthFab")) return;
+    var s = document.createElement("script");
+    s.src = "profile-auth.js";
+    s.async = true;
+    (document.body || document.documentElement).appendChild(s);
+  })();
 
   /* URL slug → exact category name used by the submit form */
   var CAT_NAMES = {
@@ -76,6 +87,17 @@
       (d.institution ? " · " + d.institution : "") +
       (fmtDate(d.submittedAt) ? " · " + fmtDate(d.submittedAt) : "");
   }
+  /* v9 (feature #11): same meta line, but the author name becomes a link
+     to the public profile when the submitter has an account (uid). */
+  function metaHTML(d) {
+    var who = d.fullName || "Anonymous";
+    var linked = d.uid
+      ? '<a class="us-author" data-arc-author="' + esc(d.uid) + '" href="author.html?uid=' + encodeURIComponent(d.uid) + '">' + esc(who) + "</a>"
+      : esc(who);
+    return "By " + linked +
+      (d.institution ? " · " + esc(d.institution) : "") +
+      (fmtDate(d.submittedAt) ? " · " + fmtDate(d.submittedAt) : "");
+  }
   function makePlaceholder(letter) {
     letter = (letter || "A").substring(0, 1).toUpperCase();
     return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='140'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%231f3d7a'/%3E%3Cstop offset='1' stop-color='%233d5fa8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='140' rx='6' fill='url(%23g)'/%3E%3Ctext x='50' y='84' font-family='Georgia,serif' font-size='46' fill='rgba(255,255,255,0.92)' text-anchor='middle'%3E" + encodeURIComponent(letter) + "%3C/text%3E%3C/svg%3E";
@@ -135,6 +157,8 @@
       ".us-title a{color:#1c2b4a;text-decoration:none;}",
       ".us-title a:hover{color:#1f3d7a;text-decoration:underline;}",
       ".us-meta{font-size:.78rem;color:#6c757d;line-height:1.5;margin:0;}",
+      ".us-meta a, .us-author{color:#1f3d7a;font-weight:600;text-decoration:none;}",
+      ".us-meta a:hover, .us-author:hover{text-decoration:underline;}",
       ".us-abs{font-size:.85rem;color:#55607a;line-height:1.55;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
       ".us-actions{margin-top:auto;padding-top:.4rem;display:flex;gap:.5rem;flex-wrap:wrap;}",
       ".us-btn{background:#1f3d7a;color:#fff;text-decoration:none;font-size:.78rem;font-weight:600;padding:.38rem .8rem;border-radius:7px;transition:background .15s;}",
@@ -181,7 +205,7 @@
         '<a class="us-thumb" href="' + view + '">' + thumb + "</a>" +
         '<div class="us-body">' + chip +
           '<h3 class="us-title"><a href="' + view + '">' + esc(d.title || "(Untitled)") + "</a></h3>" +
-          '<p class="us-meta">' + esc(metaLine(d)) + "</p>" +
+          '<p class="us-meta">' + metaHTML(d) + "</p>" +
           (abs ? '<p class="us-abs">' + esc(abs.slice(0, 200)) + (abs.length > 200 ? "..." : "") + "</p>" : "") +
           '<div class="us-actions">' +
             '<a class="us-btn" href="' + view + '"><i class="fas fa-book-open"></i> Read</a>' +
@@ -730,6 +754,7 @@
     });
     var texts = [];
     while (walker.nextNode()) texts.push(walker.currentNode);
+    var metaParent = (d.uid && texts.length) ? texts[0].parentElement : null;
     for (var i = 0; i < texts.length; i++) texts[i].textContent = (i === 0) ? metaLine(d) : "";
 
     /* every link → submission view */
@@ -741,6 +766,18 @@
     } else if (!(node.matches && node.matches("a"))) {
       node.style.cursor = "pointer";
       (function (n, u) { n.addEventListener("click", function () { location.href = u; }); })(node, url);
+    }
+
+    /* v9 (feature #11): re-write the meta line as HTML so the author
+       name becomes a link to the public profile. Must run AFTER the
+       link-rewrite above, otherwise this link would be redirected to
+       the submission view too. SAFETY: metaParent must be a leaf-style
+       text holder (no element children at all) — if the meta text node
+       sits directly inside a big container, we keep the plain text
+       metaLine instead of risking any data loss. */
+    if (metaParent && node.contains(metaParent) && metaParent.children.length === 0 &&
+        !metaParent.querySelector("a,img,h1,h2,h3,h4,h5,h6,button")) {
+      try { metaParent.innerHTML = metaHTML(d); } catch (e) {}
     }
     return node;
   }
