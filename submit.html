@@ -52,6 +52,11 @@
     .sug-item { padding: .58rem .95rem; cursor: pointer; font-size: .9rem; color: #2d3a56; }
     .sug-item:hover, .sug-item.active { background: #eef4ff; }
     .submit-note { margin-top: 1rem; font-size: .8rem; color: #8a92a1; text-align: center; line-height: 1.6; }
+    /* logged-in / logged-out note (features #3 + #11) */
+    .login-note { display: none; margin: 0 0 1.3rem; padding: .75rem .95rem; border-radius: 10px; font-size: .85rem; line-height: 1.65; }
+    .login-note.in { background: #eef2fa; border: 1px solid #cdd9f0; color: #1f3d7a; }
+    .login-note.out { background: #fdf8ec; border: 1px solid #ecd9ad; color: #8a6d1a; }
+    .login-note a { color: inherit; font-weight: 700; }
     @media (max-width: 640px) {
       .form-grid { grid-template-columns: 1fr; }
       .submit-card { padding: 1.3rem 1.1rem; }
@@ -84,6 +89,7 @@
     <form id="submitForm" class="submit-card" novalidate>
       <h2><i class="fas fa-file-upload"></i> Article Submission Form</h2>
       <p class="form-intro">Fields marked with a star (<span class="req">*</span>) are required. A cover image is optional.</p>
+      <div id="loginNote" class="login-note"></div>
 
       <div class="form-grid">
         <div class="form-group">
@@ -162,8 +168,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
   /* ---------------- Firebase ---------------- */
   const firebaseConfig = {
@@ -177,6 +183,40 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app); // casual users may not be logged in — currentUser can be null, that is fine
+
+  /* ---------------- Logged-in pre-fill (features #3 + #11) ----------------
+     If the visitor has an account, we pre-fill their name / email /
+     institution from their profile and the submission's uid links the
+     article to their public author profile automatically. */
+  let loggedInUser = null;
+  let profileData = null;
+
+  async function prefillFromProfile() {
+    const note = document.getElementById("loginNote");
+    if (!note) return;
+    if (!loggedInUser) {
+      note.className = "login-note out";
+      note.style.display = "block";
+      note.innerHTML = '<i class="fas fa-info-circle"></i> Have an account? <a href="login.html?next=submit.html">Log in first</a> — ' +
+        "your submission will then appear on your author profile and dashboard automatically.";
+      return;
+    }
+    if (!profileData) {
+      try {
+        const snap = await getDoc(doc(db, "users", loggedInUser.uid));
+        profileData = snap.exists() ? snap.data() : null;
+      } catch (e) { console.warn("[ARC submit] profile read:", e); }
+    }
+    const u = profileData || {};
+    if (u.fullName && !fullNameEl.value) fullNameEl.value = u.fullName;
+    if (u.institution && !institutionEl.value) institutionEl.value = u.institution;
+    if (loggedInUser.email && !emailEl.value) emailEl.value = loggedInUser.email;
+    note.className = "login-note in";
+    note.style.display = "block";
+    note.innerHTML = '<i class="fas fa-user-check"></i> Submitting as <b>' + esc(u.fullName || loggedInUser.email || "you") +
+      '</b> — this article will be linked to <a href="profile.html">your profile</a> and your public author page.';
+  }
+  onAuthStateChanged(auth, (user) => { loggedInUser = user || null; profileData = null; prefillFromProfile(); });
 
   /* ---------------- Config ---------------- */
   const WORKER_URL = "https://journal-upload.ssbcpoint.workers.dev";
@@ -495,6 +535,7 @@
 
       form.reset();
       clearImage();
+      prefillFromProfile(); /* put the logged-in author's details back after the reset */
       window.scrollTo({ top: form.offsetTop - 100, behavior: "smooth" });
 
     } catch (err) {
