@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In / Create Account — ARC Journals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* ---- auth card (same visual language as the submission card) ---- */
+    .auth-wrap { max-width: 480px; margin: 2.2rem auto 4.5rem; padding: 0 1.25rem; }
+    .auth-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 14px; padding: 2rem; box-shadow: 0 6px 26px rgba(20,30,60,.08); }
+    .auth-card h2 { margin: 0 0 .3rem; font-family: 'Lora', serif; font-size: 1.45rem; color: #1c2b4a; }
+    .auth-card .auth-intro { margin: 0 0 1.3rem; color: #66707f; font-size: .9rem; line-height: 1.6; }
+
+    /* tabs */
+    .auth-tabs { display: flex; gap: .45rem; background: #eef1f7; border-radius: 10px; padding: 5px; margin-bottom: 1.4rem; }
+    .auth-tab { flex: 1; border: 0; background: transparent; color: #4a5568; font: 600 .88rem 'Inter', sans-serif;
+      padding: .62rem .5rem; border-radius: 8px; cursor: pointer; transition: all .18s; }
+    .auth-tab:hover { color: #1f3d7a; }
+    .auth-tab.active { background: #fff; color: #1f3d7a; box-shadow: 0 1px 6px rgba(20,30,60,.12); }
+
+    .auth-form { display: none; }
+    .auth-form.active { display: block; animation: authIn .3s ease both; }
+    @keyframes authIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .fg { display: flex; flex-direction: column; margin-bottom: 1.05rem; }
+    .fg label { font-weight: 600; font-size: .86rem; margin-bottom: .4rem; color: #25355a; }
+    .fg label .req { color: #c0392b; }
+    .fg input { width: 100%; padding: .72rem .9rem; border: 1px solid #d3d8e2; border-radius: 9px;
+      font: inherit; font-size: .93rem; background: #fbfcfe; color: #222; transition: border-color .15s, box-shadow .15s; }
+    .fg input:focus { outline: none; border-color: #1f3d7a; box-shadow: 0 0 0 3px rgba(31,61,122,.12); background: #fff; }
+
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 2.7rem; }
+    .pw-toggle { position: absolute; right: .55rem; top: 50%; transform: translateY(-50%); border: 0; background: transparent;
+      color: #8a92a1; width: 2rem; height: 2rem; border-radius: 7px; cursor: pointer; font-size: .9rem; }
+    .pw-toggle:hover { color: #1f3d7a; background: #f0f4fb; }
+
+    .auth-row { display: flex; justify-content: space-between; align-items: center; margin: -.15rem 0 1.15rem; font-size: .84rem; }
+    .auth-row a { color: #1f3d7a; font-weight: 600; text-decoration: none; }
+    .auth-row a:hover { text-decoration: underline; }
+
+    .auth-btn { width: 100%; border: 0; background: #1f3d7a; color: #fff; font: 600 .95rem 'Inter', sans-serif;
+      padding: .8rem 1rem; border-radius: 9px; cursor: pointer; transition: background .15s, transform .1s;
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
+    .auth-btn:hover { background: #16305f; }
+    .auth-btn:active { transform: translateY(1px); }
+    .auth-btn:disabled { opacity: .65; cursor: default; }
+
+    .auth-note { margin: 1.1rem 0 0; font-size: .82rem; color: #8a92a1; line-height: 1.6; text-align: center; }
+    .auth-note a { color: #1f3d7a; font-weight: 600; }
+
+    .auth-status { display: none; margin-top: 1.05rem; padding: .8rem 1rem; border-radius: 10px; font-size: .87rem; line-height: 1.6; }
+    .auth-status.error { display: block; background: #fdeeee; border: 1px solid #f2c2c2; color: #b91c1c; }
+    .auth-status.success { display: block; background: #eefaf0; border: 1px solid #bfe5c8; color: #1e7b34; }
+    .auth-status.info { display: block; background: #eef2fa; border: 1px solid #cdd9f0; color: #1f3d7a; }
+    .auth-status small { display: block; margin-top: .25rem; opacity: .85; }
+
+    .auth-back { text-align: center; margin-top: 1.15rem; font-size: .86rem; }
+    .auth-back a { color: #1f3d7a; font-weight: 600; text-decoration: none; }
+    .auth-back a:hover { text-decoration: underline; }
+
+    /* loading overlay while we check the login state */
+    .auth-loading { display: flex; flex-direction: column; align-items: center; gap: .8rem; padding: 2.4rem 0 1rem; color: #66707f; font-size: .9rem; }
+    .auth-loading i { font-size: 1.6rem; color: #1f3d7a; }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
+    <a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a>
+    <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="admin-login.html" class="login-link"><i class="fas fa-user-shield"></i> Log In</a>
+  </div>
+
+  <nav class="main-nav">
+    <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+
+  <div class="hero-search">
+    <h2>Account Access</h2>
+    <div class="tagline">Log in to manage your profile and submissions — or create a free account</div>
+  </div>
+
+  <div class="auth-wrap">
+    <div class="auth-card" id="authCard">
+
+      <!-- spinner while Firebase checks the session -->
+      <div class="auth-loading" id="authLoading">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Checking your session...</span>
+      </div>
+
+      <!-- the real card (shown after the session check) -->
+      <div id="authBody" style="display:none;">
+
+        <div class="auth-tabs" role="tablist">
+          <button type="button" class="auth-tab active" id="tabLogin" role="tab"><i class="fas fa-sign-in-alt"></i> Log In</button>
+          <button type="button" class="auth-tab" id="tabRegister" role="tab"><i class="fas fa-user-plus"></i> Create Account</button>
+        </div>
+
+        <!-- ================= LOG IN ================= -->
+        <form class="auth-form active" id="loginForm" novalidate>
+          <h2>Welcome back</h2>
+          <p class="auth-intro">Log in to visit your profile, track your submissions and update your details.</p>
+
+          <div class="fg">
+            <label for="loginEmail">Email Address <span class="req">*</span></label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="fg">
+            <label for="loginPassword">Password <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+              <button type="button" class="pw-toggle" data-pw="loginPassword" tabindex="-1" aria-label="Show password"><i class="fas fa-eye"></i></button>
+            </div>
+          </div>
+
+          <div class="auth-row">
+            <a href="#" id="forgotLink">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="auth-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Log In</button>
+          <div class="auth-status" id="loginStatus" role="alert" aria-live="polite"></div>
+        </form>
+
+        <!-- ================= CREATE ACCOUNT ================= -->
+        <form class="auth-form" id="registerForm" novalidate>
+          <h2>Create your account</h2>
+          <p class="auth-intro">A free account gives you a public author profile and lets you track every submission in one place.</p>
+
+          <div class="fg">
+            <label for="regName">Full Name <span class="req">*</span></label>
+            <input type="text" id="regName" placeholder="e.g. Md. Rakib Hasan" autocomplete="name">
+          </div>
+          <div class="fg">
+            <label for="regEmail">Email Address <span class="req">*</span></label>
+            <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="fg">
+            <label for="regPassword">Password <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="regPassword" placeholder="At least 6 characters" autocomplete="new-password">
+              <button type="button" class="pw-toggle" data-pw="regPassword" tabindex="-1" aria-label="Show password"><i class="fas fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="fg">
+            <label for="regPassword2">Confirm Password <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="regPassword2" placeholder="Repeat your password" autocomplete="new-password">
+              <button type="button" class="pw-toggle" data-pw="regPassword2" tabindex="-1" aria-label="Show password"><i class="fas fa-eye"></i></button>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+          <div class="auth-status" id="registerStatus" role="alert" aria-live="polite"></div>
+          <p class="auth-note">By creating an account you agree that your <b>public author profile</b>
+            (name, title, institution, biography) and your <b>approved articles</b> will be visible to site visitors.</p>
+        </form>
+
+        <!-- ================= FORGOT PASSWORD ================= -->
+        <form class="auth-form" id="forgotForm" novalidate>
+          <h2>Reset your password</h2>
+          <p class="auth-intro">Enter the email address of your account and we will send you a password reset link.</p>
+
+          <div class="fg">
+            <label for="forgotEmail">Email Address <span class="req">*</span></label>
+            <input type="email" id="forgotEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+
+          <button type="submit" class="auth-btn" id="forgotBtn"><i class="fas fa-paper-plane"></i> Send Reset Link</button>
+          <div class="auth-status" id="forgotStatus" role="alert" aria-live="polite"></div>
+          <div class="auth-back"><a href="#" id="backToLogin"><i class="fas fa-arrow-left"></i> Back to Log In</div>
+        </form>
+
+      </div><!-- /authBody -->
+    </div>
+
+    <p class="auth-note" style="margin-top:1.2rem;">Just browsing? You can <a href="submit.html">submit an article</a> or
+      <a href="journals.html">explore the journals</a> without an account too.</p>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div>
+      <div class="footer-col"><h4>Resources</h4><p><a href="#">Journal Submissions</a></p><p><a href="#">Peer Review Guidelines</a></p></div>
+      <div class="footer-col"><h4>Publishing</h4><p><a href="#">Open Access Policy</a></p></div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
+</div>
+
+<script src="journals-data.js"></script>
+<script src="menu.js"></script>
+<script src="script.js"></script>
+<script src="footer.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile,
+           sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  /* ---------------- Firebase ---------------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+    authDomain: "my-journal-a0eaa.firebaseapp.com",
+    projectId: "my-journal-a0eaa",
+    storageBucket: "my-journal-a0eaa.firebasestorage.app",
+    messagingSenderId: "577249786861",
+    appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ---------------- helpers ---------------- */
+  const $ = (id) => document.getElementById(id);
+  const loading = $("authLoading"), body = $("authBody");
+  const tabLogin = $("tabLogin"), tabRegister = $("tabRegister");
+  const forms = { login: $("loginForm"), register: $("registerForm"), forgot: $("forgotForm") };
+
+  /* where to go after a successful login (the page that sent the user here) */
+  function nextUrl() {
+    const n = new URLSearchParams(location.search).get("next");
+    if (!n) return "profile.html";
+    /* only allow relative links inside this site — never an external URL */
+    if (!/^[a-z0-9\-]+\.html(\?.*)?$/i.test(n)) return "profile.html";
+    return n;
+  }
+
+  function show(view) {
+    Object.keys(forms).forEach((k) => forms[k].classList.toggle("active", k === view));
+    tabLogin.classList.toggle("active", view === "login");
+    tabRegister.classList.toggle("active", view === "register");
+    if (view === "forgot") { tabLogin.classList.remove("active"); tabRegister.classList.remove("active"); }
+  }
+  tabLogin.addEventListener("click", () => show("login"));
+  tabRegister.addEventListener("click", () => show("register"));
+  $("forgotLink").addEventListener("click", (e) => { e.preventDefault(); show("forgot"); });
+  $("backToLogin").addEventListener("click", (e) => { e.preventDefault(); show("login"); });
+
+  /* show / hide password buttons */
+  document.querySelectorAll(".pw-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = $(btn.dataset.pw);
+      const on = input.type === "password";
+      input.type = on ? "text" : "password";
+      btn.innerHTML = on ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+    });
+  });
+
+  function setStatus(el, type, html) {
+    el.className = "auth-status " + type;
+    el.innerHTML = html;
+  }
+  function clearStatus(el) { el.className = "auth-status"; el.innerHTML = ""; }
+
+  /* friendly messages for every common Firebase error code */
+  function friendlyAuthError(err) {
+    const code = (err && err.code) || "";
+    const map = {
+      "auth/invalid-credential": "The email or password is incorrect. Please try again.",
+      "auth/wrong-password": "The email or password is incorrect. Please try again.",
+      "auth/user-not-found": "No account found with this email address. You can create one on the Create Account tab.",
+      "auth/email-already-in-use": "An account with this email already exists. Try logging in instead, or reset your password.",
+      "auth/weak-password": "The password is too weak — please use at least 6 characters.",
+      "auth/invalid-email": "That does not look like a valid email address.",
+      "auth/too-many-requests": "Too many attempts — please wait a moment and try again.",
+      "auth/network-request-failed": "A network error occurred. Please check your internet connection and try again.",
+      "auth/operation-not-allowed": "Email/Password sign-in is not enabled in Firebase yet. The site administrator must enable it: Firebase Console → Authentication → Sign-in method → Email/Password → Enable."
+    };
+    return map[code] || ((err && err.message ? err.message : String(err)).replace("Firebase: ", ""));
+  }
+
+  /* ---------------- session check ---------------- */
+  onAuthStateChanged(auth, (user) => {
+    loading.style.display = "none";
+    body.style.display = "block";
+    if (user) {
+      /* already logged in — go straight to the profile */
+      setStatus($("loginStatus"), "info",
+        '<i class="fas fa-check-circle"></i> You are already logged in as <b>' + escHtml(user.email) + '</b>. Taking you to your profile...');
+      setTimeout(() => { location.href = nextUrl(); }, 700);
+    }
+  });
+
+  /* ---------------- LOG IN ---------------- */
+  forms.login.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const st = $("loginStatus"), btn = $("loginBtn");
+    const email = $("loginEmail").value.trim();
+    const pw = $("loginPassword").value;
+    if (!email || !pw) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> Please enter both your email address and your password.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Logging in...';
+    clearStatus(st);
+    try {
+      await signInWithEmailAndPassword(auth, email, pw);
+      setStatus(st, "success", '<i class="fas fa-check-circle"></i> Login successful! Taking you to your profile...');
+      setTimeout(() => { location.href = nextUrl(); }, 500);
+    } catch (err) {
+      console.error("[ARC login]", err);
+      setStatus(st, "error", '<i class="fas fa-times-circle"></i> <b>Login failed:</b> ' + escHtml(friendlyAuthError(err)));
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log In';
+    }
+  });
+
+  /* ---------------- CREATE ACCOUNT ---------------- */
+  forms.register.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const st = $("registerStatus"), btn = $("registerBtn");
+    const name = $("regName").value.trim();
+    const email = $("regEmail").value.trim();
+    const pw = $("regPassword").value;
+    const pw2 = $("regPassword2").value;
+
+    if (!name) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> Please enter your full name.'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> Please enter a valid email address.'); return; }
+    if (pw.length < 6) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> The password must be at least 6 characters long.'); return; }
+    if (pw !== pw2) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> The two passwords do not match.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creating your account...';
+    clearStatus(st);
+    try {
+      /* 1. create the auth account */
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      const user = cred.user;
+
+      /* 2. show the name on the account */
+      try { await updateProfile(user, { displayName: name }); } catch (e) { console.warn("[ARC register] displayName:", e); }
+
+      /* 3. create the profile document — if the Firestore rules are not
+            ready yet this can fail; the account still exists and
+            profile.html will repair the document on the next visit. */
+      let profileNote = "";
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          fullName: name,
+          email: email,
+          academicTitle: null,
+          institution: null,
+          country: null,
+          website: null,
+          bio: null,
+          avatarUrl: null,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        });
+      } catch (e) {
+        console.warn("[ARC register] users doc:", e);
+        profileNote = "<small>Note: your profile document could not be created yet (" +
+          (/permission/i.test(e.message || "") ? "Firestore rules" : "database") +
+          ") — it will be created automatically the first time you open your profile.</small>";
+      }
+
+      setStatus(st, "success", '<i class="fas fa-check-circle"></i> <b>Account created!</b> Taking you to your new profile...' + profileNote);
+      setTimeout(() => { location.href = "profile.html"; }, 900);
+    } catch (err) {
+      console.error("[ARC register]", err);
+      setStatus(st, "error", '<i class="fas fa-times-circle"></i> <b>Sign-up failed:</b> ' + escHtml(friendlyAuthError(err)));
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+    }
+  });
+
+  /* ---------------- FORGOT PASSWORD ---------------- */
+  forms.forgot.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const st = $("forgotStatus"), btn = $("forgotBtn");
+    const email = $("forgotEmail").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> Please enter a valid email address.');
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
+    clearStatus(st);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setStatus(st, "success",
+        '<i class="fas fa-check-circle"></i> <b>Reset link sent!</b> Check the inbox of <b>' + escHtml(email) +
+        '</b> (and the spam folder) and follow the link to set a new password.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+    } catch (err) {
+      console.error("[ARC forgot]", err);
+      setStatus(st, "error", '<i class="fas fa-times-circle"></i> ' + escHtml(friendlyAuthError(err)));
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+    }
+  });
+
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+</script>
+</body>
+</html>

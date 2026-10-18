@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — ARC Journals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .profile-wrap { max-width: 980px; margin: 2.2rem auto 4.5rem; padding: 0 1.25rem; }
+
+    /* ---- gate (login check) ---- */
+    .pf-gate { display: flex; flex-direction: column; align-items: center; gap: .9rem; padding: 3.2rem 0; color: #66707f; font-size: .95rem; }
+    .pf-gate i.big { font-size: 1.9rem; color: #1f3d7a; }
+
+    /* ---- profile header card ---- */
+    .pf-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 14px; padding: 1.8rem; box-shadow: 0 6px 26px rgba(20,30,60,.08); }
+    .pf-head { display: flex; gap: 1.4rem; align-items: flex-start; flex-wrap: wrap; }
+    .pf-avatar-box { position: relative; flex: 0 0 auto; }
+    .pf-avatar { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; border: 3px solid #eef2fa; background: #1f3d7a; display: block; }
+    .pf-avatar-initial { width: 108px; height: 108px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font: 600 2.3rem 'Lora', serif; color: #fff; background: linear-gradient(135deg,#1f3d7a,#3d5fa8); }
+    .pf-avatar-edit { position: absolute; right: -4px; bottom: -4px; width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid #fff; background: #1f3d7a; color: #fff; cursor: pointer; font-size: .8rem;
+      display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .pf-avatar-edit:hover { background: #16305f; }
+    .pf-info { flex: 1; min-width: 250px; }
+    .pf-name { margin: 0 0 .15rem; font-family: 'Lora', serif; font-size: 1.5rem; color: #1c2b4a; line-height: 1.25; }
+    .pf-title { color: #1f3d7a; font-weight: 600; font-size: .92rem; margin: 0 0 .5rem; }
+    .pf-lines { color: #66707f; font-size: .87rem; line-height: 1.75; margin: 0; }
+    .pf-lines i { width: 17px; color: #9aa3b5; }
+    .pf-lines a { color: #1f3d7a; text-decoration: none; font-weight: 600; }
+    .pf-lines a:hover { text-decoration: underline; }
+    .pf-bio { margin: .7rem 0 0; color: #55607a; font-size: .9rem; line-height: 1.65; }
+    .pf-actions { display: flex; gap: .55rem; flex-wrap: wrap; margin-top: 1rem; }
+    .pf-btn { display: inline-flex; align-items: center; gap: .45rem; border: 0; background: #1f3d7a; color: #fff;
+      font: 600 .84rem 'Inter', sans-serif; padding: .55rem 1rem; border-radius: 8px; cursor: pointer;
+      text-decoration: none; transition: background .15s; }
+    .pf-btn:hover { background: #16305f; }
+    .pf-btn.ghost { background: #fff; color: #1f3d7a; border: 1px solid #c9d3e8; }
+    .pf-btn.ghost:hover { background: #f0f4fb; }
+    .pf-btn.danger { background: #fff; color: #b91c1c; border: 1px solid #eec7c7; }
+    .pf-btn.danger:hover { background: #fdeeee; }
+    .pf-btn:disabled { opacity: .6; cursor: default; }
+
+    /* ---- stats ---- */
+    .pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: .9rem; margin: 1.4rem 0 2rem; }
+    .pf-stat { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: .95rem 1rem; text-align: center;
+      box-shadow: 0 2px 10px rgba(20,30,60,.05); }
+    .pf-stat b { display: block; font-size: 1.55rem; font-family: 'Lora', serif; color: #1c2b4a; line-height: 1.2; }
+    .pf-stat span { font-size: .76rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #8a92a1; }
+    .pf-stat.ap b { color: #1e7b34; } .pf-stat.pd b { color: #b7791f; } .pf-stat.rj b { color: #b91c1c; }
+
+    /* ---- section headers ---- */
+    .pf-sec { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.9rem 0 .9rem; }
+    .pf-sec h3 { margin: 0; font-family: 'Lora', serif; font-size: 1.2rem; color: #1c2b4a; }
+    .pf-filters { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .pf-chip { border: 1px solid #d3d8e2; background: #fff; color: #4a5568; font: 600 .76rem 'Inter', sans-serif;
+      padding: .34rem .8rem; border-radius: 999px; cursor: pointer; transition: all .15s; }
+    .pf-chip:hover { border-color: #1f3d7a; color: #1f3d7a; }
+    .pf-chip.on { background: #1f3d7a; border-color: #1f3d7a; color: #fff; }
+
+    /* ---- submission list (same journal-card language) ---- */
+    .pf-subs { display: flex; flex-direction: column; gap: .85rem; }
+    .pf-sub { display: flex; gap: 14px; background: #fff; border: 1px solid #e6e8ee; border-radius: 10px;
+      padding: 13px 15px; box-shadow: 0 2px 10px rgba(20,30,60,.06); }
+    .pf-sub-thumb { width: 74px; min-width: 74px; height: 104px; border-radius: 6px; overflow: hidden;
+      background: linear-gradient(135deg,#1f3d7a,#3d5fa8); display: flex; align-items: center; justify-content: center; }
+    .pf-sub-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .pf-sub-thumb i { color: rgba(255,255,255,.85); font-size: 1.5rem; }
+    .pf-sub-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .3rem; }
+    .pf-sub-top { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .pf-sub-cat { font-size: .64rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #1f3d7a;
+      background: #eef2fa; border: 1px solid #d9e1f2; padding: 2px 9px; border-radius: 20px; }
+    .pf-badge { font-size: .68rem; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+    .pf-badge.approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
+    .pf-badge.pending { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
+    .pf-badge.rejected { background: #fdeeee; color: #b91c1c; border: 1px solid #f2c2c2; }
+    .pf-sub-title { margin: 0; font-family: 'Lora', serif; font-size: 1.02rem; line-height: 1.35; }
+    .pf-sub-title a { color: #1c2b4a; text-decoration: none; }
+    .pf-sub-title a:hover { color: #1f3d7a; text-decoration: underline; }
+    .pf-sub-meta { margin: 0; font-size: .78rem; color: #6c757d; }
+    .pf-sub-abs { margin: 0; font-size: .84rem; color: #55607a; line-height: 1.5; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .pf-sub-actions { margin-top: auto; padding-top: .35rem; display: flex; gap: .45rem; flex-wrap: wrap; }
+    .pf-mini { display: inline-flex; align-items: center; gap: .35rem; font-size: .76rem; font-weight: 600; padding: .32rem .75rem;
+      border-radius: 7px; text-decoration: none; cursor: pointer; }
+    .pf-mini.read { background: #1f3d7a; color: #fff; } .pf-mini.read:hover { background: #16305f; }
+    .pf-mini.pdf { border: 1px solid #cdd5e2; color: #1f3d7a; background: #fff; } .pf-mini.pdf:hover { background: #f0f4fb; }
+    .pf-mini.del { border: 1px solid #eec7c7; color: #b91c1c; background: #fff; } .pf-mini.del:hover { background: #fdeeee; }
+    .pf-empty { background: #fff; border: 1px dashed #d9dfeb; border-radius: 12px; padding: 1.8rem 1.4rem; text-align: center;
+      color: #8a92a1; font-size: .9rem; line-height: 1.7; }
+    .pf-empty a { color: #1f3d7a; font-weight: 600; }
+
+    /* ---- edit form ---- */
+    .pf-edit { display: none; }
+    .pf-edit.open { display: block; animation: pfIn .3s ease both; }
+    @keyframes pfIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .pf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.2rem; }
+    .pf-fg { display: flex; flex-direction: column; }
+    .pf-fg.full { grid-column: 1 / -1; }
+    .pf-fg label { font-weight: 600; font-size: .86rem; margin-bottom: .4rem; color: #25355a; }
+    .pf-fg label .req { color: #c0392b; }
+    .pf-fg input, .pf-fg textarea, .pf-fg select { width: 100%; padding: .68rem .9rem; border: 1px solid #d3d8e2; border-radius: 9px;
+      font: inherit; font-size: .92rem; background: #fbfcfe; color: #222; transition: border-color .15s, box-shadow .15s; }
+    .pf-fg input:focus, .pf-fg textarea:focus { outline: none; border-color: #1f3d7a; box-shadow: 0 0 0 3px rgba(31,61,122,.12); background: #fff; }
+    .pf-fg textarea { min-height: 110px; resize: vertical; }
+    .pf-fg .hint { font-size: .76rem; color: #8a92a1; margin-top: .3rem; line-height: 1.5; }
+    .pf-fg .counter { font-size: .74rem; color: #9aa3b5; text-align: right; margin-top: .25rem; }
+    .avatar-preview { display: flex; align-items: center; gap: .8rem; }
+    .avatar-preview img, .avatar-preview .pf-avatar-initial { width: 64px; height: 64px; border-radius: 50%; }
+
+    /* ---- account card ---- */
+    .pf-account { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-top: .4rem; }
+    .pf-acc-box { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 1.25rem 1.3rem; }
+    .pf-acc-box h4 { margin: 0 0 .3rem; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.02rem; }
+    .pf-acc-box p { margin: 0 0 .9rem; color: #66707f; font-size: .82rem; line-height: 1.6; }
+    .pf-danger-note { margin-top: 1.1rem; font-size: .78rem; color: #8a92a1; line-height: 1.6; }
+
+    /* ---- status + toast ---- */
+    .pf-status { display: none; margin-top: .95rem; padding: .8rem 1rem; border-radius: 10px; font-size: .87rem; line-height: 1.6; }
+    .pf-status.error { display: block; background: #fdeeee; border: 1px solid #f2c2c2; color: #b91c1c; }
+    .pf-status.success { display: block; background: #eefaf0; border: 1px solid #bfe5c8; color: #1e7b34; }
+    .pf-status.info { display: block; background: #eef2fa; border: 1px solid #cdd9f0; color: #1f3d7a; }
+    #pfToast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1c2b4a; color: #fff;
+      padding: .75rem 1.25rem; border-radius: 10px; font-size: .88rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      opacity: 0; pointer-events: none; transition: all .3s ease; z-index: 99998; max-width: 90vw; text-align: center; }
+    #pfToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #pfToast.ok { background: #1e6b3a; } #pfToast.err { background: #a02020; }
+
+    @media (max-width: 760px) {
+      .pf-stats { grid-template-columns: repeat(2, 1fr); }
+      .pf-form-grid { grid-template-columns: 1fr; }
+      .pf-account { grid-template-columns: 1fr; }
+      .pf-head { flex-direction: column; }
+    }
+    @media (max-width: 540px) {
+      .pf-sub { flex-direction: column; }
+      .pf-sub-thumb { width: 100%; height: 150px; }
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
+    <a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a>
+    <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="admin-login.html" class="login-link"><i class="fas fa-user-shield"></i> Log In</a>
+  </div>
+
+  <nav class="main-nav">
+    <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+
+  <div class="hero-search">
+    <h2>My Profile</h2>
+    <div class="tagline">Your personal dashboard — profile details, submission history and account settings</div>
+  </div>
+
+  <div class="profile-wrap">
+
+    <!-- gate: shown while the login state is checked -->
+    <div class="pf-gate" id="pfGate">
+      <i class="fas fa-circle-notch fa-spin big"></i>
+      <span id="pfGateText">Loading your profile...</span>
+    </div>
+
+    <!-- the real profile (hidden until logged in) -->
+    <div id="pfMain" style="display:none;">
+
+      <!-- ============ profile header ============ -->
+      <div class="pf-card">
+        <div class="pf-head">
+          <div class="pf-avatar-box">
+            <div id="pfAvatar"></div>
+            <button type="button" class="pf-avatar-edit" id="avatarEditBtn" title="Upload a profile photo"><i class="fas fa-camera"></i></button>
+            <input type="file" id="avatarFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+          </div>
+          <div class="pf-info">
+            <h2 class="pf-name" id="pfName"></h2>
+            <p class="pf-title" id="pfAcademic"></p>
+            <p class="pf-lines" id="pfLines"></p>
+            <p class="pf-bio" id="pfBio"></p>
+            <div class="pf-actions">
+              <button type="button" class="pf-btn" id="editProfileBtn"><i class="fas fa-user-edit"></i> Edit Profile</button>
+              <a class="pf-btn ghost" id="publicLink" href="#" target="_blank" rel="noopener"><i class="fas fa-globe"></i> View Public Profile</a>
+              <button type="button" class="pf-btn ghost" id="copyLinkBtn" title="Copy your public profile link"><i class="fas fa-link"></i> Copy Link</button>
+              <a class="pf-btn" href="submit.html"><i class="fas fa-paper-plane"></i> Submit New Article</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ stats ============ -->
+      <div class="pf-stats">
+        <div class="pf-stat"><b id="stTotal">0</b><span>Total Submissions</span></div>
+        <div class="pf-stat ap"><b id="stApproved">0</b><span>Approved</span></div>
+        <div class="pf-stat pd"><b id="stPending">0</b><span>Pending Review</span></div>
+        <div class="pf-stat rj"><b id="stRejected">0</b><span>Rejected</span></div>
+      </div>
+
+      <!-- ============ my submissions ============ -->
+      <div class="pf-sec">
+        <h3><i class="fas fa-folder-open"></i> My Submissions</h3>
+        <div class="pf-filters" id="pfFilters">
+          <button type="button" class="pf-chip on" data-f="all">All</button>
+          <button type="button" class="pf-chip" data-f="approved">Approved</button>
+          <button type="button" class="pf-chip" data-f="pending">Pending</button>
+          <button type="button" class="pf-chip" data-f="rejected">Rejected</button>
+        </div>
+      </div>
+      <div class="pf-subs" id="pfSubs"></div>
+
+      <!-- ============ edit profile (toggle) ============ -->
+      <div class="pf-sec"><h3><i class="fas fa-user-edit"></i> Edit Profile</h3></div>
+      <div class="pf-card pf-edit" id="pfEditCard">
+        <form id="editForm" novalidate>
+          <div class="pf-form-grid">
+            <div class="pf-fg">
+              <label for="edName">Full Name <span class="req">*</span></label>
+              <input type="text" id="edName" placeholder="e.g. Md. Rakib Hasan">
+            </div>
+            <div class="pf-fg">
+              <label for="edAcademic">Academic Title</label>
+              <input type="text" id="edAcademic" list="titleList" placeholder="e.g. Assistant Professor">
+              <datalist id="titleList">
+                <option>Professor</option><option>Associate Professor</option><option>Assistant Professor</option>
+                <option>Lecturer</option><option>Postdoctoral Researcher</option><option>PhD Candidate</option>
+                <option>MSc Student</option><option>Independent Researcher</option>
+              </datalist>
+            </div>
+            <div class="pf-fg">
+              <label for="edInstitution">Institution / University</label>
+              <input type="text" id="edInstitution" list="instList" placeholder="Start typing... e.g. Rajshahi">
+              <datalist id="instList"></datalist>
+            </div>
+            <div class="pf-fg">
+              <label for="edCountry">Country</label>
+              <input type="text" id="edCountry" list="countryList" placeholder="e.g. Bangladesh">
+              <datalist id="countryList">
+                <option>Bangladesh</option><option>India</option><option>Pakistan</option><option>Nepal</option>
+                <option>Sri Lanka</option><option>Malaysia</option><option>Singapore</option><option>Japan</option>
+                <option>China</option><option>South Korea</option><option>Australia</option><option>United Kingdom</option>
+                <option>United States</option><option>Canada</option><option>Germany</option><option>France</option>
+                <option>Netherlands</option><option>Sweden</option><option>Norway</option><option>Italy</option>
+                <option>Spain</option><option>Turkey</option><option>Saudi Arabia</option><option>UAE</option><option>Egypt</option>
+                <option>Nigeria</option><option>Kenya</option><option>South Africa</option><option>Brazil</option>
+                <option>Mexico</option><option>Other</option>
+              </datalist>
+            </div>
+            <div class="pf-fg full">
+              <label for="edWebsite">Website / Research Profile (optional)</label>
+              <input type="url" id="edWebsite" placeholder="e.g. https://scholar.google.com/...">
+              <div class="hint">A personal page, Google Scholar, ORCID, ResearchGate or LinkedIn profile.</div>
+            </div>
+            <div class="pf-fg full">
+              <label for="edBio">Short Biography</label>
+              <textarea id="edBio" maxlength="600" placeholder="Tell readers about your research interests and work (shown on your public profile)"></textarea>
+              <div class="counter"><span id="bioCount">0</span>/600</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1.15rem;">
+            <button type="submit" class="pf-btn" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
+            <button type="button" class="pf-btn ghost" id="cancelEditBtn"><i class="fas fa-times"></i> Cancel</button>
+          </div>
+          <div class="pf-status" id="editStatus" role="alert" aria-live="polite"></div>
+        </form>
+      </div>
+
+      <!-- ============ account settings ============ -->
+      <div class="pf-sec"><h3><i class="fas fa-cog"></i> Account Settings</h3></div>
+      <div class="pf-account">
+        <div class="pf-acc-box">
+          <h4><i class="fas fa-key"></i> Change Password</h4>
+          <p>Choose a new password. You stay logged in on this device.</p>
+          <form id="pwForm" novalidate>
+            <div class="pf-fg" style="margin-bottom:.8rem;">
+              <label for="pwCurrent">Current Password</label>
+              <input type="password" id="pwCurrent" autocomplete="current-password" placeholder="Your current password">
+            </div>
+            <div class="pf-fg" style="margin-bottom:.8rem;">
+              <label for="pwNew">New Password</label>
+              <input type="password" id="pwNew" autocomplete="new-password" placeholder="At least 6 characters">
+            </div>
+            <div class="pf-fg" style="margin-bottom:1rem;">
+              <label for="pwNew2">Confirm New Password</label>
+              <input type="password" id="pwNew2" autocomplete="new-password" placeholder="Repeat the new password">
+            </div>
+            <button type="submit" class="pf-btn" id="pwBtn"><i class="fas fa-key"></i> Update Password</button>
+          </form>
+          <div class="pf-status" id="pwStatus" role="alert" aria-live="polite"></div>
+        </div>
+
+        <div class="pf-acc-box">
+          <h4><i class="fas fa-sign-out-alt"></i> Session &amp; Account</h4>
+          <p>Logged in as <b id="accEmail"></b>.</p>
+          <button type="button" class="pf-btn ghost" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+          <button type="button" class="pf-btn danger" id="deleteBtn" style="margin-left:.5rem;"><i class="fas fa-trash-alt"></i> Delete Account</button>
+          <div class="pf-danger-note"><i class="fas fa-exclamation-triangle"></i> Deleting your account removes your profile and logs you out everywhere.
+            Your already-published articles stay on the site (the author link will simply show the article information instead of a profile).
+            This cannot be undone.</div>
+          <div class="pf-status" id="accStatus" role="alert" aria-live="polite"></div>
+        </div>
+      </div>
+
+    </div><!-- /pfMain -->
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div>
+      <div class="footer-col"><h4>Resources</h4><p><a href="#">Journal Submissions</a></p><p><a href="#">Peer Review Guidelines</a></p></div>
+      <div class="footer-col"><h4>Publishing</h4><p><a href="#">Open Access Policy</a></p></div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
+</div>
+
+<div id="pfToast"></div>
+
+<script src="journals-data.js"></script>
+<script src="menu.js"></script>
+<script src="script.js"></script>
+<script src="footer.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, updatePassword, updateProfile, reauthenticateWithCredential,
+           EmailAuthProvider, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, deleteDoc }
+    from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  /* ---------------- Firebase ---------------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+    authDomain: "my-journal-a0eaa.firebaseapp.com",
+    projectId: "my-journal-a0eaa",
+    storageBucket: "my-journal-a0eaa.firebasestorage.app",
+    messagingSenderId: "577249786861",
+    appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const WORKER_URL = "https://journal-upload.ssbcpoint.workers.dev";
+  const WORKER_FILE_FIELD = "file";
+  const UPLOAD_TIMEOUT_MS = 90000;
+
+  /* ---------------- state + shortcuts ---------------- */
+  const $ = (id) => document.getElementById(id);
+  let currentUser = null;   /* firebase user  */
+  let userData = {};        /* users/{uid} doc */
+  let mySubs = [];          /* my submissions */
+  let subFilter = "all";
+
+  /* ---------------- helpers ---------------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function tsNum(v) {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+    if (typeof v === "string") { const n = Date.parse(v); return isNaN(n) ? 0 : n; }
+    if (typeof v.toMillis === "function") return v.toMillis();
+    return 0;
+  }
+  function fmtDate(v) {
+    const t = tsNum(v);
+    return t ? new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
+  }
+  function initials(name) {
+    return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
+  }
+  function avatarHTML(url, name, cls) {
+    if (url) return '<img class="' + (cls || "pf-avatar") + '" src="' + esc(url) + '" alt="' + esc(name || "Avatar") + '">';
+    return '<div class="' + (cls || "pf-avatar-initial") + '">' + esc(initials(name)) + "</div>";
+  }
+  function toast(msg, kind) {
+    const t = $("pfToast");
+    t.className = "show " + (kind || "");
+    t.innerHTML = msg;
+    clearTimeout(t._tm);
+    t._tm = setTimeout(() => { t.className = ""; }, 3200);
+  }
+  function setStatus(el, type, html) { el.className = "pf-status " + type; el.innerHTML = html; }
+  function clearStatus(el) { el.className = "pf-status"; el.innerHTML = ""; }
+  function statusOf(d) {
+    if (d.approved === true || d.approved === "true" || d.approved === 1) return "approved";
+    const st = String(d.status || "").toLowerCase();
+    if (st === "approved" || st === "published") return "approved";
+    if (st === "rejected") return "rejected";
+    if (d.published === true || d.published === "true") return "approved";
+    return "pending";
+  }
+
+  /* ================= gate — only logged-in users ================= */
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      $("pfGateText").innerHTML = 'You are not logged in. <a href="login.html?next=profile.html" style="color:#1f3d7a;font-weight:600;">Log in or create an account</a> to see your profile.';
+      $("pfGate").querySelector("i").className = "fas fa-user-lock big";
+      return;
+    }
+    currentUser = user;
+    $("pfGate").style.display = "none";
+    $("pfMain").style.display = "block";
+    loadEverything();
+  });
+
+  /* ================= data loading ================= */
+  async function loadEverything() {
+    await ensureUserDoc();
+    await Promise.all([ renderHeader(), loadMySubs() ]);
+  }
+
+  /* if the users/{uid} document does not exist yet (e.g. the rules were
+     not ready during sign-up) — create it now from the auth account */
+  async function ensureUserDoc() {
+    const ref = doc(db, "users", currentUser.uid);
+    try {
+      const snap = await getDoc(ref);
+      if (snap.exists()) { userData = snap.data(); return; }
+      const fresh = {
+        fullName: currentUser.displayName || (currentUser.email || "New Author").split("@")[0],
+        email: currentUser.email || "",
+        academicTitle: null, institution: null, country: null, website: null,
+        bio: null, avatarUrl: null,
+        createdAt: Date.now(), updatedAt: Date.now()
+      };
+      await setDoc(ref, fresh);
+      userData = fresh;
+      console.log("[ARC profile] users document created");
+    } catch (e) {
+      console.warn("[ARC profile] ensureUserDoc:", e);
+      if (!userData || !userData.fullName) {
+        userData = { fullName: currentUser.displayName || (currentUser.email || "New Author").split("@")[0],
+          email: currentUser.email || "", avatarUrl: null, institution: null, country: null,
+          academicTitle: null, website: null, bio: null };
+      }
+      if (/permission/i.test(e.message || "")) {
+        toast("Your profile document could not be read/created — the Firestore rules for the <b>users</b> collection need to allow signed-in users to read/write their own document. See the install guide.", "err");
+      }
+    }
+  }
+
+  async function loadMySubs() {
+    /* all submissions of this user (any status — it is their private list) */
+    try {
+      const q = query(collection(db, "submissions"), where("uid", "==", currentUser.uid));
+      const snap = await getDocs(q);
+      mySubs = [];
+      snap.forEach((s) => { const d = s.data(); d.id = s.id; mySubs.push(d); });
+    } catch (e1) {
+      console.warn("[ARC profile] uid query failed, trying full read:", e1);
+      try {
+        const snap = await getDocs(collection(db, "submissions"));
+        mySubs = [];
+        snap.forEach((s) => { const d = s.data(); d.id = s.id; if (d.uid === currentUser.uid) mySubs.push(d); });
+      } catch (e2) {
+        console.error("[ARC profile] submissions read failed:", e2);
+        mySubs = [];
+        toast("Your submissions could not be loaded from the database.", "err");
+      }
+    }
+    mySubs.sort((a, b) => tsNum(b.submittedAt) - tsNum(a.submittedAt));
+    renderStats();
+    renderSubs();
+  }
+
+  /* ================= rendering ================= */
+  async function renderHeader() {
+    $("pfAvatar").innerHTML = avatarHTML(userData.avatarUrl, userData.fullName);
+    $("pfName").textContent = userData.fullName || "New Author";
+    $("pfAcademic").textContent = userData.academicTitle || "";
+    $("pfAcademic").style.display = userData.academicTitle ? "block" : "none";
+
+    const lines = [];
+    if (userData.institution) lines.push('<i class="fas fa-university"></i> ' + esc(userData.institution));
+    if (userData.country) lines.push('<i class="fas fa-globe-americas"></i> ' + esc(userData.country));
+    if (userData.website) lines.push('<i class="fas fa-link"></i> <a href="' + esc(userData.website) + '" target="_blank" rel="noopener">' + esc(userData.website.replace(/^https?:\/\//, "")) + "</a>");
+    lines.push('<i class="fas fa-envelope"></i> ' + esc(userData.email || currentUser.email || ""));
+    const since = tsNum(userData.createdAt) ? fmtDate(userData.createdAt) : "";
+    if (since) lines.push('<i class="fas fa-calendar-alt"></i> Member since ' + esc(since));
+    $("pfLines").innerHTML = lines.join("<br>");
+
+    const bio = String(userData.bio || "").trim();
+    $("pfBio").textContent = bio;
+    $("pfBio").style.display = bio ? "block" : "none";
+
+    $("publicLink").href = "author.html?uid=" + encodeURIComponent(currentUser.uid);
+    $("accEmail").textContent = currentUser.email || "";
+  }
+
+  function renderStats() {
+    const c = { total: mySubs.length, approved: 0, pending: 0, rejected: 0 };
+    mySubs.forEach((d) => { c[statusOf(d)]++; });
+    $("stTotal").textContent = c.total;
+    $("stApproved").textContent = c.approved;
+    $("stPending").textContent = c.pending;
+    $("stRejected").textContent = c.rejected;
+  }
+
+  function renderSubs() {
+    const box = $("pfSubs");
+    const list = subFilter === "all" ? mySubs : mySubs.filter((d) => statusOf(d) === subFilter);
+    if (!list.length) {
+      box.innerHTML = '<div class="pf-empty">' +
+        (mySubs.length
+          ? "No <b>" + esc(subFilter) + "</b> submissions yet."
+          : 'You have not submitted any article yet.<br><a href="submit.html"><i class="fas fa-paper-plane"></i> Submit your first article</a> — it will appear here with its review status.') +
+        "</div>";
+      return;
+    }
+    box.innerHTML = list.map((d) => {
+      const st = statusOf(d);
+      const view = "submission-view.html?sub=" + encodeURIComponent(d.id);
+      const thumb = d.imageUrl
+        ? '<img src="' + esc(d.imageUrl) + '" alt="" loading="lazy">'
+        : '<i class="fas fa-file-pdf"></i>';
+      const abs = String(d.abstract || "");
+      return '<div class="pf-sub" data-id="' + esc(d.id) + '">' +
+        '<div class="pf-sub-thumb">' + thumb + "</div>" +
+        '<div class="pf-sub-body">' +
+          '<div class="pf-sub-top">' +
+            (d.category ? '<span class="pf-sub-cat">' + esc(d.category) + "</span>" : "") +
+            '<span class="pf-badge ' + st + '">' + (st === "approved" ? "Approved" : st === "rejected" ? "Rejected" : "Pending Review") + "</span>" +
+          "</div>" +
+          '<h3 class="pf-sub-title"><a href="' + view + '">' + esc(d.title || "(Untitled)") + "</a></h3>" +
+          '<p class="pf-sub-meta">Submitted ' + esc(fmtDate(d.submittedAt) || "—") + "</p>" +
+          (abs ? '<p class="pf-sub-abs">' + esc(abs.slice(0, 200)) + (abs.length > 200 ? "..." : "") + "</p>" : "") +
+          '<div class="pf-sub-actions">' +
+            '<a class="pf-mini read" href="' + view + '"><i class="fas fa-book-open"></i> Read</a>' +
+            (d.fileUrl ? '<a class="pf-mini pdf" href="' + esc(d.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> PDF</a>' : "") +
+            '<button type="button" class="pf-mini del" data-del="' + esc(d.id) + '"><i class="fas fa-trash-alt"></i> Delete</button>' +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    }).join("");
+
+    box.querySelectorAll("[data-del]").forEach((btn) => {
+      btn.addEventListener("click", () => deleteSubmission(btn.getAttribute("data-del"), btn));
+    });
+  }
+
+  /* ================= filters ================= */
+  $("pfFilters").addEventListener("click", (e) => {
+    const chip = e.target.closest(".pf-chip");
+    if (!chip) return;
+    subFilter = chip.getAttribute("data-f");
+    document.querySelectorAll(".pf-chip").forEach((c) => c.classList.toggle("on", c === chip));
+    renderSubs();
+  });
+
+  /* ================= delete a submission ================= */
+  async function deleteSubmission(id, btn) {
+    const d = mySubs.find((x) => x.id === id);
+    if (!d) return;
+    if (!confirm('Delete the submission "' + (d.title || "Untitled") + '"?\n\nThe PDF and cover image files stay on the server, but the submission is removed from the database and from the site. This cannot be undone.')) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Deleting...';
+    try {
+      await deleteDoc(doc(db, "submissions", id));
+      mySubs = mySubs.filter((x) => x.id !== id);
+      renderStats();
+      renderSubs();
+      toast('<i class="fas fa-check-circle"></i> Submission deleted.', "ok");
+    } catch (err) {
+      console.error("[ARC profile] delete:", err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete';
+      let msg = err.message || String(err);
+      if (/permission/i.test(msg)) msg = "The database refused (Firestore rules). Submissions can currently only be deleted by signed-in users — ask the administrator to update the rules.";
+      toast('<i class="fas fa-times-circle"></i> Could not delete: ' + esc(msg), "err");
+    }
+  }
+
+  /* ================= edit profile ================= */
+  $("editProfileBtn").addEventListener("click", () => {
+    const card = $("pfEditCard");
+    const opening = !card.classList.contains("open");
+    card.classList.toggle("open", opening);
+    if (opening) {
+      $("edName").value = userData.fullName || "";
+      $("edAcademic").value = userData.academicTitle || "";
+      $("edInstitution").value = userData.institution || "";
+      $("edCountry").value = userData.country || "";
+      $("edWebsite").value = userData.website || "";
+      $("edBio").value = userData.bio || "";
+      $("bioCount").textContent = $("edBio").value.length;
+      clearStatus($("editStatus"));
+      try { card.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+    }
+  });
+  $("cancelEditBtn").addEventListener("click", () => $("pfEditCard").classList.remove("open"));
+  $("edBio").addEventListener("input", () => { $("bioCount").textContent = $("edBio").value.length; });
+
+  $("editForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const st = $("editStatus");
+    const name = $("edName").value.trim();
+    if (!name) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> Please enter your full name.'); return; }
+    let website = $("edWebsite").value.trim();
+    if (website && !/^https?:\/\//i.test(website)) website = "https://" + website;
+    if (website && !/^https?:\/\/[^\s.]+\.[^\s]{2,}/i.test(website)) {
+      setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> That website address does not look valid.'); return;
+    }
+    const btn = $("saveProfileBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
+    clearStatus(st);
+    try {
+      const fresh = {
+        fullName: name,
+        academicTitle: $("edAcademic").value.trim() || null,
+        institution: $("edInstitution").value.trim() || null,
+        country: $("edCountry").value.trim() || null,
+        website: website || null,
+        bio: $("edBio").value.trim() || null,
+        updatedAt: Date.now()
+      };
+      await updateDoc(doc(db, "users", currentUser.uid), fresh);
+      Object.assign(userData, fresh);
+      try { await updateProfile(currentUser, { displayName: name }); } catch (e) { console.warn("displayName:", e); }
+      await renderHeader();
+      $("pfEditCard").classList.remove("open");
+      toast('<i class="fas fa-check-circle"></i> Profile updated!', "ok");
+    } catch (err) {
+      console.error("[ARC profile] save:", err);
+      let msg = err.message || String(err);
+      if (/permission/i.test(msg)) msg = "The database refused to save your profile. The administrator must add rules for the <b>users</b> collection (see the install guide) — allow each signed-in user to update their own document.";
+      setStatus(st, "error", '<i class="fas fa-times-circle"></i> ' + esc(msg));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+  });
+
+  /* ================= avatar upload (same Worker as submissions) ================= */
+  function fetchWithTimeout(url, options, ms) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+  }
+  async function uploadToWorker(file) {
+    const fd = new FormData();
+    fd.append(WORKER_FILE_FIELD, file, file.name);
+    let res;
+    try {
+      res = await fetchWithTimeout(WORKER_URL, { method: "POST", body: fd }, UPLOAD_TIMEOUT_MS);
+    } catch (err) {
+      throw new Error(err.name === "AbortError" ? "The upload is taking longer than 90 seconds." : "Upload failed (network error): " + err.message);
+    }
+    if (!res.ok) {
+      let t = ""; try { t = (await res.text()).slice(0, 160); } catch (e) {}
+      throw new Error("The server returned code " + res.status + (t ? " — " + t : ""));
+    }
+    const text = (await res.text()).trim();
+    let url = null;
+    try { const j = JSON.parse(text); url = (typeof j === "string") ? j : (j.url || j.fileUrl || j.path || j.link || j.data || null); }
+    catch (e) { url = text; }
+    if (!url || !/^https?:\/\//i.test(url)) throw new Error("Could not read the uploaded file URL from the server response.");
+    return url;
+  }
+
+  $("avatarEditBtn").addEventListener("click", () => $("avatarFile").click());
+  $("avatarFile").addEventListener("change", async () => {
+    const f = $("avatarFile").files[0];
+    $("avatarFile").value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { toast("Please choose an image file (JPG / PNG / WebP).", "err"); return; }
+    if (f.size > 2 * 1048576) { toast("The profile photo must be smaller than 2 MB.", "err"); return; }
+    const btn = $("avatarEditBtn");
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+    btn.disabled = true;
+    try {
+      const url = await uploadToWorker(f);
+      await updateDoc(doc(db, "users", currentUser.uid), { avatarUrl: url, updatedAt: Date.now() });
+      userData.avatarUrl = url;
+      $("pfAvatar").innerHTML = avatarHTML(url, userData.fullName);
+      toast('<i class="fas fa-check-circle"></i> Profile photo updated!', "ok");
+    } catch (err) {
+      console.error("[ARC profile] avatar:", err);
+      toast('<i class="fas fa-times-circle"></i> Photo upload failed: ' + esc(err.message || err), "err");
+    } finally {
+      btn.innerHTML = '<i class="fas fa-camera"></i>';
+      btn.disabled = false;
+    }
+  });
+
+  /* ================= copy public link ================= */
+  $("copyLinkBtn").addEventListener("click", async () => {
+    const link = new URL("author.html?uid=" + encodeURIComponent(currentUser.uid), location.href).href;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast('<i class="fas fa-check-circle"></i> Public profile link copied to the clipboard!', "ok");
+    } catch (e) {
+      prompt("Copy your public profile link:", link);
+    }
+  });
+
+  /* ================= change password ================= */
+  $("pwForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const st = $("pwStatus");
+    const cur = $("pwCurrent").value, nw = $("pwNew").value, nw2 = $("pwNew2").value;
+    if (!cur || !nw) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> Please fill in all the fields.'); return; }
+    if (nw.length < 6) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> The new password must be at least 6 characters long.'); return; }
+    if (nw !== nw2) { setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> The two new passwords do not match.'); return; }
+    const btn = $("pwBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Updating...';
+    clearStatus(st);
+    try {
+      const cred = EmailAuthProvider.credential(currentUser.email, cur);
+      await reauthenticateWithCredential(currentUser, cred);
+      await updatePassword(currentUser, nw);
+      $("pwForm").reset();
+      setStatus(st, "success", '<i class="fas fa-check-circle"></i> Your password has been updated.');
+    } catch (err) {
+      console.error("[ARC profile] password:", err);
+      const code = err.code || "";
+      let msg = err.message || String(err);
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password" || /invalid-login-credentials/i.test(msg)) msg = "The current password is incorrect.";
+      else if (code === "auth/too-many-requests") msg = "Too many attempts — please wait a moment and try again.";
+      setStatus(st, "error", '<i class="fas fa-times-circle"></i> ' + esc(msg));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-key"></i> Update Password';
+    }
+  });
+
+  /* ================= logout / delete account ================= */
+  $("logoutBtn").addEventListener("click", async () => {
+    try { await signOut(auth); }
+    catch (e) { console.warn(e); }
+    location.href = "login.html";
+  });
+
+  $("deleteBtn").addEventListener("click", async () => {
+    const st = $("accStatus");
+    if (!confirm("Really delete your ACCOUNT?\n\nYour profile and login will be removed. Already-published articles remain on the site but lose the link to your profile.")) return;
+    const typed = prompt('This cannot be undone. Type DELETE (in capital letters) to confirm:');
+    if (typed !== "DELETE") { clearStatus(st); return; }
+    const btn = $("deleteBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Deleting...';
+    try {
+      try { await deleteDoc(doc(db, "users", currentUser.uid)); } catch (e) { console.warn("users doc delete:", e); }
+      await currentUser.delete();
+      location.href = "index.html";
+    } catch (err) {
+      console.error("[ARC profile] delete account:", err);
+      let msg = err.message || String(err);
+      if (/requires-recent-login|credential-too-old/i.test(msg)) msg = "For security reasons you must log in again before deleting your account. Please log out, log back in, and try once more.";
+      setStatus(st, "error", '<i class="fas fa-times-circle"></i> ' + esc(msg));
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete Account';
+    }
+  });
+
+  /* ================= institution suggestions (subset of the submit form) ================= */
+  const INSTITUTIONS = [
+    "University of Dhaka", "University of Rajshahi", "University of Chittagong", "University of Khulna",
+    "University of Barishal", "Shahjalal University of Science and Technology (SUST)", "Jahangirnagar University",
+    "Bangladesh University of Engineering and Technology (BUET)", "Rajshahi University of Engineering and Technology (RUET)",
+    "Islamic University, Bangladesh", "National University, Bangladesh", "Bangladesh Open University",
+    "Bangabandhu Sheikh Mujibur Rahman Science and Technology University", "Pabna University of Science and Technology (PUST)",
+    "Begum Rokeya University, Rangpur", "Comilla University", "Noakhali Science and Technology University (NSTU)",
+    "Hajee Mohammad Danesh Science and Technology University (HSTU)",
+    "Bangladesh Agricultural University (BAU)", "Sher-e-Bangla Agricultural University (SAU)",
+    "Bangabandhu Sheikh Mujib Medical University (BSMMU)",
+    "North South University (NSU)", "BRAC University", "Independent University, Bangladesh (IUB)",
+    "American International University-Bangladesh (AIUB)", "East West University (EWU)", "United International University (UIU)",
+    "Daffodil International University (DIU)", "Ahsanullah University of Science and Technology (AUST)",
+    "University of Liberal Arts Bangladesh (ULAB)", "International Islamic University Chittagong (IIUC)",
+    "University of Asia Pacific (UAP)", "Asian University for Women (AUW)",
+    "Harvard University", "University of Oxford", "University of Cambridge", "Stanford University",
+    "Massachusetts Institute of Technology (MIT)", "University of Toronto", "Monash University", "University of Melbourne"
+  ];
+  $("instList").innerHTML = INSTITUTIONS.map((u) => "<option>" + esc(u) + "</option>").join("");
+</script>
+</body>
+</html>

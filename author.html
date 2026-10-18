@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Author Profile — ARC Journals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .author-wrap { max-width: 900px; margin: 2.2rem auto 4.5rem; padding: 0 1.25rem; }
+
+    .au-gate { display: flex; flex-direction: column; align-items: center; gap: .9rem; padding: 3rem 0; color: #66707f; font-size: .95rem; text-align: center; }
+    .au-gate i.big { font-size: 1.9rem; color: #1f3d7a; }
+
+    /* own-profile banner */
+    .au-own { display: none; background: #eef2fa; border: 1px solid #cdd9f0; color: #1f3d7a; border-radius: 11px;
+      padding: .85rem 1.1rem; font-size: .87rem; line-height: 1.65; margin-bottom: 1.1rem; }
+    .au-own a { color: #1f3d7a; font-weight: 700; }
+
+    /* profile card */
+    .au-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 14px; padding: 1.8rem; box-shadow: 0 6px 26px rgba(20,30,60,.08); }
+    .au-head { display: flex; gap: 1.4rem; align-items: flex-start; flex-wrap: wrap; }
+    .au-avatar { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; border: 3px solid #eef2fa; flex: 0 0 auto; }
+    .au-avatar-initial { width: 108px; height: 108px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font: 600 2.3rem 'Lora', serif; color: #fff; background: linear-gradient(135deg,#1f3d7a,#3d5fa8); flex: 0 0 auto; }
+    .au-info { flex: 1; min-width: 240px; }
+    .au-name { margin: 0 0 .15rem; font-family: 'Lora', serif; font-size: 1.5rem; color: #1c2b4a; line-height: 1.25; }
+    .au-title { color: #1f3d7a; font-weight: 600; font-size: .92rem; margin: 0 0 .5rem; }
+    .au-lines { color: #66707f; font-size: .87rem; line-height: 1.75; margin: 0; }
+    .au-lines i { width: 17px; color: #9aa3b5; }
+    .au-lines a { color: #1f3d7a; text-decoration: none; font-weight: 600; }
+    .au-lines a:hover { text-decoration: underline; }
+    .au-bio { margin: .7rem 0 0; color: #55607a; font-size: .9rem; line-height: 1.65; }
+
+    /* stat strip */
+    .au-stat { display: flex; gap: .6rem; align-items: center; background: #f7f9fd; border: 1px solid #e4e9f3;
+      border-radius: 10px; padding: .6rem 1rem; margin-top: 1.15rem; font-size: .85rem; color: #4a5568; }
+    .au-stat b { font-family: 'Lora', serif; font-size: 1.25rem; color: #1c2b4a; }
+    .au-stat span.sep { flex: 1; }
+
+    /* publications */
+    .au-sec { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.9rem 0 .9rem; }
+    .au-sec h3 { margin: 0; font-family: 'Lora', serif; font-size: 1.2rem; color: #1c2b4a; }
+    .au-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.1rem; }
+
+    /* journal-card design (same as the "Submitted Journals" cards) */
+    .us-card { display: flex; gap: 14px; background: #fff; border: 1px solid #e6e8ee; border-radius: 10px;
+      padding: 12px 14px; box-shadow: 0 2px 10px rgba(20,30,60,.06); animation: usIn .5s ease both; }
+    .us-card:nth-child(2) { animation-delay: .06s; } .us-card:nth-child(3) { animation-delay: .12s; }
+    .us-card:nth-child(4) { animation-delay: .18s; } .us-card:nth-child(5) { animation-delay: .24s; }
+    .us-card:nth-child(6) { animation-delay: .3s; }
+    @keyframes usIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .us-thumb { width: 100px; min-width: 100px; height: 140px; border-radius: 6px; overflow: hidden;
+      background: linear-gradient(135deg,#1f3d7a,#3d5fa8); display: flex; align-items: center; justify-content: center; align-self: flex-start; }
+    .us-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .us-thumb i { color: rgba(255,255,255,.85); font-size: 2rem; }
+    .us-body { display: flex; flex-direction: column; gap: .4rem; flex: 1; min-width: 0; }
+    .us-cat { align-self: flex-start; font-size: .66rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+      color: #1f3d7a; background: #eef2fa; border: 1px solid #d9e1f2; padding: 2px 9px; border-radius: 20px; text-decoration: none; }
+    .us-cat:hover { background: #dde7f7; }
+    .us-title { margin: 0; font-size: 1.02rem; line-height: 1.35; font-family: 'Lora', serif; }
+    .us-title a { color: #1c2b4a; text-decoration: none; }
+    .us-title a:hover { color: #1f3d7a; text-decoration: underline; }
+    .us-meta { font-size: .78rem; color: #6c757d; line-height: 1.5; margin: 0; }
+    .us-abs { font-size: .85rem; color: #55607a; line-height: 1.55; margin: 0; display: -webkit-box;
+      -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .us-actions { margin-top: auto; padding-top: .4rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+    .us-btn { background: #1f3d7a; color: #fff; text-decoration: none; font-size: .78rem; font-weight: 600;
+      padding: .38rem .8rem; border-radius: 7px; transition: background .15s; }
+    .us-btn:hover { background: #16305f; }
+    .us-pdf { border: 1px solid #cdd5e2; color: #1f3d7a; background: #fff; text-decoration: none; font-size: .78rem;
+      font-weight: 600; padding: .38rem .8rem; border-radius: 7px; transition: background .15s; }
+    .us-pdf:hover { background: #f0f4fb; }
+
+    .au-empty { background: #fff; border: 1px dashed #d9dfeb; border-radius: 12px; padding: 1.8rem 1.4rem;
+      text-align: center; color: #8a92a1; font-size: .9rem; line-height: 1.7; }
+
+    .au-error { display: none; background: #fdeeee; border: 1px solid #f2c2c2; color: #b91c1c; border-radius: 12px;
+      padding: 1.2rem 1.4rem; font-size: .9rem; line-height: 1.7; }
+    .au-error a { color: #b91c1c; font-weight: 700; }
+
+    @media (max-width: 560px) {
+      .au-head { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="site-wrapper">
+
+  <div class="top-bar">
+    <span><i class="fas fa-gavel"></i> 24/7 Legal Counsel</span>
+    <a href="tel:+8801712534626"><i class="fas fa-phone-alt"></i> +880 1712534626</a>
+    <a href="mailto:contact@arc.com"><i class="far fa-envelope"></i> contact@arc.com</a>
+    <a href="https://wa.me/8801712534626" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="admin-login.html" class="login-link"><i class="fas fa-user-shield"></i> Log In</a>
+  </div>
+
+  <nav class="main-nav">
+    <div class="logo-area"><h1>ARC Journals</h1><p>Advocacy | Research | Results</p></div>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="nav-links" id="navLinks"></div>
+  </nav>
+
+  <div class="hero-search">
+    <h2>Author Profile</h2>
+    <div class="tagline">Researcher profile and published work on ARC Journals</div>
+  </div>
+
+  <div class="author-wrap">
+
+    <!-- loading -->
+    <div class="au-gate" id="auGate">
+      <i class="fas fa-circle-notch fa-spin big"></i>
+      <span>Loading author profile...</span>
+    </div>
+
+    <!-- error (bad / missing uid) -->
+    <div class="au-error" id="auError"></div>
+
+    <!-- the profile -->
+    <div id="auMain" style="display:none;">
+      <div class="au-own" id="auOwn">
+        <i class="fas fa-info-circle"></i> <b>This is your own public profile</b> — this is exactly what other visitors see.
+        &nbsp;<a href="profile.html"><i class="fas fa-user-edit"></i> Open my dashboard to edit it</a>
+      </div>
+
+      <div class="au-card">
+        <div class="au-head">
+          <div id="auAvatar"></div>
+          <div class="au-info">
+            <h2 class="au-name" id="auName"></h2>
+            <p class="au-title" id="auAcademic"></p>
+            <p class="au-lines" id="auLines"></p>
+            <p class="au-bio" id="auBio"></p>
+          </div>
+        </div>
+        <div class="au-stat" id="auStat"></div>
+      </div>
+
+      <div class="au-sec">
+        <h3><i class="fas fa-book-open"></i> Published Work</h3>
+      </div>
+      <div class="au-grid" id="auGrid"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div>
+      <div class="footer-col"><h4>Resources</h4><p><a href="#">Journal Submissions</a></p><p><a href="#">Peer Review Guidelines</a></p></div>
+      <div class="footer-col"><h4>Publishing</h4><p><a href="#">Open Access Policy</a></p></div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
+</div>
+
+<script src="journals-data.js"></script>
+<script src="menu.js"></script>
+<script src="script.js"></script>
+<script src="footer.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, collection, query, where, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  /* ---------------- Firebase ---------------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+    authDomain: "my-journal-a0eaa.firebaseapp.com",
+    projectId: "my-journal-a0eaa",
+    storageBucket: "my-journal-a0eaa.firebasestorage.app",
+    messagingSenderId: "577249786861",
+    appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ---------------- helpers ---------------- */
+  const $ = (id) => document.getElementById(id);
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function tsNum(v) {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+    if (typeof v === "string") { const n = Date.parse(v); return isNaN(n) ? 0 : n; }
+    if (typeof v.toMillis === "function") return v.toMillis();
+    return 0;
+  }
+  function fmtDate(v) {
+    const t = tsNum(v);
+    return t ? new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
+  }
+  function initials(name) {
+    return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
+  }
+  function isApproved(d) {
+    if (d.approved === true || d.approved === "true" || d.approved === 1) return true;
+    const st = String(d.status || "").toLowerCase();
+    if (st === "approved" || st === "published") return true;
+    if (d.published === true || d.published === "true") return true;
+    return false;
+  }
+  /* category name (as stored on the submission) → category page slug */
+  const CAT_SLUGS = {
+    "arts": "Arts & Culture",
+    "comparative": "Comparative & International Studies",
+    "economics": "Economics & Business",
+    "education": "Education Studies",
+    "space": "Future & Space Studies",
+    "health": "Health, Psychology & Bioethics",
+    "history": "History & Memory Studies",
+    "human": "Human Rights & Indigenous Studies",
+    "inter": "Interdisciplinary Studies",
+    "law": "Law & Environment",
+    "justice": "Law & Justice",
+    "migration": "Migration & Geopolitics",
+    "philosophy": "Philosophy & Ethics",
+    "digital": "Technology & Digital Studies"
+  };
+  function normCat(s) {
+    return String(s || "").toLowerCase().replace(/\s*&\s*/g, " and ").replace(/[^a-z0-9]+/g, "");
+  }
+  function slugOf(category) {
+    const n = normCat(category);
+    if (!n) return null;
+    for (const slug in CAT_SLUGS) {
+      if (normCat(CAT_SLUGS[slug]) === n) return slug;
+      /* tolerate partial matches both ways (same leniency as the site script) */
+      if (n.length >= 4 && normCat(CAT_SLUGS[slug]).indexOf(n) !== -1) return slug;
+      if (normCat(CAT_SLUGS[slug]).length >= 4 && n.indexOf(normCat(CAT_SLUGS[slug])) !== -1) return slug;
+    }
+    return null;
+  }
+  function cardHTML(d) {
+    const view = "submission-view.html?sub=" + encodeURIComponent(d.id);
+    const thumb = d.imageUrl
+      ? '<img src="' + esc(d.imageUrl) + '" alt="' + esc(d.title || "Submission") + '" loading="lazy">'
+      : '<i class="fas fa-file-pdf"></i>';
+    const abs = String(d.abstract || "");
+    const slug = slugOf(d.category);
+    const chip = d.category
+      ? (slug
+          ? '<a class="us-cat" href="journals-' + esc(slug) + '.html" title="Open the category page">' + esc(d.category) + "</a>"
+          : '<span class="us-cat">' + esc(d.category) + "</span>")
+      : "";
+    const dateTxt = fmtDate(d.submittedAt);
+    return '<div class="us-card">' +
+        '<a class="us-thumb" style="display:flex;" href="' + view + '">' + thumb + "</a>" +
+        '<div class="us-body">' + chip +
+          '<h3 class="us-title"><a href="' + view + '">' + esc(d.title || "(Untitled)") + "</a></h3>" +
+          '<p class="us-meta">Published' + (dateTxt ? " " + esc(dateTxt) : "") + "</p>" +
+          (abs ? '<p class="us-abs">' + esc(abs.slice(0, 200)) + (abs.length > 200 ? "..." : "") + "</p>" : "") +
+          '<div class="us-actions">' +
+            '<a class="us-btn" href="' + view + '"><i class="fas fa-book-open"></i> Read</a>' +
+            (d.fileUrl ? '<a class="us-pdf" href="' + esc(d.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> PDF</a>' : "") +
+          "</div>" +
+        "</div>" +
+      "</div>";
+  }
+
+  function fail(html) {
+    $("auGate").style.display = "none";
+    const err = $("auError");
+    err.style.display = "block";
+    err.innerHTML = html;
+  }
+
+  /* ---------------- read ?uid= ---------------- */
+  const uid = new URLSearchParams(location.search).get("uid");
+  if (!uid || !/^[A-Za-z0-9_-]{10,64}$/.test(uid)) {
+    fail('<i class="fas fa-exclamation-triangle"></i> <b>No author specified.</b><br>' +
+      'This page shows an author\'s public profile — open it from an article card (click the author name) or from a profile.<br>' +
+      '<a href="journals.html"><i class="fas fa-arrow-left"></i> Back to all journals</a>');
+  } else {
+    boot(uid);
+  }
+
+  /* also react to the login state (to show the "this is you" banner) */
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.uid === uid) $("auOwn").style.display = "block";
+    else $("auOwn").style.display = "none";
+  });
+
+  async function boot(uid) {
+    /* ---- 1. profile document + submissions in parallel ---- */
+    let profile = null, profileErr = null, subs = [], subsErr = null;
+    const pProfile = (async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (snap.exists()) profile = snap.data();
+      } catch (e) { profileErr = e; }
+    })();
+    const pSubs = (async () => {
+      try {
+        const q = query(collection(db, "submissions"), where("uid", "==", uid));
+        const snap = await getDocs(q);
+        snap.forEach((s) => { const d = s.data(); d.id = s.id; subs.push(d); });
+      } catch (e1) {
+        console.warn("[ARC author] uid query failed, trying full read:", e1);
+        try {
+          const snap = await getDocs(collection(db, "submissions"));
+          snap.forEach((s) => { const d = s.data(); d.id = s.id; if (d.uid === uid) subs.push(d); });
+        } catch (e2) { subsErr = e2; }
+      }
+    })();
+    await Promise.all([pProfile, pSubs]);
+
+    const approved = subs.filter(isApproved).sort((a, b) => tsNum(b.submittedAt) - tsNum(a.submittedAt));
+
+    /* ---- 2. nothing at all? ---- */
+    if (!profile && !approved.length) {
+      if (profileErr && /permission/i.test(profileErr.message || "")) {
+        fail('<i class="fas fa-lock"></i> <b>The profile could not be read.</b><br>' +
+          "The database refused access (Firestore Security Rules). The administrator must allow public reads on the <b>users</b> collection — see the install guide." +
+          '<br><small>Details: ' + esc(profileErr.message) + "</small>");
+      } else {
+        fail('<i class="fas fa-user-slash"></i> <b>This author profile is not available.</b><br>' +
+          "The author has not created a public profile yet and has no published articles on this site.<br>" +
+          '<a href="journals.html"><i class="fas fa-arrow-left"></i> Back to all journals</a>');
+      }
+      return;
+    }
+
+    /* ---- 3. paint the header (fall back to submission data) ---- */
+    const name = (profile && profile.fullName) || (approved[0] && approved[0].fullName) || "ARC Journals Author";
+    $("auAvatar").innerHTML = (profile && profile.avatarUrl)
+      ? '<img class="au-avatar" src="' + esc(profile.avatarUrl) + '" alt="' + esc(name) + '">'
+      : '<div class="au-avatar-initial">' + esc(initials(name)) + "</div>";
+    $("auName").textContent = name;
+    document.title = name + " — Author Profile — ARC Journals";
+
+    const academic = (profile && profile.academicTitle) || "";
+    $("auAcademic").textContent = academic;
+    $("auAcademic").style.display = academic ? "block" : "none";
+
+    const lines = [];
+    const inst = (profile && profile.institution) || (approved.find((d) => d.institution) || {}).institution;
+    if (inst) lines.push('<i class="fas fa-university"></i> ' + esc(inst));
+    if (profile && profile.country) lines.push('<i class="fas fa-globe-americas"></i> ' + esc(profile.country));
+    if (profile && profile.website) lines.push('<i class="fas fa-link"></i> <a href="' + esc(profile.website) + '" target="_blank" rel="noopener">' + esc(profile.website.replace(/^https?:\/\//, "")) + "</a>");
+    const since = profile && tsNum(profile.createdAt) ? fmtDate(profile.createdAt) : "";
+    if (since) lines.push('<i class="fas fa-calendar-alt"></i> Member since ' + esc(since));
+    $("auLines").innerHTML = lines.join("<br>");
+
+    const bio = (profile && String(profile.bio || "").trim()) || "";
+    $("auBio").textContent = bio;
+    $("auBio").style.display = bio ? "block" : "none";
+
+    const cats = {};
+    approved.forEach((d) => { if (d.category) cats[d.category] = (cats[d.category] || 0) + 1; });
+    $("auStat").innerHTML = "<b>" + approved.length + "</b> published article" + (approved.length === 1 ? "" : "s") +
+      (Object.keys(cats).length
+        ? '<span class="sep"></span><span><i class="fas fa-folder"></i> ' +
+          Object.keys(cats).map((c) => esc(c)).join(" · ") + "</span>"
+        : "");
+
+    /* ---- 4. publications ---- */
+    $("auGrid").innerHTML = approved.length
+      ? approved.map(cardHTML).join("")
+      : '<div class="au-empty" style="grid-column:1/-1;">This author has no published articles yet.<br>Articles appear here after editorial approval.</div>';
+
+    if (subsErr) console.warn("[ARC author] submissions error:", subsErr);
+    $("auGate").style.display = "none";
+    $("auMain").style.display = "block";
+  }
+</script>
+</body>
+</html>
