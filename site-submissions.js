@@ -1,5 +1,5 @@
 /* =====================================================================
-   ARC Journals — site-submissions.js  (v7 — page-walk takeover + bar preservation)
+   ARC Journals — site-submissions.js  (v8 — page-walk takeover + bar preservation + strict 6-per-page)
    ===================================================================== */
 
 (function () {
@@ -8,7 +8,7 @@
   if (window.__ARC_SUBMISSIONS_LOADED) return; /* double-load guard */
   window.__ARC_SUBMISSIONS_LOADED = true;
 
-  var VERSION = "v7";
+  var VERSION = "v8";
 
   /* URL slug → exact category name used by the submit form */
   var CAT_NAMES = {
@@ -754,15 +754,26 @@
     var countEl = document.getElementById("resultCount");
     if (!container) return false;
 
-    /* flatten all static cards, in original page order, links untouched */
+    /* flatten all static cards, in original page order, links untouched.
+       v8: keep ONLY element nodes — the site's script.js leaves invisible
+       whitespace text nodes between its cards (innerHTML templates with
+       newlines/indentation). childNodes picked those up and they consumed
+       slots in the 6-per-page slicing, so pages showed fewer than 6 visible
+       cards (journals-arts: 5 / 3 / 2 / 3). Elements only = strict 6/page. */
     var staticNodes = [];
     var holder = document.createElement("div");
+    var droppedTextNodes = 0;
     for (var i = 1; i < snapshots.length; i++) {
       if (!snapshots[i]) continue;
       holder.innerHTML = snapshots[i];
-      for (var n = 0; n < holder.childNodes.length; n++) staticNodes.push(holder.childNodes[n]);
+      var kids = holder.childNodes;
+      for (var n = 0; n < kids.length; n++) {
+        if (kids[n].nodeType === 1) staticNodes.push(kids[n]); /* element only */
+        else if (kids[n].nodeType === 3 && !/\S/.test(kids[n].textContent || "")) droppedTextNodes++;
+      }
     }
-    dbg("takeover: " + staticNodes.length + " static card node(s) collected from " + (snapshots.length - 1) + " page(s)");
+    dbg("takeover: " + staticNodes.length + " static card(s) collected from " + (snapshots.length - 1) +
+      " page(s)" + (droppedTextNodes ? " · " + droppedTextNodes + " invisible whitespace node(s) dropped (v8)" : " (v8)"));
 
     /* submission cards */
     var placeholder = makePlaceholder(String(CAT_NAMES[slug] || "A").charAt(0));
@@ -1127,6 +1138,15 @@
      Data loading (shared)
      ===================================================================== */
   async function fetchApproved() {
+    /* test-harness support: when the page defines window.__FAKE_SUBS__,
+       use that deterministic list instead of the real database (never
+       set on the live site). */
+    if (typeof window.__FAKE_SUBS__ !== "undefined") {
+      var fdocs = (window.__FAKE_SUBS__ || []).slice();
+      fdocs.sort(function (a, b) { return tsNum(b.submittedAt) - tsNum(a.submittedAt); });
+      dbg("query FAKE (test harness): " + fdocs.length + " doc(s)");
+      return fdocs.filter(isApproved);
+    }
     var appMod, fsMod;
     try {
       appMod = await import("https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js");
