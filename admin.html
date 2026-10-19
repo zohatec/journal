@@ -1,75 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Panel — ARC Journals</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — ARC Journals</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&family=Lora:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  .admin-wrap { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
-  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem; }
-  .admin-header h2 { font-family: 'Lora', serif; color: #0a2540; }
-  .admin-actions { display: flex; gap: 0.6rem; }
-  .btn-view-site { background: #085f99; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; }
-  .btn-view-site:hover { background: #0a2540; }
-  .btn-logout { background: #555; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-  .stat-card { background: white; border: 1px solid #eef2f8; border-radius: 14px; padding: 1.1rem; text-align: center; color: #5b6e8c; font-size: 0.85rem; }
-  .stat-card span { display: block; font-size: 1.8rem; font-weight: 700; color: #0a2540; }
-  .stat-card.pending span { color: #856404; }
-  .stat-card.approved span { color: #1a7a3c; }
-  .admin-toolbar { display: flex; gap: 0.8rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
-  .admin-toolbar input { flex: 1; min-width: 220px; padding: 0.7rem 1rem; border: 1px solid #cfdfed; border-radius: 10px; font-family: 'Inter', sans-serif; }
-  .filter-tabs { display: flex; gap: 0.4rem; }
-  .filter-tabs button { background: #f5f7fb; border: 1px solid #cfdfed; padding: 0.5rem 1rem; border-radius: 30px; cursor: pointer; font-size: 0.85rem; }
-  .filter-tabs button.active { background: #0a2540; color: #fff; border-color: #0a2540; }
-  .sub-card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
-  .sub-card h3 { margin: 0.5rem 0 0.3rem 0; color: #1f3a4b; }
-  .sub-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.6rem; }
-  .sub-abstract { font-size: 0.9rem; color: #2c4c6e; line-height: 1.5; margin-bottom: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-  .status-pending { background: #fff3cd; color: #856404; }
-  .status-approved { background: #d4edda; color: #155724; }
-  .type-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: #eef2f8; color: #2c5282; }
-  .btn-row { margin-top: 0.8rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
-  .btn-row a { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
-  .btn-approve { background: #1a7a3c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-  .btn-unpublish { background: #b8860b; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-  .btn-view { background: #085f99; color: white; padding: 6px 14px; border-radius: 6px; }
-  .btn-delete { background: #c4452c; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-  @media (max-width: 650px) { .stats-row { grid-template-columns: 1fr; } }
+  body { font-family: 'Inter', sans-serif; background: #f4f6fb; margin: 0; color: #222; }
+  .admin-wrap { max-width: 920px; margin: 2rem auto; padding: 0 1rem; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  .admin-header h2 { margin: 0; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.5rem; }
+  .admin-header .who { font-size: .82rem; color: #66707f; margin-top: .3rem; }
+  .admin-header .who b { color: #1f3d7a; }
+  .btn { border: none; padding: .5rem 1rem; border-radius: 8px; cursor: pointer; font: 600 .84rem 'Inter', sans-serif;
+    text-decoration: none; display: inline-flex; align-items: center; gap: .45rem; }
+  .btn-view { background: #fff; color: #1f3d7a; border: 1px solid #c9d3e8; } .btn-view:hover { background: #f0f4fb; }
+  .btn-logout { background: #555; color: #fff; } .btn-logout:hover { background: #444; }
+  .sub-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 1.2rem 1.3rem; margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(20,30,60,.05); }
+  .sub-card h3 { margin: .45rem 0 .35rem; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.08rem; line-height: 1.35; }
+  .sub-meta { font-size: .84rem; color: #66707f; margin-bottom: .6rem; }
+  .sub-abs { font-size: .88rem; color: #55607a; line-height: 1.6; margin: 0 0 .75rem; }
+  .sub-links a { color: #1f3d7a; font-weight: 600; text-decoration: none; font-size: .84rem; }
+  .sub-links a:hover { text-decoration: underline; }
+  .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .74rem; font-weight: 700;
+    letter-spacing: .3px; text-transform: uppercase; }
+  .status-pending { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
+  .status-approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
+  .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .btn-approve { background: #1a7a3c; color: #fff; } .btn-approve:hover { background: #156832; }
+  .btn-delete { background: #c4452c; color: #fff; } .btn-delete:hover { background: #a83a24; }
+  .denied { background: #fff; border: 1px solid #f2c2c2; border-radius: 14px; padding: 2.4rem 2rem; text-align: center;
+    box-shadow: 0 6px 26px rgba(20,30,60,.08); max-width: 560px; margin: 3rem auto; }
+  .denied i.big { font-size: 2.2rem; color: #b91c1c; margin-bottom: .9rem; display: block; }
+  .denied h2 { margin: 0 0 .5rem; font-family: 'Lora', serif; color: #1c2b4a; }
+  .denied p { margin: 0 0 1.3rem; color: #66707f; font-size: .92rem; line-height: 1.7; }
+  .denied .btn-admin { background: #1f3d7a; color: #fff; }
 </style>
 </head>
 <body>
-<div class="admin-wrap">
-  <div class="admin-header">
-    <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
-    <div class="admin-actions">
-      <a class="btn-view-site" href="index.html" target="_blank"><i class="fas fa-globe"></i> View Site</a>
-      <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+<div class="admin-wrap" id="adminWrap">
+  <div class="admin-header" id="adminHeader">
+    <div>
+      <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+      <div class="who">Signed in as <b id="whoEmail"></b></div>
+    </div>
+    <div style="display:flex; gap:.55rem; flex-wrap:wrap;">
+      <a class="btn btn-view" href="index.html"><i class="fas fa-globe"></i> View Site</a>
+      <button class="btn btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
     </div>
   </div>
-
-  <div class="stats-row">
-    <div class="stat-card"><span id="statTotal">—</span>Total Submissions</div>
-    <div class="stat-card pending"><span id="statPending">—</span>Awaiting Approval</div>
-    <div class="stat-card approved"><span id="statApproved">—</span>Published on Site</div>
-  </div>
-
-  <div class="admin-toolbar">
-    <input type="text" id="searchBox" placeholder="Search by title, author or email...">
-    <div class="filter-tabs" id="filterTabs">
-      <button data-filter="all" class="active">All</button>
-      <button data-filter="pending">Pending</button>
-      <button data-filter="approved">Published</button>
-    </div>
-  </div>
-
-  <div id="submissionsList">Loading submissions...</div>
+  <div id="submissionsList">Loading...</div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
@@ -80,45 +70,63 @@
     appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
   };
 
+  /* ============================================================
+     ADMIN ACCOUNTS — must be kept in sync with admin-login.html
+     and with the Firestore rules (firestore-rules.txt).
+     ============================================================ */
+  const ADMIN_EMAILS = [
+    "ssbcpoint@gmail.com",
+    "zulfiquarcyberlaw@gmail.com"
+  ];
+  const isAdminEmail = (e) => ADMIN_EMAILS.includes(String(e || "").trim().toLowerCase());
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const container = document.getElementById("submissionsList");
 
-  let allSubs = [];
-  let currentFilter = "all";
-  let searchTerm = "";
-
   function esc(s) {
-    if (s === null || s === undefined) return "";
-    return String(s).replace(/[&<>"']/g, function (m) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
-    });
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function fmtDate(v) {
+    try {
+      if (v == null) return "";
+      if (typeof v === "number") return new Date(v).toLocaleDateString();
+      if (typeof v === "string") { const n = Date.parse(v); return n ? new Date(n).toLocaleDateString() : ""; }
+      if (typeof v.toMillis === "function") return new Date(v.toMillis()).toLocaleDateString();
+    } catch (e) { /* keep going without a date */ }
+    return "";
   }
 
+  /* ---------------- gate ----------------
+     The page itself verifies the signed-in account is an administrator.
+     A regular (author) account that opens this URL directly is blocked —
+     it never sees the panel and never gets the edit/delete controls. */
   onAuthStateChanged(auth, (user) => {
-    if (!user) window.location.href = "admin-login.html";
-    else loadSubmissions();
+    if (!user) { window.location.href = "admin-login.html"; return; }
+    if (!isAdminEmail(user.email)) { renderAccessDenied(user.email); return; }
+    document.getElementById("whoEmail").textContent = user.email || "";
+    loadSubmissions();
   });
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await signOut(auth);
+    try { await signOut(auth); } catch (e) { console.warn(e); }
     window.location.href = "admin-login.html";
   });
 
-  document.getElementById("searchBox").addEventListener("input", (e) => {
-    searchTerm = e.target.value.trim().toLowerCase();
-    render();
-  });
-
-  document.getElementById("filterTabs").addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-filter]");
-    if (!btn) return;
-    currentFilter = btn.dataset.filter;
-    document.querySelectorAll("#filterTabs button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    render();
-  });
+  function renderAccessDenied(email) {
+    document.getElementById("adminHeader").style.display = "none";
+    container.innerHTML = "";
+    document.getElementById("adminWrap").innerHTML =
+      '<div class="denied">' +
+        '<i class="fas fa-user-lock big"></i>' +
+        '<h2>Access denied</h2>' +
+        '<p>The account you are signed in with (<b>' + esc(email || "unknown") + '</b>) is not an administrator account.<br>' +
+        'The admin panel can only be opened with an administrator account.</p>' +
+        '<a class="btn btn-admin" href="admin-login.html"><i class="fas fa-sign-in-alt"></i> Go to Admin Login</a>' +
+      '</div>';
+  }
 
   function extractFilePath(fileUrl) {
     const marker = "/main/";
@@ -129,87 +137,79 @@
   async function loadSubmissions() {
     const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
     const snapshot = await getDocs(q);
-    allSubs = [];
-    snapshot.forEach((d) => { const v = d.data(); v._id = d.id; allSubs.push(v); });
-    const approved = allSubs.filter(s => s.approved).length;
-    document.getElementById("statTotal").innerText = allSubs.length;
-    document.getElementById("statPending").innerText = allSubs.length - approved;
-    document.getElementById("statApproved").innerText = approved;
-    render();
-  }
 
-  function render() {
-    let list = allSubs;
-    if (currentFilter === "pending") list = list.filter(s => !s.approved);
-    if (currentFilter === "approved") list = list.filter(s => s.approved);
-    if (searchTerm) {
-      list = list.filter(s =>
-        (s.title || "").toLowerCase().includes(searchTerm) ||
-        (s.fullName || "").toLowerCase().includes(searchTerm) ||
-        (s.email || "").toLowerCase().includes(searchTerm));
-    }
-    if (!list.length) {
-      container.innerHTML = "<p style='color:#6b7a8a;padding:1rem;'>No submissions match.</p>";
+    if (snapshot.empty) {
+      container.innerHTML = "<p>No submissions yet.</p>";
       return;
     }
+
     container.innerHTML = "";
-    list.forEach((d) => {
+    snapshot.forEach((docSnap) => {
+      const d = docSnap.data();
+      const id = docSnap.id;
+      const approved = d.approved === true || d.approved === "true" || d.approved === 1;
+      const statusClass = approved ? "status-approved" : "status-pending";
+      const statusText = approved ? "Approved" : "Pending";
+
       const card = document.createElement("div");
       card.className = "sub-card";
-      card.innerHTML = `
-        <div>
-          <span class="status-badge ${d.approved ? "status-approved" : "status-pending"}">${d.approved ? "Published" : "Pending"}</span>
-          <span class="type-badge">${esc(d.submissionType || "")}</span>
-        </div>
-        <h3>${esc(d.title || "(Untitled)")}</h3>
-        <div class="sub-meta">${esc(d.fullName || "")} · ${esc(d.email || "")} ${d.category ? "· " + esc(d.category) : ""} ${d.submittedAt ? "· " + new Date(d.submittedAt).toLocaleDateString() : ""}</div>
-        ${d.abstract ? `<p class="sub-abstract">${esc(d.abstract)}</p>` : ""}
-        <a href="${esc(d.fileUrl || "#")}" target="_blank">📄 See the PDF</a>
-        <div class="btn-row">
-          ${d.approved
-            ? `<button class="btn-unpublish" data-id="${d._id}">⏸ Unpublish</button>
-               <a class="btn-view" href="submission-view.html?sub=${d._id}" target="_blank">👁 View on Site</a>`
-            : `<button class="btn-approve" data-id="${d._id}">✅ Approve & Publish</button>`}
-          <button class="btn-delete" data-id="${d._id}" data-fileurl="${esc(d.fileUrl || "")}">🗑️ Delete</button>
-        </div>`;
+      /* every value that a submitter typed is escaped — a crafted title or
+         name can never inject HTML into the admin panel */
+      card.innerHTML =
+        '<span class="status-badge ' + statusClass + '">' + statusText + '</span>' +
+        '<h3>' + esc(d.title || "(Untitled)") + '</h3>' +
+        '<div class="sub-meta">' + esc(d.fullName || "") + ' &middot; ' + esc(d.email || "") +
+          (d.category ? ' &middot; ' + esc(d.category) : "") +
+          (d.submittedAt ? ' &middot; ' + esc(fmtDate(d.submittedAt)) : "") + '</div>' +
+        (d.abstract ? '<p class="sub-abs">' + esc(d.abstract) + '</p>' : "") +
+        '<div class="sub-links"><a href="' + esc(d.fileUrl || "#") + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> See the PDF</a></div>' +
+        '<div class="btn-row">' +
+          (approved ? "" : '<button class="btn btn-approve" data-id="' + esc(id) + '"><i class="fas fa-check"></i> Approve</button>') +
+          '<button class="btn btn-delete" data-id="' + esc(id) + '" data-fileurl="' + esc(d.fileUrl || "") + '"><i class="fas fa-trash-alt"></i> Delete</button>' +
+        '</div>';
       container.appendChild(card);
     });
-  }
 
-  container.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button[data-id]");
-    if (!btn) return;
-    const id = btn.dataset.id;
-
-    if (btn.classList.contains("btn-approve")) {
-      await updateDoc(doc(db, "submissions", id), { approved: true });
-      loadSubmissions();
-    }
-    else if (btn.classList.contains("btn-unpublish")) {
-      await updateDoc(doc(db, "submissions", id), { approved: false });
-      loadSubmissions();
-    }
-    else if (btn.classList.contains("btn-delete")) {
-      if (!confirm("Are you sure you want to delete this submission?")) return;
-      const filePath = extractFilePath(btn.dataset.fileurl);
-      try {
-        if (filePath) {
-          const idToken = await auth.currentUser.getIdToken();
-          await fetch("https://journal-upload.ssbcpoint.workers.dev/delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken, filePath }),
-          });
+    container.querySelectorAll(".btn-approve").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Approving...';
+        try {
+          await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: true });
+          loadSubmissions();
+        } catch (err) {
+          console.error("[ARC admin] approve:", err);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-check"></i> Approve';
+          alert("Could not approve the submission. " + (err && err.message ? err.message : ""));
         }
-        await deleteDoc(doc(db, "submissions", id));
-        loadSubmissions();
-      } catch (err) {
-        alert("There was a problem deleting it.");
-        console.error(err);
-      }
-    }
-  });
+      });
+    });
+
+    container.querySelectorAll(".btn-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to delete this submission? This cannot be undone.")) return;
+        const id = btn.dataset.id;
+        const filePath = extractFilePath(btn.dataset.fileurl || "");
+
+        try {
+          if (filePath) {
+            const idToken = await auth.currentUser.getIdToken();
+            await fetch("https://journal-upload.ssbcpoint.workers.dev/delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken, filePath }),
+            });
+          }
+          await deleteDoc(doc(db, "submissions", id));
+          loadSubmissions();
+        } catch (err) {
+          console.error("[ARC admin] delete:", err);
+          alert("There was a problem deleting it. " + (err && err.message ? err.message : ""));
+        }
+      });
+    });
+  }
 </script>
-<script src="footer.js"></script>
 </body>
 </html>
