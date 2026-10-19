@@ -45,6 +45,54 @@
     .pf-btn.danger:hover { background: #fdeeee; }
     .pf-btn:disabled { opacity: .6; cursor: default; }
 
+    /* ---- v3: ORCID + social link chips ---- */
+    .pf-chiprow { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .65rem; }
+    .pf-link-chip { display: inline-flex; align-items: center; gap: .4rem; font: 600 .76rem 'Inter', sans-serif;
+      padding: .3rem .75rem; border-radius: 999px; text-decoration: none; border: 1px solid #d3d8e2; background: #fff; color: #4a5568; }
+    .pf-link-chip:hover { border-color: #1f3d7a; color: #1f3d7a; }
+    .pf-link-chip.orcid { background: #f4faef; border-color: #cfe3b8; color: #3d6b1e; }
+    .pf-link-chip.orcid:hover { border-color: #3d6b1e; color: #2c5116; }
+
+    /* ---- v3: research interest tags ---- */
+    .pf-tags { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .65rem; }
+    .pf-tag { font: 600 .74rem 'Inter', sans-serif; color: #1f3d7a; background: #eef2fa; border: 1px solid #d9e1f2;
+      padding: .26rem .7rem; border-radius: 999px; }
+
+    /* ---- v3: education list ---- */
+    .pf-edu { display: flex; flex-direction: column; gap: .55rem; margin-top: .8rem; }
+    .pf-edu-item { display: flex; gap: .7rem; align-items: flex-start; background: #f7f9fd; border: 1px solid #e4e9f3;
+      border-radius: 10px; padding: .6rem .85rem; }
+    .pf-edu-item i { color: #1f3d7a; margin-top: .2rem; }
+    .pf-edu-item b { color: #1c2b4a; }
+    .pf-edu-item .edu-sub { display: block; font-size: .8rem; color: #66707f; margin-top: .1rem; }
+
+    /* ---- v3: profile completeness ---- */
+    .pf-progress { margin-top: 1rem; }
+    .pf-progress .lbl { display: flex; justify-content: space-between; font-size: .78rem; font-weight: 600; color: #4a5568; margin-bottom: .3rem; }
+    .pf-progress .track { height: 8px; border-radius: 99px; background: #e8ecf4; overflow: hidden; }
+    .pf-progress .fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#1f3d7a,#3d5fa8); transition: width .4s ease; }
+    .pf-progress .hint { font-size: .74rem; color: #8a92a1; margin-top: .3rem; }
+
+    /* ---- v3: tag editor ---- */
+    .tag-box { border: 1px solid #d3d8e2; border-radius: 9px; background: #fbfcfe; padding: .45rem .55rem;
+      display: flex; flex-wrap: wrap; gap: .35rem; }
+    .tag-box:focus-within { border-color: #1f3d7a; box-shadow: 0 0 0 3px rgba(31,61,122,.12); background: #fff; }
+    .tag-box input { flex: 1; min-width: 150px; border: 0; background: transparent; font: inherit; font-size: .9rem; padding: .3rem .35rem; outline: none; color: #222; }
+    .tag-edit { display: inline-flex; align-items: center; gap: .3rem; background: #eef2fa; border: 1px solid #d9e1f2;
+      color: #1f3d7a; border-radius: 999px; padding: .18rem .35rem .18rem .7rem; font: 600 .76rem 'Inter', sans-serif; }
+    .tag-edit button { border: 0; background: transparent; color: #1f3d7a; cursor: pointer; width: 1.15rem; height: 1.15rem;
+      border-radius: 50%; font-size: .68rem; line-height: 1; padding: 0; }
+    .tag-edit button:hover { background: #d9e1f2; }
+
+    /* ---- v3: education editor rows ---- */
+    .edu-rows { display: flex; flex-direction: column; gap: .6rem; }
+    .edu-row { display: grid; grid-template-columns: 118px 1fr 1fr 84px 38px; gap: .5rem; align-items: center; }
+    .edu-row input, .edu-row select { padding: .55rem .65rem; border: 1px solid #d3d8e2; border-radius: 8px;
+      font: inherit; font-size: .85rem; background: #fbfcfe; color: #222; }
+    .edu-row .edu-del { border: 1px solid #eec7c7; background: #fff; color: #b91c1c; border-radius: 8px; height: 36px; cursor: pointer; }
+    .edu-row .edu-del:hover { background: #fdeeee; }
+    .edu-add { margin-top: .55rem; }
+
     /* ---- stats ---- */
     .pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: .9rem; margin: 1.4rem 0 2rem; }
     .pf-stat { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: .95rem 1rem; text-align: center;
@@ -134,6 +182,8 @@
       .pf-form-grid { grid-template-columns: 1fr; }
       .pf-account { grid-template-columns: 1fr; }
       .pf-head { flex-direction: column; }
+      .edu-row { grid-template-columns: 1fr 1fr; }
+      .edu-row .edu-del { grid-column: 2; justify-self: end; width: 38px; }
     }
     @media (max-width: 540px) {
       .pf-sub { flex-direction: column; }
@@ -187,11 +237,20 @@
             <p class="pf-title" id="pfAcademic"></p>
             <p class="pf-lines" id="pfLines"></p>
             <p class="pf-bio" id="pfBio"></p>
+            <div class="pf-chiprow" id="pfSocials"></div>
+            <div class="pf-tags" id="pfTags"></div>
+            <div class="pf-edu" id="pfEdu"></div>
+            <div class="pf-progress" id="pfProgress" style="display:none;">
+              <div class="lbl"><span>Profile completeness</span><b id="pfProgressPct">0%</b></div>
+              <div class="track"><div class="fill" id="pfProgressFill" style="width:0%"></div></div>
+              <div class="hint" id="pfProgressHint"></div>
+            </div>
             <div class="pf-actions">
               <button type="button" class="pf-btn" id="editProfileBtn"><i class="fas fa-user-edit"></i> Edit Profile</button>
               <a class="pf-btn ghost" id="publicLink" href="#" target="_blank" rel="noopener"><i class="fas fa-globe"></i> View Public Profile</a>
               <button type="button" class="pf-btn ghost" id="copyLinkBtn" title="Copy your public profile link"><i class="fas fa-link"></i> Copy Link</button>
               <a class="pf-btn" href="submit.html"><i class="fas fa-paper-plane"></i> Submit New Article</a>
+              <a class="pf-btn" id="adminDashBtn" href="admin.html" style="display:none; background:#0a2540;"><i class="fas fa-shield-alt"></i> Admin Dashboard</a>
             </div>
           </div>
         </div>
@@ -254,10 +313,47 @@
                 <option>Mexico</option><option>Other</option>
               </datalist>
             </div>
+            <div class="pf-fg">
+              <label for="edDepartment">Department / Faculty</label>
+              <input type="text" id="edDepartment" placeholder="e.g. Department of Law">
+            </div>
+            <div class="pf-fg">
+              <label for="edCity">City</label>
+              <input type="text" id="edCity" placeholder="e.g. Rajshahi">
+            </div>
+            <div class="pf-fg">
+              <label for="edOrcid">ORCID iD</label>
+              <input type="text" id="edOrcid" placeholder="0000-0000-0000-0000" maxlength="19" inputmode="numeric">
+              <div class="hint">Your 16-digit researcher ID from <a href="https://orcid.org" target="_blank" rel="noopener">orcid.org</a> — used by journals and funders worldwide.</div>
+            </div>
             <div class="pf-fg full">
-              <label for="edWebsite">Website / Research Profile (optional)</label>
+              <label for="edWebsite">Website / Blog (optional)</label>
               <input type="url" id="edWebsite" placeholder="e.g. https://scholar.google.com/...">
-              <div class="hint">A personal page, Google Scholar, ORCID, ResearchGate or LinkedIn profile.</div>
+              <div class="hint">A personal page or blog — your academic profiles go in the fields below.</div>
+            </div>
+            <div class="pf-fg">
+              <label for="edScholar">Google Scholar profile</label>
+              <input type="url" id="edScholar" placeholder="https://scholar.google.com/citations?...">
+            </div>
+            <div class="pf-fg">
+              <label for="edResearchgate">ResearchGate profile</label>
+              <input type="url" id="edResearchgate" placeholder="https://www.researchgate.net/profile/...">
+            </div>
+            <div class="pf-fg">
+              <label for="edLinkedin">LinkedIn profile</label>
+              <input type="url" id="edLinkedin" placeholder="https://www.linkedin.com/in/...">
+            </div>
+            <div class="pf-fg full">
+              <label>Research Interests</label>
+              <div class="tag-box" id="tagBox">
+                <input type="text" id="tagInput" placeholder="Type a keyword and press Enter — e.g. Human Rights">
+              </div>
+              <div class="hint">Up to 10 keywords. They appear as topic labels on your public profile.</div>
+            </div>
+            <div class="pf-fg full">
+              <label>Education &amp; Qualifications</label>
+              <div class="edu-rows" id="eduRows"></div>
+              <button type="button" class="pf-btn ghost edu-add" id="eduAddBtn"><i class="fas fa-plus"></i> Add Education</button>
             </div>
             <div class="pf-fg full">
               <label for="edBio">Short Biography</label>
@@ -360,6 +456,12 @@
   let mySubs = [];          /* my submissions */
   let subFilter = "all";
 
+  /* ADMIN ACCOUNTS — keep in sync with admin-login.html, admin.html,
+     login.html, menu.js and the Firestore rules. Administrators get
+     a dashboard shortcut on this page. */
+  const ADMIN_EMAILS = ["ssbcpoint@gmail.com", "zulfiquarcyberlaw@gmail.com"];
+  const isAdminEmail = (e) => ADMIN_EMAILS.includes(String(e || "").trim().toLowerCase());
+
   /* ---------------- helpers ---------------- */
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
@@ -409,6 +511,7 @@
       return;
     }
     currentUser = user;
+    $("adminDashBtn").style.display = isAdminEmail(user.email) ? "inline-flex" : "none";
     $("pfGate").style.display = "none";
     $("pfMain").style.display = "block";
     loadEverything();
@@ -431,6 +534,9 @@
         fullName: currentUser.displayName || (currentUser.email || "New Author").split("@")[0],
         email: currentUser.email || "",
         academicTitle: null, institution: null, country: null, website: null,
+        department: null, city: null, orcid: null,
+        scholarUrl: null, researchgateUrl: null, linkedinUrl: null,
+        researchInterests: [], education: [],
         bio: null, avatarUrl: null,
         createdAt: Date.now(), updatedAt: Date.now()
       };
@@ -482,17 +588,66 @@
     $("pfAcademic").style.display = userData.academicTitle ? "block" : "none";
 
     const lines = [];
-    if (userData.institution) lines.push('<i class="fas fa-university"></i> ' + esc(userData.institution));
-    if (userData.country) lines.push('<i class="fas fa-globe-americas"></i> ' + esc(userData.country));
-    if (userData.website) lines.push('<i class="fas fa-link"></i> <a href="' + esc(userData.website) + '" target="_blank" rel="noopener">' + esc(userData.website.replace(/^https?:\/\//, "")) + "</a>");
+    /* v3: affiliation = department + institution; place = city + country */
+    const affil = [userData.department, userData.institution].filter(Boolean).join(" · ");
+    if (affil) lines.push('<i class="fas fa-university"></i> ' + esc(affil));
+    const place = [userData.city, userData.country].filter(Boolean).join(", ");
+    if (place) lines.push('<i class="fas fa-globe-americas"></i> ' + esc(place));
     lines.push('<i class="fas fa-envelope"></i> ' + esc(userData.email || currentUser.email || ""));
     const since = tsNum(userData.createdAt) ? fmtDate(userData.createdAt) : "";
     if (since) lines.push('<i class="fas fa-calendar-alt"></i> Member since ' + esc(since));
     $("pfLines").innerHTML = lines.join("<br>");
 
+    /* v3: ORCID + academic/social link chips (website moved here from the lines) */
+    const socials = [];
+    if (userData.orcid) socials.push('<a class="pf-link-chip orcid" href="https://orcid.org/' + esc(userData.orcid) + '" target="_blank" rel="noopener" title="Open the ORCID record"><i class="fab fa-orcid"></i> ORCID ' + esc(userData.orcid) + "</a>");
+    if (userData.website) socials.push('<a class="pf-link-chip" href="' + esc(userData.website) + '" target="_blank" rel="noopener"><i class="fas fa-globe"></i> Website</a>');
+    if (userData.scholarUrl) socials.push('<a class="pf-link-chip" href="' + esc(userData.scholarUrl) + '" target="_blank" rel="noopener"><i class="fas fa-graduation-cap"></i> Google Scholar</a>');
+    if (userData.researchgateUrl) socials.push('<a class="pf-link-chip" href="' + esc(userData.researchgateUrl) + '" target="_blank" rel="noopener"><i class="fas fa-flask"></i> ResearchGate</a>');
+    if (userData.linkedinUrl) socials.push('<a class="pf-link-chip" href="' + esc(userData.linkedinUrl) + '" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i> LinkedIn</a>');
+    $("pfSocials").innerHTML = socials.join("");
+
     const bio = String(userData.bio || "").trim();
     $("pfBio").textContent = bio;
     $("pfBio").style.display = bio ? "block" : "none";
+
+    /* v3: research interest tags */
+    const tags = Array.isArray(userData.researchInterests) ? userData.researchInterests : [];
+    $("pfTags").innerHTML = tags.map((t) => '<span class="pf-tag">' + esc(t) + "</span>").join("");
+
+    /* v3: education list */
+    const edu = Array.isArray(userData.education) ? userData.education : [];
+    $("pfEdu").innerHTML = edu.map((e2) => {
+      const head = [(e2 && e2.degree) || "", (e2 && e2.field) ? "in " + e2.field : ""].filter(Boolean).join(" ");
+      const sub = [e2 && e2.institution, e2 && e2.year].filter(Boolean).join(" · ");
+      if (!head && !sub) return "";
+      return '<div class="pf-edu-item"><i class="fas fa-graduation-cap"></i><div><b>' + esc(head || "Qualification") + "</b>" +
+        (sub ? '<span class="edu-sub">' + esc(sub) + "</span>" : "") + "</div></div>";
+    }).join("");
+
+    /* v3: profile completeness meter */
+    const checks = {
+      "profile photo": !!userData.avatarUrl,
+      "academic title": !!userData.academicTitle,
+      "department": !!userData.department,
+      "institution": !!userData.institution,
+      "country": !!userData.country,
+      "ORCID iD": !!userData.orcid,
+      "research interests": tags.length > 0,
+      "education": edu.length > 0,
+      "biography": !!bio,
+      "a profile link (website / Scholar / ResearchGate / LinkedIn)":
+        !!(userData.website || userData.scholarUrl || userData.researchgateUrl || userData.linkedinUrl)
+    };
+    const done = Object.keys(checks).filter((k) => checks[k]).length;
+    const pct = Math.round((done / Object.keys(checks).length) * 100);
+    $("pfProgressPct").textContent = pct + "%";
+    $("pfProgressFill").style.width = pct + "%";
+    const missing = Object.keys(checks).filter((k) => !checks[k]);
+    $("pfProgressHint").innerHTML = missing.length
+      ? "Add " + esc(missing.slice(0, 3).join(", ")) + (missing.length > 3 ? " and more" : "") + " to reach 100%."
+      : "Your profile is complete — excellent work!";
+    $("pfProgress").style.display = "block";
 
     $("publicLink").href = "author.html?uid=" + encodeURIComponent(currentUser.uid);
     $("accEmail").textContent = currentUser.email || "";
@@ -557,6 +712,76 @@
      only the administrators can remove or edit a submission, from the
      admin panel. Users still see every status (read-only). */
 
+  /* ================= v3: research interest tag editor ================= */
+  let editTags = [];
+  function rebuildTags() {
+    editTags = Array.isArray(userData.researchInterests) ? userData.researchInterests.slice(0, 10) : [];
+    paintTags();
+  }
+  function paintTags() {
+    const box = $("tagBox"), input = $("tagInput");
+    box.querySelectorAll(".tag-edit").forEach((el) => el.remove());
+    editTags.forEach((t, i) => {
+      const chip = document.createElement("span");
+      chip.className = "tag-edit";
+      chip.innerHTML = esc(t) + '<button type="button" aria-label="Remove">&times;</button>';
+      chip.querySelector("button").addEventListener("click", () => { editTags.splice(i, 1); paintTags(); });
+      box.insertBefore(chip, input);
+    });
+  }
+  function addTag(raw) {
+    const t = String(raw || "").trim().replace(/[,;]+$/, "").slice(0, 30);
+    if (!t) return;
+    if (editTags.length >= 10) { toast("You can keep up to 10 research interests.", "err"); return; }
+    if (!editTags.some((x) => x.toLowerCase() === t.toLowerCase())) editTags.push(t);
+    paintTags();
+  }
+  $("tagInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === "," || e.key === ";") {
+      e.preventDefault();
+      addTag($("tagInput").value);
+      $("tagInput").value = "";
+    }
+  });
+  $("tagInput").addEventListener("blur", () => { addTag($("tagInput").value); $("tagInput").value = ""; });
+
+  /* ================= v3: education rows editor ================= */
+  const DEGREES = ["BSc", "BA", "BSS", "BBA", "LLB", "MSc", "MA", "MSS", "MBA", "LLM", "MPhil", "PhD", "MD", "Postdoc", "Diploma", "Other"];
+  function addEduRow(e2) {
+    const row = document.createElement("div");
+    row.className = "edu-row";
+    const opts = DEGREES.map((d) => '<option' + (e2 && e2.degree === d ? " selected" : "") + ">" + d + "</option>").join("");
+    row.innerHTML =
+      '<select class="edu-degree" aria-label="Degree">' + opts + "</select>" +
+      '<input type="text" class="edu-field" placeholder="Field (e.g. Law)" value="' + esc(e2 && e2.field || "") + '">' +
+      '<input type="text" class="edu-inst" placeholder="Institution" list="instList" value="' + esc(e2 && e2.institution || "") + '">' +
+      '<input type="number" class="edu-year" placeholder="Year" min="1960" max="2030" value="' + esc(e2 && e2.year || "") + '">' +
+      '<button type="button" class="edu-del" title="Remove this entry"><i class="fas fa-trash-alt"></i></button>';
+    row.querySelector(".edu-del").addEventListener("click", () => row.remove());
+    $("eduRows").appendChild(row);
+  }
+  function rebuildEduRows() {
+    $("eduRows").innerHTML = "";
+    (Array.isArray(userData.education) ? userData.education : []).forEach((e2) => addEduRow(e2));
+  }
+  $("eduAddBtn").addEventListener("click", () => addEduRow(null));
+
+  /* ================= v3: ORCID input (auto-format + validation) ================= */
+  $("edOrcid").addEventListener("input", () => {
+    const digits = $("edOrcid").value.replace(/\D/g, "").slice(0, 16);
+    $("edOrcid").value = digits.replace(/(\d{4})(?=\d)/g, "$1-");
+  });
+  function normalizeOrcid() {
+    const v = $("edOrcid").value.trim();
+    if (!v) return null;
+    /* accept a pasted orcid.org URL and extract the ID from it */
+    const m = v.match(/(\d{4}-\d{4}-\d{4}-\d{3}[\dX])/i);
+    if (m) return m[1].toUpperCase();
+    const d = v.replace(/\D/g, "");
+    if (d.length === 16) return d.replace(/(\d{4})(?=\d)/g, "$1-");
+    return "INVALID";
+  }
+
   /* ================= edit profile ================= */
   $("editProfileBtn").addEventListener("click", () => {
     const card = $("pfEditCard");
@@ -567,8 +792,16 @@
       $("edAcademic").value = userData.academicTitle || "";
       $("edInstitution").value = userData.institution || "";
       $("edCountry").value = userData.country || "";
+      $("edDepartment").value = userData.department || "";
+      $("edCity").value = userData.city || "";
+      $("edOrcid").value = userData.orcid || "";
       $("edWebsite").value = userData.website || "";
+      $("edScholar").value = userData.scholarUrl || "";
+      $("edResearchgate").value = userData.researchgateUrl || "";
+      $("edLinkedin").value = userData.linkedinUrl || "";
       $("edBio").value = userData.bio || "";
+      rebuildTags();
+      rebuildEduRows();
       $("bioCount").textContent = $("edBio").value.length;
       clearStatus($("editStatus"));
       try { card.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
@@ -587,6 +820,35 @@
     if (website && !/^https?:\/\/[^\s.]+\.[^\s]{2,}/i.test(website)) {
       setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> That website address does not look valid.'); return;
     }
+    /* v3: scholar / researchgate / linkedin links */
+    const normalizeUrl = (id) => {
+      let u = $(id).value.trim();
+      if (u && !/^https?:\/\//i.test(u)) u = "https://" + u;
+      return u || null;
+    };
+    const scholar = normalizeUrl("edScholar");
+    const rg = normalizeUrl("edResearchgate");
+    const li = normalizeUrl("edLinkedin");
+    const badUrl = [scholar, rg, li].find((u) => u && !/^https?:\/\/[^\s.]+\.[^\s]{2,}/i.test(u));
+    if (badUrl) {
+      setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> One of the profile links (Scholar / ResearchGate / LinkedIn) does not look like a valid address.'); return;
+    }
+    /* v3: ORCID validation */
+    const orcid = normalizeOrcid();
+    if (orcid === "INVALID") {
+      setStatus(st, "error", '<i class="fas fa-exclamation-circle"></i> That ORCID iD does not look right — it should be 16 digits, like 0000-0002-1825-0097.'); return;
+    }
+    /* v3: collect the education rows (rows without any content are skipped) */
+    const eduList = [];
+    document.querySelectorAll("#eduRows .edu-row").forEach((row) => {
+      const degree = row.querySelector(".edu-degree").value;
+      const field = row.querySelector(".edu-field").value.trim();
+      const institution = row.querySelector(".edu-inst").value.trim();
+      const year = row.querySelector(".edu-year").value.trim();
+      if (degree || field || institution || year) {
+        eduList.push({ degree: degree || null, field: field || null, institution: institution || null, year: year || null });
+      }
+    });
     const btn = $("saveProfileBtn");
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
@@ -597,7 +859,15 @@
         academicTitle: $("edAcademic").value.trim() || null,
         institution: $("edInstitution").value.trim() || null,
         country: $("edCountry").value.trim() || null,
+        department: $("edDepartment").value.trim() || null,
+        city: $("edCity").value.trim() || null,
+        orcid: orcid,
         website: website || null,
+        scholarUrl: scholar,
+        researchgateUrl: rg,
+        linkedinUrl: li,
+        researchInterests: editTags.slice(0, 10),
+        education: eduList,
         bio: $("edBio").value.trim() || null,
         updatedAt: Date.now()
       };
