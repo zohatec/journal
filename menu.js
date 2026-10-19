@@ -1,5 +1,6 @@
 // menu.js - Dynamic menu with Donate dropdown (click toggles on all devices, hover works on desktop)
 // v2 — টপ-বারের "Log In" বাটনে অ্যাকাউন্ট-স্টেট যোগ হয়েছে (নিচে initAccountButton)। বাকি সব আগের মতোই।
+// v3 — অ্যাডমিন লগ-ইন থাকলে টপ-বারে "Admin" বাটনও দেখায় (admin.html প্যানেলে যায়)।
 (function() {
     // ===== ফেভিকন: menu.js সব পেজে লোড হয়, তাই এক জায়গায় দিলেই সব পেজে সেট হয়ে যাবে =====
   (function () {
@@ -96,6 +97,8 @@
        • লগইন অবস্থায়  → ব্যবহারকারীর নাম → profile.html
      admin-login.html এখন শুধু অ্যাডমিনদের জন্য — ওই পেজ নিজেই যাচাই
      করে, তাই এই বাটন কখনো ওখানে পাঠায় না।
+     v3 — অ্যাডমিন লগ-ইন থাকলে এই বাটনের পাশে আলাদা "Admin" বাটন
+     যোগ হয় (শুধু অ্যাডমিনরা দেখবে), যেটা সরাসরি admin.html প্যানেলে যায়।
      Firebase লোড ব্যর্থ হলে বাটন login.html-এই থাকে — কখনো ভাঙা
      বা অ্যাডমিন-লগইনে যাওয়া অবস্থায় পড়ে না।
      ============================================================ */
@@ -133,6 +136,40 @@
       link.title = 'Go to your profile';
     }
 
+    /* ============================================================
+       v3 — অ্যাডমিন বাটন
+       ------------------------------------------------------------
+       লগ-ইন করা ব্যবহারকারী যদি অ্যাডমিন হন, তাহলে টপ-বারের Log In /
+       নামের বাটনের ঠিক আগে একটি "Admin" লিংক বসানো হয় — যেটা
+       সরাসরি admin.html (এডমিন প্যানেল) খোলে। সাধারণ ব্যবহারকারী
+       বা লগআউট অবস্থায় এই বাটন লুকানো থাকে।
+       ADMIN_EMAILS তালিকাটি admin.html, admin-login.html, login.html
+       এবং Firestore rules-এর সাথে সিংকে রাখুন।
+       ============================================================ */
+    var ADMIN_EMAILS = [
+      'ssbcpoint@gmail.com',
+      'zulfiquarcyberlaw@gmail.com'
+    ];
+    function isAdminEmail(e) {
+      return ADMIN_EMAILS.indexOf(String(e || '').trim().toLowerCase()) !== -1;
+    }
+    function showAdminLink() {
+      var admin = document.querySelector('.admin-link');
+      if (!admin) {
+        admin = document.createElement('a');
+        admin.className = 'admin-link';
+        admin.innerHTML = '<i class="fas fa-user-shield"></i> Admin';
+        admin.title = 'Open the admin panel';
+        if (link.parentNode) link.parentNode.insertBefore(admin, link);
+      }
+      admin.href = 'admin.html';
+      admin.style.display = '';
+    }
+    function hideAdminLink() {
+      var admin = document.querySelector('.admin-link');
+      if (admin) admin.style.display = 'none';
+    }
+
     /* ডিফল্ট স্টেট (Firebase চেক হওয়ার আগেই): লগআউট */
     paintLoggedOut();
 
@@ -155,7 +192,9 @@
       var db = mods[2].getFirestore(app);
 
       mods[1].onAuthStateChanged(auth, function (user) {
-        if (!user) { paintLoggedOut(); return; }
+        if (!user) { paintLoggedOut(); hideAdminLink(); return; }
+        /* v3: অ্যাডমিন হলে "Admin" বাটন দেখাও, না হলে লুকাও */
+        if (isAdminEmail(user.email)) { showAdminLink(); } else { hideAdminLink(); }
         var name = user.displayName || (user.email || 'My Profile').split('@')[0];
         /* users ডকুমেন্ট থেকে পুরো নাম আনার চেষ্টা — ব্যর্থ হলে auth-এর নামই থাকে */
         mods[2].getDoc(mods[2].doc(db, 'users', user.uid)).then(function (snap) {
