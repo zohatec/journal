@@ -34,9 +34,30 @@
     .au-lines a:hover { text-decoration: underline; }
     .au-bio { margin: .7rem 0 0; color: #55607a; font-size: .9rem; line-height: 1.65; }
 
+    /* ORCID + social chips (v2) */
+    .au-chiprow { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .65rem; }
+    .au-link-chip { display: inline-flex; align-items: center; gap: .4rem; font: 600 .76rem 'Inter', sans-serif;
+      padding: .3rem .75rem; border-radius: 999px; text-decoration: none; border: 1px solid #d3d8e2; background: #fff; color: #4a5568; }
+    .au-link-chip:hover { border-color: #1f3d7a; color: #1f3d7a; }
+    .au-link-chip.orcid { background: #f4faef; border-color: #cfe3b8; color: #3d6b1e; }
+    .au-link-chip.orcid:hover { border-color: #3d6b1e; color: #2c5116; }
+
+    /* research interest tags (v2) */
+    .au-tags { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .65rem; }
+    .au-tag { font: 600 .74rem 'Inter', sans-serif; color: #1f3d7a; background: #eef2fa; border: 1px solid #d9e1f2;
+      padding: .26rem .7rem; border-radius: 999px; }
+
+    /* education list (v2) */
+    .au-edu { display: flex; flex-direction: column; gap: .55rem; margin-top: 1rem; }
+    .au-edu-item { display: flex; gap: .7rem; align-items: flex-start; background: #f7f9fd; border: 1px solid #e4e9f3;
+      border-radius: 10px; padding: .6rem .85rem; }
+    .au-edu-item i { color: #1f3d7a; margin-top: .2rem; }
+    .au-edu-item b { color: #1c2b4a; }
+    .au-edu-item .edu-sub { display: block; font-size: .8rem; color: #66707f; margin-top: .1rem; }
+
     /* stat strip */
     .au-stat { display: flex; gap: .6rem; align-items: center; background: #f7f9fd; border: 1px solid #e4e9f3;
-      border-radius: 10px; padding: .6rem 1rem; margin-top: 1.15rem; font-size: .85rem; color: #4a5568; }
+      border-radius: 10px; padding: .6rem 1rem; margin-top: 1.15rem; font-size: .85rem; color: #4a5568; flex-wrap: wrap; }
     .au-stat b { font-family: 'Lora', serif; font-size: 1.25rem; color: #1c2b4a; }
     .au-stat span.sep { flex: 1; }
 
@@ -133,7 +154,10 @@
             <h2 class="au-name" id="auName"></h2>
             <p class="au-title" id="auAcademic"></p>
             <p class="au-lines" id="auLines"></p>
+            <div class="au-chiprow" id="auSocials"></div>
             <p class="au-bio" id="auBio"></p>
+            <div class="au-tags" id="auTags"></div>
+            <div class="au-edu" id="auEdu"></div>
           </div>
         </div>
         <div class="au-stat" id="auStat"></div>
@@ -145,6 +169,15 @@
       <div class="au-grid" id="auGrid"></div>
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col"><h4>ARC Journals</h4><p>University of Rajshahi.</p><p><i class="fas fa-phone"></i> +880 1712534626</p></div>
+      <div class="footer-col"><h4>Resources</h4><p><a href="#">Journal Submissions</a></p><p><a href="#">Peer Review Guidelines</a></p></div>
+      <div class="footer-col"><h4>Publishing</h4><p><a href="#">Open Access Policy</a></p></div>
+    </div>
+    <div class="copyright">© 2026 ARC Journals</div>
+  </footer>
 </div>
 
 <script src="journals-data.js"></script>
@@ -331,18 +364,57 @@
     $("auAcademic").textContent = academic;
     $("auAcademic").style.display = academic ? "block" : "none";
 
+    /* v2: affiliation = department + institution (falls back to the
+       institution stored on the submissions themselves) */
     const lines = [];
     const inst = (profile && profile.institution) || (approved.find((d) => d.institution) || {}).institution;
-    if (inst) lines.push('<i class="fas fa-university"></i> ' + esc(inst));
-    if (profile && profile.country) lines.push('<i class="fas fa-globe-americas"></i> ' + esc(profile.country));
-    if (profile && profile.website) lines.push('<i class="fas fa-link"></i> <a href="' + esc(profile.website) + '" target="_blank" rel="noopener">' + esc(profile.website.replace(/^https?:\/\//, "")) + "</a>");
+    const affil = (profile && profile.department && inst)
+      ? profile.department + " · " + inst
+      : (profile && profile.department) || inst;
+    if (affil) lines.push('<i class="fas fa-university"></i> ' + esc(affil));
+    const place = profile ? [profile.city, profile.country].filter(Boolean).join(", ") : "";
+    if (place) lines.push('<i class="fas fa-globe-americas"></i> ' + esc(place));
     const since = profile && tsNum(profile.createdAt) ? fmtDate(profile.createdAt) : "";
     if (since) lines.push('<i class="fas fa-calendar-alt"></i> Member since ' + esc(since));
     $("auLines").innerHTML = lines.join("<br>");
 
+    /* v2: ORCID + academic/social link chips (the email stays private) */
+    const socials = [];
+    if (profile && profile.orcid) {
+      socials.push('<a class="au-link-chip orcid" href="https://orcid.org/' + esc(profile.orcid) + '" target="_blank" rel="noopener" ' +
+        'title="Open the ORCID record"><i class="fab fa-orcid"></i> ORCID ' + esc(profile.orcid) + "</a>");
+    }
+    if (profile && profile.website) {
+      socials.push('<a class="au-link-chip" href="' + esc(profile.website) + '" target="_blank" rel="noopener"><i class="fas fa-globe"></i> Website</a>');
+    }
+    if (profile && profile.scholarUrl) {
+      socials.push('<a class="au-link-chip" href="' + esc(profile.scholarUrl) + '" target="_blank" rel="noopener"><i class="fas fa-graduation-cap"></i> Google Scholar</a>');
+    }
+    if (profile && profile.researchgateUrl) {
+      socials.push('<a class="au-link-chip" href="' + esc(profile.researchgateUrl) + '" target="_blank" rel="noopener"><i class="fas fa-flask"></i> ResearchGate</a>');
+    }
+    if (profile && profile.linkedinUrl) {
+      socials.push('<a class="au-link-chip" href="' + esc(profile.linkedinUrl) + '" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i> LinkedIn</a>');
+    }
+    $("auSocials").innerHTML = socials.join("");
+
     const bio = (profile && String(profile.bio || "").trim()) || "";
     $("auBio").textContent = bio;
     $("auBio").style.display = bio ? "block" : "none";
+
+    /* v2: research interest tags */
+    const tags = (profile && Array.isArray(profile.researchInterests)) ? profile.researchInterests : [];
+    $("auTags").innerHTML = tags.map((t) => '<span class="au-tag">' + esc(t) + "</span>").join("");
+
+    /* v2: education & qualifications */
+    const edu = (profile && Array.isArray(profile.education)) ? profile.education : [];
+    $("auEdu").innerHTML = edu.map((e2) => {
+      const head = [(e2 && e2.degree) || "", (e2 && e2.field) ? "in " + e2.field : ""].filter(Boolean).join(" ");
+      const sub = [e2 && e2.institution, e2 && e2.year].filter(Boolean).join(" · ");
+      if (!head && !sub) return "";
+      return '<div class="au-edu-item"><i class="fas fa-graduation-cap"></i><div><b>' + esc(head || "Qualification") + "</b>" +
+        (sub ? '<span class="edu-sub">' + esc(sub) + "</span>" : "") + "</div></div>";
+    }).join("");
 
     const cats = {};
     approved.forEach((d) => { if (d.category) cats[d.category] = (cats[d.category] || 0) + 1; });
@@ -350,7 +422,8 @@
       (Object.keys(cats).length
         ? '<span class="sep"></span><span><i class="fas fa-folder"></i> ' +
           Object.keys(cats).map((c) => esc(c)).join(" · ") + "</span>"
-        : "");
+        : "") +
+      (since ? '<span class="sep"></span><span><i class="fas fa-calendar-alt"></i> On ARC Journals since ' + esc(since) + "</span>" : "");
 
     /* ---- 4. publications ---- */
     $("auGrid").innerHTML = approved.length
