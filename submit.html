@@ -57,6 +57,15 @@
     .login-note.in { background: #eef2fa; border: 1px solid #cdd9f0; color: #1f3d7a; }
     .login-note.out { background: #fdf8ec; border: 1px solid #ecd9ad; color: #8a6d1a; }
     .login-note a { color: inherit; font-weight: 700; }
+    /* v2: login gate (only registered users can submit) */
+    .login-gate { text-align: center; padding: 1.8rem 1.2rem 2rem; }
+    .login-gate .lg-icon { font-size: 2.4rem; color: #1f3d7a; margin-bottom: 1rem; display: block; }
+    .login-gate h2 { margin: 0 0 .5rem; font-family: 'Lora', serif; font-size: 1.4rem; color: #1c2b4a; }
+    .login-gate p { margin: 0 0 1.3rem; color: #66707f; font-size: .92rem; line-height: 1.7; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .login-gate .lg-btn { display: inline-flex; align-items: center; gap: .5rem; background: #1f3d7a; color: #fff; border: none;
+      padding: .8rem 1.6rem; border-radius: 10px; font: 600 .95rem 'Inter', sans-serif; cursor: pointer; text-decoration: none; transition: background .15s; }
+    .login-gate .lg-btn:hover { background: #16305f; }
+    .login-gate .lg-small { margin: 1rem 0 0; font-size: .78rem; color: #8a92a1; }
     @media (max-width: 640px) {
       .form-grid { grid-template-columns: 1fr; }
       .submit-card { padding: 1.3rem 1.1rem; }
@@ -86,6 +95,19 @@
   </div>
 
   <div class="submit-wrap">
+
+    <!-- v2 login gate: shown instead of the form when the visitor is not
+         logged in — only registered users can submit -->
+    <div id="loginGate" class="submit-card" style="display:none">
+      <div class="login-gate">
+        <i class="fas fa-user-lock lg-icon"></i>
+        <h2>Login Required</h2>
+        <p>Only registered users can submit articles. This links every submission to an author profile and lets you follow its review status from your own dashboard.</p>
+        <a class="lg-btn" href="login.html?next=submit.html"><i class="fas fa-sign-in-alt"></i> Log In / Create Account</a>
+        <p class="lg-small">You will come back here automatically after logging in.</p>
+      </div>
+    </div>
+
     <form id="submitForm" class="submit-card" novalidate>
       <h2><i class="fas fa-file-upload"></i> Article Submission Form</h2>
       <p class="form-intro">Fields marked with a star (<span class="req">*</span>) are required. A cover image is optional.</p>
@@ -182,7 +204,7 @@
   };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app); // casual users may not be logged in — currentUser can be null, that is fine
+  const auth = getAuth(app); // v2: only logged-in users can submit — the form is gated until they sign in
 
   /* ---------------- Logged-in pre-fill (features #3 + #11) ----------------
      If the visitor has an account, we pre-fill their name / email /
@@ -193,14 +215,17 @@
 
   async function prefillFromProfile() {
     const note = document.getElementById("loginNote");
-    if (!note) return;
+    const gate = document.getElementById("loginGate");
+    const formEl = document.getElementById("submitForm");
     if (!loggedInUser) {
-      note.className = "login-note out";
-      note.style.display = "block";
-      note.innerHTML = '<i class="fas fa-info-circle"></i> Have an account? <a href="login.html?next=submit.html">Log in first</a> — ' +
-        "your submission will then appear on your author profile and dashboard automatically.";
+      /* v2: guests cannot submit — the form is replaced by the login gate */
+      if (gate) gate.style.display = "block";
+      if (formEl) formEl.style.display = "none";
+      if (note) { note.style.display = "none"; note.innerHTML = ""; }
       return;
     }
+    if (gate) gate.style.display = "none";
+    if (formEl) formEl.style.display = "";
     if (!profileData) {
       try {
         const snap = await getDoc(doc(db, "users", loggedInUser.uid));
@@ -443,6 +468,11 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (submitting) return;
+    if (!auth.currentUser) {
+      /* v2 belt-and-braces guard — the gate should already prevent this */
+      setStatus("error", '<i class="fas fa-lock"></i> You must be logged in to submit an article. <a href="login.html?next=submit.html" style="color:inherit;font-weight:700;">Log in first</a>.');
+      return;
+    }
 
     const vErr = validateForm();
     if (vErr) {
