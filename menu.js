@@ -1,4 +1,5 @@
 // menu.js - Dynamic menu with Donate dropdown (click toggles on all devices, hover works on desktop)
+// v2 — টপ-বারের "Log In" বাটনে অ্যাকাউন্ট-স্টেট যোগ হয়েছে (নিচে initAccountButton)। বাকি সব আগের মতোই।
 (function() {
     // ===== ফেভিকন: menu.js সব পেজে লোড হয়, তাই এক জায়গায় দিলেই সব পেজে সেট হয়ে যাবে =====
   (function () {
@@ -50,12 +51,12 @@
     donateBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
-      // বর্তমানে ড্রপডাউন খোলা আছে কিনা
+
+      // বর্তমানে ড্রপডাউন খোলা আছে কি না
       const isOpen = dropdown.style.display === 'block';
       // সব ড্রপডাউন বন্ধ করে (পেজে অন্য কোনো ড্রপডাউন থাকলে)
       document.querySelectorAll('.dropdown-content').forEach(dd => dd.style.display = 'none');
-      
+
       if (!isOpen) {
         dropdown.style.display = 'block';
       } else {
@@ -86,13 +87,96 @@
     });
   }
 
+  /* ============================================================
+     v2 — টপ-বারের "Log In" বাটন (সাইটের একমাত্র লগইন বাটন)
+     ------------------------------------------------------------
+     প্রতি পেজের top-bar-এ থাকা .login-link বাটনটি এখানে নিয়ন্ত্রিত হয়:
+       • লগআউট অবস্থায় → "Log In" → login.html?next=<এই পেজ> (লগইন করে
+         স্বয়ংক্রিয়ভাবে এই পেজেই ফিরে আসবে)
+       • লগইন অবস্থায়  → ব্যবহারকারীর নাম → profile.html
+     admin-login.html এখন শুধু অ্যাডমিনদের জন্য — ওই পেজ নিজেই যাচাই
+     করে, তাই এই বাটন কখনো ওখানে পাঠায় না।
+     Firebase লোড ব্যর্থ হলে বাটন login.html-এই থাকে — কখনো ভাঙা
+     বা অ্যাডমিন-লগইনে যাওয়া অবস্থায় পড়ে না।
+     ============================================================ */
+  function initAccountButton() {
+    var link = document.querySelector('.login-link');
+    if (!link) return; /* এই পেজে top-bar/বাটন নেই (যেমন admin প্যানেল) */
+
+    var page = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+
+    function escVal(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function loginHref() {
+      if (page === 'login.html') return 'login.html';
+      return 'login.html?next=' + encodeURIComponent(page || 'index.html');
+    }
+    function shortName(n) {
+      var parts = String(n || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return 'My Profile';
+      var two = parts.slice(0, 2).join(' ');
+      return two.length > 24 ? parts[0] : two;
+    }
+
+    function paintLoggedOut() {
+      link.innerHTML = '<i class="fas fa-user-shield"></i> Log In';
+      link.href = loginHref();
+      link.title = 'Log in or create an account';
+    }
+
+    function paintLoggedIn(name) {
+      link.innerHTML = '<i class="fas fa-user-circle"></i> ' + escVal(shortName(name));
+      link.href = 'profile.html';
+      link.title = 'Go to your profile';
+    }
+
+    /* ডিফল্ট স্টেট (Firebase চেক হওয়ার আগেই): লগআউট */
+    paintLoggedOut();
+
+    /* Firebase সেশন চেক — ব্যর্থ হলে উপরের ডিফল্টই থাকে (নিরাপদ) */
+    Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js')
+    ]).then(function (mods) {
+      var firebaseConfig = {
+        apiKey: "AIzaSyD89i0iqHXWY6mG1P1ErFkf8Otbunsx6LU",
+        authDomain: "my-journal-a0eaa.firebaseapp.com",
+        projectId: "my-journal-a0eaa",
+        storageBucket: "my-journal-a0eaa.firebasestorage.app",
+        messagingSenderId: "577249786861",
+        appId: "1:577249786861:web:489745d30cd82b6ca6c5e4"
+      };
+      var app = mods[0].initializeApp(firebaseConfig);
+      var auth = mods[1].getAuth(app);
+      var db = mods[2].getFirestore(app);
+
+      mods[1].onAuthStateChanged(auth, function (user) {
+        if (!user) { paintLoggedOut(); return; }
+        var name = user.displayName || (user.email || 'My Profile').split('@')[0];
+        /* users ডকুমেন্ট থেকে পুরো নাম আনার চেষ্টা — ব্যর্থ হলে auth-এর নামই থাকে */
+        mods[2].getDoc(mods[2].doc(db, 'users', user.uid)).then(function (snap) {
+          if (snap.exists() && snap.data() && snap.data().fullName) name = snap.data().fullName;
+        }).catch(function () { /* rules বা নেটওয়ার্ক — auth-এর নামই যথেষ্ট */ })
+          .finally(function () { paintLoggedIn(name); });
+      });
+    }).catch(function (err) {
+      console.warn('[ARC menu] Firebase unavailable — the Log In button keeps its default state:', err);
+    });
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       loadMenu();
       setActiveMenuItem();
+      initAccountButton();
     });
   } else {
     loadMenu();
     setActiveMenuItem();
+    initAccountButton();
   }
 })();
