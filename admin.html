@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — ARC Journals</title>
+<title>Admin Dashboard — ARC Journals</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&family=Lora:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   body { font-family: 'Inter', sans-serif; background: #f4f6fb; margin: 0; color: #222; }
-  .admin-wrap { max-width: 920px; margin: 2rem auto; padding: 0 1rem; }
+  .admin-wrap { max-width: 1080px; margin: 2rem auto; padding: 0 1rem; }
+
+  /* ---- header ---- */
   .admin-header { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
   .admin-header h2 { margin: 0; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.5rem; }
   .admin-header .who { font-size: .82rem; color: #66707f; margin-top: .3rem; }
@@ -18,11 +20,41 @@
     text-decoration: none; display: inline-flex; align-items: center; gap: .45rem; }
   .btn-view { background: #fff; color: #1f3d7a; border: 1px solid #c9d3e8; } .btn-view:hover { background: #f0f4fb; }
   .btn-logout { background: #555; color: #fff; } .btn-logout:hover { background: #444; }
+
+  /* ---- overview stats ---- */
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; margin-bottom: 1.6rem; }
+  .stat-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: .95rem 1rem; text-align: center;
+    box-shadow: 0 2px 10px rgba(20,30,60,.05); }
+  .stat-card b { display: block; font-size: 1.5rem; font-family: 'Lora', serif; color: #1c2b4a; line-height: 1.2; }
+  .stat-card span { font-size: .72rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #8a92a1; }
+  .stat-card.pd b { color: #b7791f; } .stat-card.ap b { color: #1e7b34; } .stat-card.mo b { color: #1f3d7a; }
+
+  /* ---- sections ---- */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.8rem 0 .9rem; }
+  .sec-head h3 { margin: 0; font-family: 'Lora', serif; font-size: 1.15rem; color: #1c2b4a; }
+
+  /* ---- toolbar ---- */
+  .toolbar { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: .9rem; }
+  .toolbar input[type="search"] { flex: 1; min-width: 210px; padding: .55rem .8rem; border: 1px solid #d3d8e2; border-radius: 9px;
+    font: inherit; font-size: .88rem; background: #fff; }
+  .toolbar input[type="search"]:focus { outline: none; border-color: #1f3d7a; box-shadow: 0 0 0 3px rgba(31,61,122,.12); }
+  .toolbar select { padding: .55rem .65rem; border: 1px solid #d3d8e2; border-radius: 9px; font: inherit; font-size: .86rem;
+    background: #fff; color: #333; cursor: pointer; }
+  .count-note { font-size: .78rem; color: #8a92a1; margin: 0 0 .8rem; }
+
+  /* ---- submission cards ---- */
   .sub-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 1.2rem 1.3rem; margin-bottom: 1rem;
     box-shadow: 0 2px 10px rgba(20,30,60,.05); }
+  .sub-top { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
   .sub-card h3 { margin: .45rem 0 .35rem; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.08rem; line-height: 1.35; }
+  .cat-chip { font-size: .64rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #1f3d7a;
+    background: #eef2fa; border: 1px solid #d9e1f2; padding: 2px 9px; border-radius: 20px; }
   .sub-meta { font-size: .84rem; color: #66707f; margin-bottom: .6rem; }
-  .sub-abs { font-size: .88rem; color: #55607a; line-height: 1.6; margin: 0 0 .75rem; }
+  .sub-meta a { color: #1f3d7a; font-weight: 600; text-decoration: none; }
+  .sub-meta a:hover { text-decoration: underline; }
+  .sub-abs { font-size: .88rem; color: #55607a; line-height: 1.6; margin: 0 0 .75rem; display: -webkit-box;
+    -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .sub-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .7rem; }
   .sub-links a { color: #1f3d7a; font-weight: 600; text-decoration: none; font-size: .84rem; }
   .sub-links a:hover { text-decoration: underline; }
   .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .74rem; font-weight: 700;
@@ -31,28 +63,95 @@
   .status-approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
   .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; }
   .btn-approve { background: #1a7a3c; color: #fff; } .btn-approve:hover { background: #156832; }
+  .btn-unpublish { background: #fff; color: #b7791f; border: 1px solid #ecd9ad; } .btn-unpublish:hover { background: #fdf6e7; }
   .btn-delete { background: #c4452c; color: #fff; } .btn-delete:hover { background: #a83a24; }
+  .empty-note { background: #fff; border: 1px dashed #d9dfeb; border-radius: 12px; padding: 1.6rem 1.3rem; text-align: center;
+    color: #8a92a1; font-size: .9rem; line-height: 1.7; }
+
+  /* ---- users section ---- */
+  .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .9rem; }
+  .user-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 1rem 1.1rem;
+    box-shadow: 0 2px 10px rgba(20,30,60,.05); }
+  .user-head { display: flex; gap: .75rem; align-items: center; }
+  .user-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 2px solid #eef2fa; }
+  .user-av-init { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font: 600 .95rem 'Lora', serif; color: #fff; background: linear-gradient(135deg,#1f3d7a,#3d5fa8); flex: 0 0 auto; }
+  .user-name { margin: 0; font-family: 'Lora', serif; font-size: .98rem; color: #1c2b4a; line-height: 1.3; }
+  .user-mail { font-size: .76rem; color: #8a92a1; word-break: break-all; }
+  .user-meta { margin: .55rem 0 0; font-size: .8rem; color: #66707f; line-height: 1.65; }
+  .user-meta i { width: 16px; color: #9aa3b5; }
+  .user-foot { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
+  .user-foot a { font-size: .78rem; font-weight: 600; color: #1f3d7a; text-decoration: none; }
+  .user-foot a:hover { text-decoration: underline; }
+  .user-foot .uc { color: #8a92a1; font-weight: 500; font-size: .78rem; margin-left: auto; }
+
   .denied { background: #fff; border: 1px solid #f2c2c2; border-radius: 14px; padding: 2.4rem 2rem; text-align: center;
     box-shadow: 0 6px 26px rgba(20,30,60,.08); max-width: 560px; margin: 3rem auto; }
   .denied i.big { font-size: 2.2rem; color: #b91c1c; margin-bottom: .9rem; display: block; }
   .denied h2 { margin: 0 0 .5rem; font-family: 'Lora', serif; color: #1c2b4a; }
   .denied p { margin: 0 0 1.3rem; color: #66707f; font-size: .92rem; line-height: 1.7; }
   .denied .btn-admin { background: #1f3d7a; color: #fff; }
+
+  @media (max-width: 860px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 520px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
 <div class="admin-wrap" id="adminWrap">
   <div class="admin-header" id="adminHeader">
     <div>
-      <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+      <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
       <div class="who">Signed in as <b id="whoEmail"></b></div>
     </div>
     <div style="display:flex; gap:.55rem; flex-wrap:wrap;">
+      <a class="btn btn-view" href="profile.html"><i class="fas fa-user-circle"></i> My Profile</a>
+      <a class="btn btn-view" href="submit.html"><i class="fas fa-paper-plane"></i> Submit Article</a>
       <a class="btn btn-view" href="index.html"><i class="fas fa-globe"></i> View Site</a>
       <button class="btn btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
     </div>
   </div>
+
+  <!-- overview stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><b id="stTotal">–</b><span>Total Submissions</span></div>
+    <div class="stat-card pd"><b id="stPending">–</b><span>Pending Review</span></div>
+    <div class="stat-card ap"><b id="stApproved">–</b><span>Approved</span></div>
+    <div class="stat-card"><b id="stUsers">–</b><span>Registered Users</span></div>
+    <div class="stat-card mo"><b id="stMonth">–</b><span>Last 30 Days</span></div>
+  </div>
+
+  <!-- submissions management -->
+  <div class="sec-head">
+    <h3><i class="fas fa-folder-open"></i> Submissions</h3>
+  </div>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search by title, author, email, institution or abstract..." aria-label="Search submissions">
+    <select id="fStatus" aria-label="Filter by status">
+      <option value="all">All statuses</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+    </select>
+    <select id="fCat" aria-label="Filter by category">
+      <option value="all">All categories</option>
+    </select>
+    <select id="fSort" aria-label="Sort">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="title">Title A–Z</option>
+    </select>
+  </div>
+  <p class="count-note" id="subCount"></p>
   <div id="submissionsList">Loading...</div>
+
+  <!-- registered users -->
+  <div class="sec-head">
+    <h3><i class="fas fa-users"></i> Registered Users</h3>
+  </div>
+  <div class="toolbar">
+    <input type="search" id="uq" placeholder="Search users by name, email or institution..." aria-label="Search users">
+  </div>
+  <p class="count-note" id="userCount"></p>
+  <div class="users-grid" id="usersList">Loading...</div>
 </div>
 
 <script type="module">
@@ -71,8 +170,9 @@
   };
 
   /* ============================================================
-     ADMIN ACCOUNTS — must be kept in sync with admin-login.html
-     and with the Firestore rules (firestore-rules.txt).
+     ADMIN ACCOUNTS — must be kept in sync with admin-login.html,
+     login.html, menu.js, profile.html and the Firestore rules
+     (firestore-rules.txt).
      ============================================================ */
   const ADMIN_EMAILS = [
     "ssbcpoint@gmail.com",
@@ -83,20 +183,44 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const container = document.getElementById("submissionsList");
+
+  const CATEGORIES = [
+    "Arts & Culture", "Comparative & International Studies", "Economics & Business",
+    "Education Studies", "Future & Space Studies", "Health, Psychology & Bioethics",
+    "History & Memory Studies", "Human Rights & Indigenous Studies", "Interdisciplinary Studies",
+    "Law & Environment", "Law & Justice", "Migration & Geopolitics",
+    "Philosophy & Ethics", "Technology & Digital Studies"
+  ];
+  document.getElementById("fCat").innerHTML = '<option value="all">All categories</option>' +
+    CATEGORIES.map((c) => '<option value="' + esc(c) + '">' + esc(c) + "</option>").join("");
+
+  /* ---------------- state ---------------- */
+  let subs = [];      /* all submissions */
+  let users = [];     /* all users docs */
+  let loaded = false;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+  function tsNum(v) {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+    if (typeof v === "string") { const n = Date.parse(v); return isNaN(n) ? 0 : n; }
+    if (typeof v.toMillis === "function") return v.toMillis();
+    return 0;
+  }
   function fmtDate(v) {
     try {
-      if (v == null) return "";
-      if (typeof v === "number") return new Date(v).toLocaleDateString();
-      if (typeof v === "string") { const n = Date.parse(v); return n ? new Date(n).toLocaleDateString() : ""; }
-      if (typeof v.toMillis === "function") return new Date(v.toMillis()).toLocaleDateString();
-    } catch (e) { /* keep going without a date */ }
-    return "";
+      const t = tsNum(v);
+      return t ? new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
+    } catch (e) { return ""; }
+  }
+  function isApproved(d) {
+    return d.approved === true || d.approved === "true" || d.approved === 1;
+  }
+  function initials(name) {
+    return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
   }
 
   /* ---------------- gate ----------------
@@ -107,76 +231,162 @@
     if (!user) { window.location.href = "admin-login.html"; return; }
     if (!isAdminEmail(user.email)) { renderAccessDenied(user.email); return; }
     document.getElementById("whoEmail").textContent = user.email || "";
-    loadSubmissions();
+    if (!loaded) loadAll();
   });
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     try { await signOut(auth); } catch (e) { console.warn(e); }
-    window.location.href = "admin-login.html";
+    window.location.href = "login.html";
   });
 
   function renderAccessDenied(email) {
     document.getElementById("adminHeader").style.display = "none";
-    container.innerHTML = "";
+    document.getElementById("statsRow").style.display = "none";
+    document.getElementById("submissionsList").innerHTML = "";
+    document.getElementById("usersList").innerHTML = "";
     document.getElementById("adminWrap").innerHTML =
       '<div class="denied">' +
         '<i class="fas fa-user-lock big"></i>' +
         '<h2>Access denied</h2>' +
         '<p>The account you are signed in with (<b>' + esc(email || "unknown") + '</b>) is not an administrator account.<br>' +
-        'The admin panel can only be opened with an administrator account.</p>' +
+        'The admin dashboard can only be opened with an administrator account.</p>' +
         '<a class="btn btn-admin" href="admin-login.html"><i class="fas fa-sign-in-alt"></i> Go to Admin Login</a>' +
       '</div>';
   }
 
-  function extractFilePath(fileUrl) {
-    const marker = "/main/";
-    const idx = fileUrl.indexOf(marker);
-    return idx === -1 ? null : fileUrl.substring(idx + marker.length);
+  /* ---------------- data loading ---------------- */
+  async function loadAll() {
+    loaded = true;
+    /* submissions: ordered read first; if any document is missing the
+       ordered field the query is refused — fall back to a full read */
+    try {
+      const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
+      const snap = await getDocs(q);
+      subs = [];
+      snap.forEach((s) => { const d = s.data(); d.id = s.id; subs.push(d); });
+    } catch (e1) {
+      console.warn("[ARC admin] ordered read failed, falling back to full read:", e1);
+      try {
+        const snap = await getDocs(collection(db, "submissions"));
+        subs = [];
+        snap.forEach((s) => { const d = s.data(); d.id = s.id; subs.push(d); });
+        subs.sort((a, b) => tsNum(b.submittedAt) - tsNum(a.submittedAt));
+      } catch (e2) {
+        console.error("[ARC admin] submissions read failed:", e2);
+        document.getElementById("submissionsList").innerHTML =
+          '<div class="empty-note"><i class="fas fa-exclamation-triangle"></i> The submissions could not be loaded — ' +
+          esc(e2.message || e2) + "</div>";
+        subs = [];
+      }
+    }
+    /* users (public profiles collection) */
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      users = [];
+      snap.forEach((s) => { const d = s.data(); d.id = s.id; users.push(d); });
+      users.sort((a, b) => tsNum(b.createdAt) - tsNum(a.createdAt));
+    } catch (e) {
+      console.warn("[ARC admin] users read failed:", e);
+      users = [];
+    }
+    renderStats();
+    renderSubs();
+    renderUsers();
   }
 
-  async function loadSubmissions() {
-    const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
-    const snapshot = await getDocs(q);
+  /* ---------------- overview stats ---------------- */
+  function renderStats() {
+    const pending = subs.filter((d) => !isApproved(d)).length;
+    const approved = subs.length - pending;
+    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const thisMonth = subs.filter((d) => tsNum(d.submittedAt) >= monthAgo).length;
+    document.getElementById("stTotal").textContent = subs.length;
+    document.getElementById("stPending").textContent = pending;
+    document.getElementById("stApproved").textContent = approved;
+    document.getElementById("stUsers").textContent = users.length;
+    document.getElementById("stMonth").textContent = thisMonth;
+  }
 
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No submissions yet.</p>";
+  /* ---------------- submissions list ---------------- */
+  function filteredSubs() {
+    const q = document.getElementById("q").value.trim().toLowerCase();
+    const st = document.getElementById("fStatus").value;
+    const cat = document.getElementById("fCat").value;
+    const sort = document.getElementById("fSort").value;
+    let list = subs.slice();
+    if (st === "pending") list = list.filter((d) => !isApproved(d));
+    if (st === "approved") list = list.filter(isApproved);
+    if (cat !== "all") list = list.filter((d) => String(d.category || "") === cat);
+    if (q) {
+      list = list.filter((d) =>
+        [d.title, d.fullName, d.email, d.institution, d.abstract, d.category]
+          .some((f) => String(f || "").toLowerCase().indexOf(q) !== -1));
+    }
+    if (sort === "oldest") list.sort((a, b) => tsNum(a.submittedAt) - tsNum(b.submittedAt));
+    else if (sort === "title") list.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    else list.sort((a, b) => tsNum(b.submittedAt) - tsNum(a.submittedAt));
+    return list;
+  }
+
+  function renderSubs() {
+    const box = document.getElementById("submissionsList");
+    const list = filteredSubs();
+    document.getElementById("subCount").textContent =
+      "Showing " + list.length + " of " + subs.length + " submission" + (subs.length === 1 ? "" : "s");
+
+    if (!subs.length) {
+      box.innerHTML = '<div class="empty-note"><i class="fas fa-inbox"></i> No submissions yet.<br>' +
+        'New submissions will appear here the moment authors send them.</div>';
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-note"><i class="fas fa-search"></i> No submissions match your search / filters.</div>';
       return;
     }
 
-    container.innerHTML = "";
-    snapshot.forEach((docSnap) => {
-      const d = docSnap.data();
-      const id = docSnap.id;
-      const approved = d.approved === true || d.approved === "true" || d.approved === 1;
-      const statusClass = approved ? "status-approved" : "status-pending";
-      const statusText = approved ? "Approved" : "Pending";
-
-      const card = document.createElement("div");
-      card.className = "sub-card";
-      /* every value that a submitter typed is escaped — a crafted title or
-         name can never inject HTML into the admin panel */
-      card.innerHTML =
-        '<span class="status-badge ' + statusClass + '">' + statusText + '</span>' +
-        '<h3>' + esc(d.title || "(Untitled)") + '</h3>' +
-        '<div class="sub-meta">' + esc(d.fullName || "") + ' &middot; ' + esc(d.email || "") +
-          (d.category ? ' &middot; ' + esc(d.category) : "") +
-          (d.submittedAt ? ' &middot; ' + esc(fmtDate(d.submittedAt)) : "") + '</div>' +
-        (d.abstract ? '<p class="sub-abs">' + esc(d.abstract) + '</p>' : "") +
-        '<div class="sub-links"><a href="' + esc(d.fileUrl || "#") + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> See the PDF</a></div>' +
+    box.innerHTML = list.map((d) => {
+      const id = d.id;
+      const approved = isApproved(d);
+      const author = d.uid
+        ? '<a href="author.html?uid=' + encodeURIComponent(d.uid) + '" target="_blank" rel="noopener">' + esc(d.fullName || "(no name)") + "</a>"
+        : esc(d.fullName || "(no name)");
+      const abs = String(d.abstract || "");
+      const view = "submission-view.html?sub=" + encodeURIComponent(id);
+      return '<div class="sub-card" data-id="' + esc(id) + '">' +
+        '<div class="sub-top">' +
+          '<span class="status-badge ' + (approved ? "status-approved" : "status-pending") + '">' + (approved ? "Approved" : "Pending") + "</span>" +
+          (d.category ? '<span class="cat-chip">' + esc(d.category) + "</span>" : "") +
+        "</div>" +
+        '<h3>' + esc(d.title || "(Untitled)") + "</h3>" +
+        '<div class="sub-meta">' + author +
+          (d.email ? " &middot; " + esc(d.email) : "") +
+          (d.institution ? " &middot; " + esc(d.institution) : "") +
+          (d.submittedAt ? " &middot; " + esc(fmtDate(d.submittedAt)) : "") + "</div>" +
+        (abs ? '<p class="sub-abs">' + esc(abs.slice(0, 260)) + (abs.length > 260 ? "..." : "") + "</p>" : "") +
+        '<div class="sub-links">' +
+          '<a href="' + view + '"><i class="fas fa-book-open"></i> View</a>' +
+          (d.fileUrl ? '<a href="' + esc(d.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> See the PDF</a>' : "") +
+        "</div>" +
         '<div class="btn-row">' +
-          (approved ? "" : '<button class="btn btn-approve" data-id="' + esc(id) + '"><i class="fas fa-check"></i> Approve</button>') +
+          (approved
+            ? '<button class="btn btn-unpublish" data-id="' + esc(id) + '"><i class="fas fa-undo"></i> Unpublish</button>'
+            : '<button class="btn btn-approve" data-id="' + esc(id) + '"><i class="fas fa-check"></i> Approve</button>') +
           '<button class="btn btn-delete" data-id="' + esc(id) + '" data-fileurl="' + esc(d.fileUrl || "") + '"><i class="fas fa-trash-alt"></i> Delete</button>' +
-        '</div>';
-      container.appendChild(card);
-    });
+        "</div>" +
+      "</div>";
+    }).join("");
 
-    container.querySelectorAll(".btn-approve").forEach((btn) => {
+    wireSubButtons();
+  }
+
+  function wireSubButtons() {
+    document.querySelectorAll(".btn-approve").forEach((btn) => {
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Approving...';
         try {
           await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: true });
-          loadSubmissions();
+          loadAll();
         } catch (err) {
           console.error("[ARC admin] approve:", err);
           btn.disabled = false;
@@ -185,13 +395,27 @@
         }
       });
     });
-
-    container.querySelectorAll(".btn-delete").forEach((btn) => {
+    document.querySelectorAll(".btn-unpublish").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Unpublishing...';
+        try {
+          await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: false });
+          loadAll();
+        } catch (err) {
+          console.error("[ARC admin] unpublish:", err);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-undo"></i> Unpublish';
+          alert("Could not unpublish the submission. " + (err && err.message ? err.message : ""));
+        }
+      });
+    });
+    document.querySelectorAll(".btn-delete").forEach((btn) => {
       btn.addEventListener("click", async () => {
         if (!confirm("Are you sure you want to delete this submission? This cannot be undone.")) return;
         const id = btn.dataset.id;
         const filePath = extractFilePath(btn.dataset.fileurl || "");
-
+        btn.disabled = true;
         try {
           if (filePath) {
             const idToken = await auth.currentUser.getIdToken();
@@ -202,14 +426,83 @@
             });
           }
           await deleteDoc(doc(db, "submissions", id));
-          loadSubmissions();
+          loadAll();
         } catch (err) {
           console.error("[ARC admin] delete:", err);
+          btn.disabled = false;
           alert("There was a problem deleting it. " + (err && err.message ? err.message : ""));
         }
       });
     });
   }
+
+  function extractFilePath(fileUrl) {
+    const marker = "/main/";
+    const idx = fileUrl.indexOf(marker);
+    return idx === -1 ? null : fileUrl.substring(idx + marker.length);
+  }
+
+  ["q", "fStatus", "fCat", "fSort"].forEach((id) => {
+    const el = document.getElementById(id);
+    el.addEventListener("input", renderSubs);
+    el.addEventListener("change", renderSubs);
+  });
+
+  /* ---------------- users list ---------------- */
+  function subCountFor(uid) {
+    return subs.filter((d) => d.uid === uid).length;
+  }
+
+  function renderUsers() {
+    const box = document.getElementById("usersList");
+    const q = document.getElementById("uq").value.trim().toLowerCase();
+    let list = users.slice();
+    if (q) {
+      list = list.filter((u) =>
+        [u.fullName, u.email, u.institution, u.country, u.academicTitle, u.department]
+          .some((f) => String(f || "").toLowerCase().indexOf(q) !== -1));
+    }
+    document.getElementById("userCount").textContent =
+      "Showing " + list.length + " of " + users.length + " registered user" + (users.length === 1 ? "" : "s");
+
+    if (!users.length) {
+      box.innerHTML = '<div class="empty-note" style="grid-column:1/-1;"><i class="fas fa-users-slash"></i> ' +
+        "No registered users could be read. Make sure the Firestore rules allow public reads on the <b>users</b> collection.</div>";
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-note" style="grid-column:1/-1;"><i class="fas fa-search"></i> No users match your search.</div>';
+      return;
+    }
+
+    box.innerHTML = list.map((u) => {
+      const av = u.avatarUrl
+        ? '<img class="user-av" src="' + esc(u.avatarUrl) + '" alt="">'
+        : '<div class="user-av-init">' + esc(initials(u.fullName)) + "</div>";
+      const meta = [];
+      if (u.academicTitle) meta.push('<i class="fas fa-user-tie"></i> ' + esc(u.academicTitle));
+      const affil = [u.department, u.institution].filter(Boolean).join(" · ");
+      if (affil) meta.push('<i class="fas fa-university"></i> ' + esc(affil));
+      const place = [u.city, u.country].filter(Boolean).join(", ");
+      if (place) meta.push('<i class="fas fa-globe-americas"></i> ' + esc(place));
+      if (u.createdAt) meta.push('<i class="fas fa-calendar-alt"></i> Joined ' + esc(fmtDate(u.createdAt)));
+      const n = subCountFor(u.id);
+      return '<div class="user-card">' +
+        '<div class="user-head">' + av +
+          '<div><h4 class="user-name">' + esc(u.fullName || "(no name)") + "</h4>" +
+          '<div class="user-mail">' + esc(u.email || "") + "</div></div>" +
+        "</div>" +
+        (meta.length ? '<p class="user-meta">' + meta.join("<br>") + "</p>" : "") +
+        '<div class="user-foot">' +
+          '<a href="author.html?uid=' + encodeURIComponent(u.id) + '" target="_blank" rel="noopener"><i class="fas fa-globe"></i> Public profile</a>' +
+          (u.orcid ? '<a href="https://orcid.org/' + esc(u.orcid) + '" target="_blank" rel="noopener"><i class="fab fa-orcid"></i> ORCID</a>' : "") +
+          '<span class="uc">' + n + " submission" + (n === 1 ? "" : "s") + "</span>" +
+        "</div>" +
+      "</div>";
+    }).join("");
+  }
+
+  document.getElementById("uq").addEventListener("input", renderUsers);
 </script>
 </body>
 </html>
