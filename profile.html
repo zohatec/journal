@@ -89,7 +89,6 @@
       border-radius: 7px; text-decoration: none; cursor: pointer; }
     .pf-mini.read { background: #1f3d7a; color: #fff; } .pf-mini.read:hover { background: #16305f; }
     .pf-mini.pdf { border: 1px solid #cdd5e2; color: #1f3d7a; background: #fff; } .pf-mini.pdf:hover { background: #f0f4fb; }
-    .pf-mini.del { border: 1px solid #eec7c7; color: #b91c1c; background: #fff; } .pf-mini.del:hover { background: #fdeeee; }
     .pf-empty { background: #fff; border: 1px dashed #d9dfeb; border-radius: 12px; padding: 1.8rem 1.4rem; text-align: center;
       color: #8a92a1; font-size: .9rem; line-height: 1.7; }
     .pf-empty a { color: #1f3d7a; font-weight: 600; }
@@ -539,15 +538,10 @@
           '<div class="pf-sub-actions">' +
             '<a class="pf-mini read" href="' + view + '"><i class="fas fa-book-open"></i> Read</a>' +
             (d.fileUrl ? '<a class="pf-mini pdf" href="' + esc(d.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> PDF</a>' : "") +
-            '<button type="button" class="pf-mini del" data-del="' + esc(d.id) + '"><i class="fas fa-trash-alt"></i> Delete</button>' +
           "</div>" +
         "</div>" +
       "</div>";
     }).join("");
-
-    box.querySelectorAll("[data-del]").forEach((btn) => {
-      btn.addEventListener("click", () => deleteSubmission(btn.getAttribute("data-del"), btn));
-    });
   }
 
   /* ================= filters ================= */
@@ -559,28 +553,9 @@
     renderSubs();
   });
 
-  /* ================= delete a submission ================= */
-  async function deleteSubmission(id, btn) {
-    const d = mySubs.find((x) => x.id === id);
-    if (!d) return;
-    if (!confirm('Delete the submission "' + (d.title || "Untitled") + '"?\n\nThe PDF and cover image files stay on the server, but the submission is removed from the database and from the site. This cannot be undone.')) return;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Deleting...';
-    try {
-      await deleteDoc(doc(db, "submissions", id));
-      mySubs = mySubs.filter((x) => x.id !== id);
-      renderStats();
-      renderSubs();
-      toast('<i class="fas fa-check-circle"></i> Submission deleted.', "ok");
-    } catch (err) {
-      console.error("[ARC profile] delete:", err);
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete';
-      let msg = err.message || String(err);
-      if (/permission/i.test(msg)) msg = "The database refused (Firestore rules). Submissions can currently only be deleted by signed-in users — ask the administrator to update the rules.";
-      toast('<i class="fas fa-times-circle"></i> Could not delete: ' + esc(msg), "err");
-    }
-  }
+  /* Note (v2): users can no longer delete their submissions from here —
+     only the administrators can remove or edit a submission, from the
+     admin panel. Users still see every status (read-only). */
 
   /* ================= edit profile ================= */
   $("editProfileBtn").addEventListener("click", () => {
