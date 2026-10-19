@@ -178,7 +178,7 @@
 
           <button type="submit" class="auth-btn" id="forgotBtn"><i class="fas fa-paper-plane"></i> Send Reset Link</button>
           <div class="auth-status" id="forgotStatus" role="alert" aria-live="polite"></div>
-          <div class="auth-back"><a href="#" id="backToLogin"><i class="fas fa-arrow-left"></i> Back to Log In</div>
+          <div class="auth-back"><a href="#" id="backToLogin"><i class="fas fa-arrow-left"></i> Back to Log In</a></div>
         </form>
 
       </div><!-- /authBody -->
@@ -222,16 +222,33 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  /* ============================================================
+     ADMIN ACCOUNTS — keep this list in sync with admin.html,
+     admin-login.html, menu.js and the Firestore rules.
+     An administrator who logs in on this page is sent straight to
+     the admin panel (admin.html) instead of the author profile.
+     ============================================================ */
+  const ADMIN_EMAILS = [
+    "ssbcpoint@gmail.com",
+    "zulfiquarcyberlaw@gmail.com"
+  ];
+  const isAdminEmail = (e) => ADMIN_EMAILS.includes(String(e || "").trim().toLowerCase());
+
   /* ---------------- helpers ---------------- */
   const $ = (id) => document.getElementById(id);
   const loading = $("authLoading"), body = $("authBody");
   const tabLogin = $("tabLogin"), tabRegister = $("tabRegister");
   const forms = { login: $("loginForm"), register: $("registerForm"), forgot: $("forgotForm") };
 
-  /* where to go after a successful login (the page that sent the user here) */
+  /* where to go after a successful login (the page that sent the user here).
+     No explicit "next" given → administrators land in the admin panel,
+     everyone else in their profile. */
   function nextUrl() {
     const n = new URLSearchParams(location.search).get("next");
-    if (!n) return "profile.html";
+    if (!n) {
+      const u = auth.currentUser;
+      return (u && isAdminEmail(u.email)) ? "admin.html" : "profile.html";
+    }
     /* only allow relative links inside this site — never an external URL */
     if (!/^[a-z0-9\-]+\.html(\?.*)?$/i.test(n)) return "profile.html";
     return n;
@@ -286,9 +303,11 @@
     loading.style.display = "none";
     body.style.display = "block";
     if (user) {
-      /* already logged in — go straight to the profile */
+      /* already logged in — admins go to the admin panel, others to their profile */
+      const admin = isAdminEmail(user.email);
       setStatus($("loginStatus"), "info",
-        '<i class="fas fa-check-circle"></i> You are already logged in as <b>' + escHtml(user.email) + '</b>. Taking you to your profile...');
+        '<i class="fas fa-check-circle"></i> You are already logged in as <b>' + escHtml(user.email) + '</b>. ' +
+        (admin ? 'Opening the admin panel...' : 'Taking you to your profile...'));
       setTimeout(() => { location.href = nextUrl(); }, 700);
     }
   });
@@ -306,7 +325,9 @@
     clearStatus(st);
     try {
       await signInWithEmailAndPassword(auth, email, pw);
-      setStatus(st, "success", '<i class="fas fa-check-circle"></i> Login successful! Taking you to your profile...');
+      const admin = isAdminEmail(auth.currentUser.email);
+      setStatus(st, "success", '<i class="fas fa-check-circle"></i> <b>Login successful!</b> ' +
+        (admin ? 'Opening the admin panel...' : 'Taking you to your profile...'));
       setTimeout(() => { location.href = nextUrl(); }, 500);
     } catch (err) {
       console.error("[ARC login]", err);
@@ -366,7 +387,7 @@
       }
 
       setStatus(st, "success", '<i class="fas fa-check-circle"></i> <b>Account created!</b> Taking you to your new profile...' + profileNote);
-      setTimeout(() => { location.href = "profile.html"; }, 900);
+      setTimeout(() => { location.href = isAdminEmail(email) ? "admin.html" : "profile.html"; }, 900);
     } catch (err) {
       console.error("[ARC register]", err);
       setStatus(st, "error", '<i class="fas fa-times-circle"></i> <b>Sign-up failed:</b> ' + escHtml(friendlyAuthError(err)));
