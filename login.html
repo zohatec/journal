@@ -110,7 +110,7 @@
         <!-- ================= LOG IN ================= -->
         <form class="auth-form active" id="loginForm" novalidate>
           <h2>Welcome back</h2>
-          <p class="auth-intro">Log in to visit your profile, track your submissions and update your details.</p>
+          <p class="auth-intro">Log in to your profile and submissions. Site administrators are taken straight to the admin dashboard.</p>
 
           <div class="fg">
             <label for="loginEmail">Email Address <span class="req">*</span></label>
@@ -178,7 +178,7 @@
 
           <button type="submit" class="auth-btn" id="forgotBtn"><i class="fas fa-paper-plane"></i> Send Reset Link</button>
           <div class="auth-status" id="forgotStatus" role="alert" aria-live="polite"></div>
-          <div class="auth-back"><a href="#" id="backToLogin"><i class="fas fa-arrow-left"></i> Back to Log In</a></div>
+          <div class="auth-back"><a href="#" id="backToLogin"><i class="fas fa-arrow-left"></i> Back to Log In</div>
         </form>
 
       </div><!-- /authBody -->
@@ -222,36 +222,35 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  /* ============================================================
-     ADMIN ACCOUNTS — keep this list in sync with admin.html,
-     admin-login.html, menu.js and the Firestore rules.
-     An administrator who logs in on this page is sent straight to
-     the admin panel (admin.html) instead of the author profile.
-     ============================================================ */
-  const ADMIN_EMAILS = [
-    "ssbcpoint@gmail.com",
-    "zulfiquarcyberlaw@gmail.com"
-  ];
-  const isAdminEmail = (e) => ADMIN_EMAILS.includes(String(e || "").trim().toLowerCase());
-
   /* ---------------- helpers ---------------- */
   const $ = (id) => document.getElementById(id);
   const loading = $("authLoading"), body = $("authBody");
   const tabLogin = $("tabLogin"), tabRegister = $("tabRegister");
   const forms = { login: $("loginForm"), register: $("registerForm"), forgot: $("forgotForm") };
 
-  /* where to go after a successful login (the page that sent the user here).
-     No explicit "next" given → administrators land in the admin panel,
-     everyone else in their profile. */
+  /* where to go after a successful login (the page that sent the user here) */
   function nextUrl() {
     const n = new URLSearchParams(location.search).get("next");
-    if (!n) {
-      const u = auth.currentUser;
-      return (u && isAdminEmail(u.email)) ? "admin.html" : "profile.html";
-    }
+    if (!n) return "profile.html";
     /* only allow relative links inside this site — never an external URL */
     if (!/^[a-z0-9\-]+\.html(\?.*)?$/i.test(n)) return "profile.html";
     return n;
+  }
+
+  /* ============================================================
+     ADMIN ACCOUNTS — must stay in sync with admin-login.html,
+     admin.html, menu.js, profile.html and the Firestore rules.
+     An administrator who logs in here goes straight to the admin
+     dashboard; everyone else goes to their profile (or back to
+     the ?next= page they came from).
+     ============================================================ */
+  const ADMIN_EMAILS = [
+    "ssbcpoint@gmail.com",
+    "zulfiquarcyberlaw@gmail.com"
+  ];
+  const isAdminEmail = (e) => ADMIN_EMAILS.includes(String(e || "").trim().toLowerCase());
+  function destFor(user) {
+    return isAdminEmail(user && user.email) ? "admin.html" : nextUrl();
   }
 
   function show(view) {
@@ -303,12 +302,13 @@
     loading.style.display = "none";
     body.style.display = "block";
     if (user) {
-      /* already logged in — admins go to the admin panel, others to their profile */
-      const admin = isAdminEmail(user.email);
+      /* already logged in — administrators go to the dashboard,
+         everyone else to their profile (or back to ?next=) */
+      const dest = destFor(user);
       setStatus($("loginStatus"), "info",
         '<i class="fas fa-check-circle"></i> You are already logged in as <b>' + escHtml(user.email) + '</b>. ' +
-        (admin ? 'Opening the admin panel...' : 'Taking you to your profile...'));
-      setTimeout(() => { location.href = nextUrl(); }, 700);
+        (dest === "admin.html" ? "Opening the admin dashboard..." : "Taking you to your profile..."));
+      setTimeout(() => { location.href = dest; }, 700);
     }
   });
 
@@ -324,11 +324,13 @@
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Logging in...';
     clearStatus(st);
     try {
-      await signInWithEmailAndPassword(auth, email, pw);
-      const admin = isAdminEmail(auth.currentUser.email);
-      setStatus(st, "success", '<i class="fas fa-check-circle"></i> <b>Login successful!</b> ' +
-        (admin ? 'Opening the admin panel...' : 'Taking you to your profile...'));
-      setTimeout(() => { location.href = nextUrl(); }, 500);
+      const cred = await signInWithEmailAndPassword(auth, email, pw);
+      const dest = destFor(cred.user);
+      setStatus(st, "success",
+        dest === "admin.html"
+          ? '<i class="fas fa-shield-alt"></i> <b>Welcome back, administrator!</b> Opening the admin dashboard...'
+          : '<i class="fas fa-check-circle"></i> Login successful! Taking you to your profile...');
+      setTimeout(() => { location.href = dest; }, 600);
     } catch (err) {
       console.error("[ARC login]", err);
       setStatus(st, "error", '<i class="fas fa-times-circle"></i> <b>Login failed:</b> ' + escHtml(friendlyAuthError(err)));
@@ -387,7 +389,7 @@
       }
 
       setStatus(st, "success", '<i class="fas fa-check-circle"></i> <b>Account created!</b> Taking you to your new profile...' + profileNote);
-      setTimeout(() => { location.href = isAdminEmail(email) ? "admin.html" : "profile.html"; }, 900);
+      setTimeout(() => { location.href = "profile.html"; }, 900);
     } catch (err) {
       console.error("[ARC register]", err);
       setStatus(st, "error", '<i class="fas fa-times-circle"></i> <b>Sign-up failed:</b> ' + escHtml(friendlyAuthError(err)));
