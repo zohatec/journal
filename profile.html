@@ -94,12 +94,12 @@
     .edu-add { margin-top: .55rem; }
 
     /* ---- stats ---- */
-    .pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: .9rem; margin: 1.4rem 0 2rem; }
+    .pf-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: .9rem; margin: 1.4rem 0 2rem; }
     .pf-stat { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: .95rem 1rem; text-align: center;
       box-shadow: 0 2px 10px rgba(20,30,60,.05); }
     .pf-stat b { display: block; font-size: 1.55rem; font-family: 'Lora', serif; color: #1c2b4a; line-height: 1.2; }
     .pf-stat span { font-size: .76rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #8a92a1; }
-    .pf-stat.ap b { color: #1e7b34; } .pf-stat.pd b { color: #b7791f; } .pf-stat.rj b { color: #b91c1c; }
+    .pf-stat.ap b { color: #1e7b34; } .pf-stat.pd b { color: #b7791f; } .pf-stat.rj b { color: #b91c1c; } .pf-stat.rv b { color: #c2410c; }
 
     /* ---- section headers ---- */
     .pf-sec { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.9rem 0 .9rem; }
@@ -128,6 +128,7 @@
     .pf-badge.approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
     .pf-badge.pending { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
     .pf-badge.rejected { background: #fdeeee; color: #b91c1c; border: 1px solid #f2c2c2; }
+    .pf-badge.revision { background: #fff1ec; color: #c2410c; border: 1px solid #ffd9c7; }
     .pf-sub-title { margin: 0; font-family: 'Lora', serif; font-size: 1.02rem; line-height: 1.35; }
     .pf-sub-title a { color: #1c2b4a; text-decoration: none; }
     .pf-sub-title a:hover { color: #1f3d7a; text-decoration: underline; }
@@ -139,6 +140,21 @@
       border-radius: 7px; text-decoration: none; cursor: pointer; }
     .pf-mini.read { background: #1f3d7a; color: #fff; } .pf-mini.read:hover { background: #16305f; }
     .pf-mini.pdf { border: 1px solid #cdd5e2; color: #1f3d7a; background: #fff; } .pf-mini.pdf:hover { background: #f0f4fb; }
+    .pf-mini.dl { background: #c2410c; color: #fff; border: 1px solid #c2410c; } .pf-mini.dl:hover { background: #9a3412; }
+    .pf-mini.revup { background: #1f3d7a; color: #fff; } .pf-mini.revup:hover { background: #16305f; }
+
+    /* ---- corrections requested (review system) ---- */
+    .pf-rev-box { background: #fff7f3; border: 1px solid #ffd9c7; border-radius: 9px; padding: .6rem .75rem; margin: .3rem 0; }
+    .pf-rev-head { font-size: .8rem; font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .pf-rev-by { font-size: .72rem; font-weight: 600; color: #b06a4a; margin-left: auto; }
+    .pf-rev-marks { margin: .45rem 0 .6rem; padding-left: 1.2rem; font-size: .82rem; color: #7c3a1d; line-height: 1.6; }
+    .pf-rev-marks li { margin-bottom: .2rem; }
+    .pf-rev-hist { font-size: .78rem; color: #66707f; margin: .35rem 0; }
+    .pf-rev-hist summary { cursor: pointer; font-weight: 600; color: #1f3d7a; font-size: .74rem; }
+    .pf-rev-hist summary:hover { text-decoration: underline; }
+    .pf-hist-row { padding: .3rem 0; border-bottom: 1px dashed #e6e8ee; line-height: 1.55; }
+    .pf-hist-row b { color: #1c2b4a; }
+    .pf-hist-note { color: #8a92a1; font-size: .74rem; }
     .pf-empty { background: #fff; border: 1px dashed #d9dfeb; border-radius: 12px; padding: 1.8rem 1.4rem; text-align: center;
       color: #8a92a1; font-size: .9rem; line-height: 1.7; grid-column: 1 / -1; }
     .pf-empty a { color: #1f3d7a; font-weight: 600; }
@@ -271,6 +287,7 @@
         <div class="pf-stat"><b id="stTotal">0</b><span>Total Submissions</span></div>
         <div class="pf-stat ap"><b id="stApproved">0</b><span>Approved</span></div>
         <div class="pf-stat pd"><b id="stPending">0</b><span>Pending Review</span></div>
+        <div class="pf-stat rv"><b id="stRevision">0</b><span>Needs Revision</span></div>
         <div class="pf-stat rj"><b id="stRejected">0</b><span>Rejected</span></div>
       </div>
 
@@ -281,11 +298,14 @@
           <button type="button" class="pf-chip on" data-f="all">All</button>
           <button type="button" class="pf-chip" data-f="approved">Approved</button>
           <button type="button" class="pf-chip" data-f="pending">Pending</button>
+          <button type="button" class="pf-chip" data-f="revision">Needs Revision</button>
           <button type="button" class="pf-chip" data-f="rejected">Rejected</button>
         </div>
       </div>
       <div class="pf-subs" id="pfSubs"></div>
       <div class="pager" id="pfPager"></div>
+      <!-- hidden input: the corrected PDF of a submission sent back for revision -->
+      <input type="file" id="revFileInput" accept="application/pdf,.pdf" hidden>
 
       <!-- ============ edit profile (toggle) ============ -->
       <div class="pf-sec"><h3><i class="fas fa-user-edit"></i> Edit Profile</h3></div>
@@ -440,7 +460,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, updatePassword, updateProfile, reauthenticateWithCredential,
            EmailAuthProvider, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, deleteDoc }
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, deleteDoc, arrayUnion }
     from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   /* ---------------- Firebase ---------------- */
@@ -469,6 +489,7 @@
   /* pagination: 9 cards per page (3 rows × 3 columns) — same as the admin dashboard */
   const PF_PAGE_SIZE = 9;
   let pfPage = 1;
+  let revUploadId = null;  /* submission id waiting for a corrected file upload */
 
   /* ADMIN ACCOUNTS — keep in sync with admin-login.html, admin.html,
      login.html, menu.js and the Firestore rules. Administrators get
@@ -492,6 +513,12 @@
     const t = tsNum(v);
     return t ? new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
   }
+  function fmtDateTime(v) {
+    const t = tsNum(v);
+    if (!t) return "";
+    return new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) +
+      ", " + new Date(t).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
   function initials(name) {
     return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
   }
@@ -513,8 +540,16 @@
     const st = String(d.status || "").toLowerCase();
     if (st === "approved" || st === "published") return "approved";
     if (st === "rejected") return "rejected";
+    if (st === "revision" || st === "sent-for-revision" || st === "needs-revision") return "revision";
     if (d.published === true || d.published === "true") return "approved";
     return "pending";
+  }
+  function pfActionLabel(a) {
+    if (a === "sent-for-revision") return "sent it back for correction";
+    if (a === "approved") return "approved it";
+    if (a === "unpublished") return "unpublished it";
+    if (a === "resubmitted") return "uploaded a corrected file";
+    return "reviewed it";
   }
 
   /* ================= gate — only logged-in users ================= */
@@ -668,11 +703,12 @@
   }
 
   function renderStats() {
-    const c = { total: mySubs.length, approved: 0, pending: 0, rejected: 0 };
+    const c = { total: mySubs.length, approved: 0, pending: 0, rejected: 0, revision: 0 };
     mySubs.forEach((d) => { c[statusOf(d)]++; });
     $("stTotal").textContent = c.total;
     $("stApproved").textContent = c.approved;
     $("stPending").textContent = c.pending;
+    $("stRevision").textContent = c.revision;
     $("stRejected").textContent = c.rejected;
   }
 
@@ -698,23 +734,52 @@
         ? '<img src="' + esc(d.imageUrl) + '" alt="" loading="lazy">'
         : '<i class="fas fa-file-pdf"></i>';
       const abs = String(d.abstract || "");
+      const badgeTxt = st === "approved" ? "Approved" : st === "revision" ? "Needs Revision" : st === "rejected" ? "Rejected" : "Pending Review";
+      /* corrections requested — the reviewer's marked points come back to the author here */
+      let revBox = "";
+      if (st === "revision") {
+        const marks = (Array.isArray(d.revisionMarks) && d.revisionMarks.filter(Boolean).length)
+          ? d.revisionMarks.filter(Boolean)
+          : String(d.revisionNote || "").split("\n").map((l) => l.replace(/^\s*\d+[).]\s*/, "")).filter(Boolean);
+        revBox = '<div class="pf-rev-box">' +
+          '<div class="pf-rev-head"><i class="fas fa-marker"></i> Corrections requested' +
+            (d.revisionBy ? '<span class="pf-rev-by">by ' + esc(d.revisionBy) +
+              (d.revisionAt ? " · " + esc(fmtDate(d.revisionAt)) : "") + "</span>" : "") +
+          "</div>" +
+          (marks.length ? '<ol class="pf-rev-marks">' + marks.map((m) => "<li>" + esc(m) + "</li>").join("") + "</ol>" : "") +
+          '<button type="button" class="pf-mini revup" data-id="' + esc(d.id) + '"><i class="fas fa-upload"></i> Upload Corrected File</button>' +
+        "</div>";
+      }
+      /* review history — who reviewed this submission and when */
+      const rlog = Array.isArray(d.reviewLog) ? d.reviewLog.slice() : [];
+      const hist = rlog.length
+        ? '<details class="pf-rev-hist"><summary><i class="fas fa-history"></i> Review history (' + rlog.length + ')</summary>' +
+            rlog.sort((a, b) => tsNum(b.at) - tsNum(a.at)).map((r) =>
+              '<div class="pf-hist-row"><b>' + esc(r.by || "?") + "</b> " + esc(pfActionLabel(r.action)) +
+              (r.at ? " · " + esc(fmtDateTime(r.at)) : "") +
+              (r.note ? '<div class="pf-hist-note">' + esc(r.note).replace(/\n/g, "<br>") + "</div>" : "") + "</div>").join("") +
+          "</details>"
+        : "";
       return '<div class="pf-sub" data-id="' + esc(d.id) + '">' +
         '<div class="pf-sub-thumb">' + thumb + "</div>" +
         '<div class="pf-sub-body">' +
           '<div class="pf-sub-top">' +
             (d.category ? '<span class="pf-sub-cat">' + esc(d.category) + "</span>" : "") +
-            '<span class="pf-badge ' + st + '">' + (st === "approved" ? "Approved" : st === "rejected" ? "Rejected" : "Pending Review") + "</span>" +
+            '<span class="pf-badge ' + st + '">' + badgeTxt + "</span>" +
           "</div>" +
           '<h3 class="pf-sub-title"><a href="' + view + '">' + esc(d.title || "(Untitled)") + "</a></h3>" +
           '<p class="pf-sub-meta">Submitted ' + esc(fmtDate(d.submittedAt) || "—") + "</p>" +
           (abs ? '<p class="pf-sub-abs">' + esc(abs.slice(0, 200)) + (abs.length > 200 ? "..." : "") + "</p>" : "") +
+          revBox + hist +
           '<div class="pf-sub-actions">' +
             '<a class="pf-mini read" href="' + view + '"><i class="fas fa-book-open"></i> Read</a>' +
-            (d.fileUrl ? '<a class="pf-mini pdf" href="' + esc(d.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> PDF</a>' : "") +
+            (d.fileUrl ? '<button type="button" class="pf-mini pdf" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-file-pdf"></i> Preview</button>' +
+                        '<button type="button" class="pf-mini dl" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-download"></i> Download</button>' : "") +
           "</div>" +
         "</div>" +
       "</div>";
     }).join("");
+    wireSubFileButtons();
     renderPager(pages);
   }
 
@@ -750,6 +815,105 @@
     document.querySelectorAll(".pf-chip").forEach((c) => c.classList.toggle("on", c === chip));
     pfPage = 1; /* changing the filter always returns to page 1 */
     renderSubs();
+  });
+
+  /* ================= PDF preview + download (no auto-download) =================
+     The file host serves PDFs as a download, so a plain link starts
+     downloading the moment it is clicked. Instead we fetch the file as a
+     Blob and open the Blob URL — the browser then shows its own PDF
+     viewer. The separate Download button is the only way the file is saved. */
+  function fileNameFromUrl(url) {
+    try {
+      const u = decodeURIComponent(String(url).split("?")[0].split("#")[0]);
+      const last = u.substring(u.lastIndexOf("/") + 1);
+      return last || "submission.pdf";
+    } catch (e) { return "submission.pdf"; }
+  }
+  async function openPdfPreview(url) {
+    if (!url) return;
+    const w = window.open("", "_blank"); /* opened during the click, before any await */
+    try {
+      if (w) w.document.write("<!doctype html><html><head><title>Loading PDF…</title></head>" +
+        "<body style=\"font-family:sans-serif;color:#66707f;padding:2rem\">Loading PDF…</body></html>");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      let blob = await res.blob();
+      if (blob.type !== "application/pdf") blob = new Blob([blob], { type: "application/pdf" });
+      const objUrl = URL.createObjectURL(blob);
+      if (w) w.location.replace(objUrl); else window.open(objUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
+    } catch (err) {
+      console.warn("[ARC profile] preview fetch failed:", err);
+      if (w) w.close();
+      window.open(url, "_blank"); /* fallback: open the direct link */
+    }
+  }
+  async function downloadFile(url, name) {
+    if (!url) return;
+    const fname = name || fileNameFromUrl(url);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 30000);
+    } catch (err) {
+      console.warn("[ARC profile] download fetch failed:", err);
+      const a = document.createElement("a"); /* fallback: let the host serve the file */
+      a.href = url; a.download = fname; a.target = "_blank"; a.rel = "noopener";
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  }
+
+  /* ================= review system: wire the card buttons ================= */
+  function wireSubFileButtons() {
+    document.querySelectorAll("#pfSubs .pf-mini.pdf").forEach((btn) => {
+      btn.addEventListener("click", () => openPdfPreview(btn.dataset.url));
+    });
+    document.querySelectorAll("#pfSubs .pf-mini.dl").forEach((btn) => {
+      btn.addEventListener("click", () => downloadFile(btn.dataset.url));
+    });
+    document.querySelectorAll("#pfSubs .pf-mini.revup").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        revUploadId = btn.dataset.id;
+        $("revFileInput").value = "";
+        $("revFileInput").click();
+      });
+    });
+  }
+
+  /* the author uploads the corrected PDF — it goes back to the editors as Pending */
+  $("revFileInput").addEventListener("change", async () => {
+    const f = $("revFileInput").files[0];
+    $("revFileInput").value = "";
+    if (!f || !revUploadId) return;
+    if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
+      toast("Please choose the corrected article as a PDF file.", "err"); return;
+    }
+    if (f.size > 20 * 1048576) { toast("The PDF must be smaller than 20 MB.", "err"); return; }
+    toast('<i class="fas fa-circle-notch fa-spin"></i> Uploading the corrected file…');
+    try {
+      const url = await uploadToWorker(f);
+      await updateDoc(doc(db, "submissions", revUploadId), {
+        fileUrl: url,
+        status: "pending",
+        resubmittedAt: Date.now(),
+        reviewLog: arrayUnion({ by: currentUser.email || "author", at: Date.now(), action: "resubmitted",
+          note: "The author uploaded a corrected file for review" })
+      });
+      toast('<i class="fas fa-check-circle"></i> Corrected file uploaded — it is back with the editors for review.', "ok");
+      await loadMySubs();
+      renderStats();
+      renderSubs();
+    } catch (err) {
+      console.error("[ARC profile] re-upload:", err);
+      let msg = err.message || String(err);
+      if (/permission/i.test(msg)) msg = "The database refused the update — the new Firestore rules must be deployed first (see the install guide) so an author can update a submission that was sent back for correction.";
+      toast('<i class="fas fa-times-circle"></i> ' + esc(msg), "err");
+    }
   });
 
   /* Note (v2): users can no longer delete their submissions from here —
