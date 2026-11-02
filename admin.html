@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard — ARC Journals</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script> <!-- best-effort email to the author when corrections are requested -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
@@ -24,12 +25,12 @@
   .btn-logout { background: #555; color: #fff; } .btn-logout:hover { background: #444; }
 
   /* ---- overview stats ---- */
-  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; margin-bottom: 1.6rem; }
+  .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: .8rem; margin-bottom: 1.6rem; }
   .stat-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: .95rem 1rem; text-align: center;
     box-shadow: 0 2px 10px rgba(20,30,60,.05); }
   .stat-card b { display: block; font-size: 1.5rem; font-family: 'Lora', serif; color: #1c2b4a; line-height: 1.2; }
   .stat-card span { font-size: .72rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #8a92a1; }
-  .stat-card.pd b { color: #b7791f; } .stat-card.ap b { color: #1e7b34; } .stat-card.mo b { color: #1f3d7a; }
+  .stat-card.pd b { color: #b7791f; } .stat-card.ap b { color: #1e7b34; } .stat-card.mo b { color: #1f3d7a; } .stat-card.rv b { color: #c2410c; }
 
   /* ---- sections ---- */
   .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.8rem 0 .9rem; }
@@ -72,13 +73,25 @@
   .sub-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .7rem; }
   .sub-links a { color: #1f3d7a; font-weight: 600; text-decoration: none; font-size: .84rem; }
   .sub-links a:hover { text-decoration: underline; }
+  .sub-links button { color: #1f3d7a; font-weight: 600; font-size: .84rem; background: none; border: none; padding: 0;
+    cursor: pointer; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: .35rem; }
+  .sub-links button:hover { text-decoration: underline; }
   .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .74rem; font-weight: 700;
     letter-spacing: .3px; text-transform: uppercase; }
   .status-pending { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
   .status-approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
+  .status-revision { background: #fff1ec; color: #c2410c; border: 1px solid #ffd9c7; }
+  .rev-note { background: #fff7f3; border: 1px solid #ffd9c7; border-radius: 9px; padding: .55rem .7rem;
+    font-size: .8rem; color: #9a3412; line-height: 1.55; margin: 0 0 .7rem; }
+  .rev-note b { color: #c2410c; }
+  .rev-note .rev-by { display: block; margin-top: .3rem; font-size: .72rem; color: #b06a4a; }
+  .rev-who { font-size: .74rem; color: #8a92a1; margin: 0 0 .6rem; }
+  .rev-who i { color: #9aa3b5; margin-right: .25rem; }
   .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; }
   .btn-approve { background: #1a7a3c; color: #fff; } .btn-approve:hover { background: #156832; }
   .btn-unpublish { background: #fff; color: #b7791f; border: 1px solid #ecd9ad; } .btn-unpublish:hover { background: #fdf6e7; }
+  .btn-review { background: #c2410c; color: #fff; } .btn-review:hover { background: #9a3412; }
+  .btn-addmark { background: #fff; color: #1f3d7a; border: 1px dashed #b9c6e0; } .btn-addmark:hover { background: #f0f4fb; }
   .btn-delete { background: #c4452c; color: #fff; } .btn-delete:hover { background: #a83a24; }
   .empty-note { background: #fff; border: 1px dashed #d9dfeb; border-radius: 12px; padding: 1.6rem 1.3rem; text-align: center;
     color: #8a92a1; font-size: .9rem; line-height: 1.7; }
@@ -106,6 +119,52 @@
   .denied h2 { margin: 0 0 .5rem; font-family: 'Lora', serif; color: #1c2b4a; }
   .denied p { margin: 0 0 1.3rem; color: #66707f; font-size: .92rem; line-height: 1.7; }
   .denied .btn-admin { background: #1f3d7a; color: #fff; }
+
+  /* ---- review & corrections modal ---- */
+  .modal-mask { position: fixed; inset: 0; background: rgba(13,23,48,.58); display: none; align-items: center;
+    justify-content: center; z-index: 1200; padding: 1rem; }
+  .modal-mask.open { display: flex; }
+  .rev-modal { background: #fff; border-radius: 14px; width: 100%; max-width: 660px; max-height: 92vh; overflow: auto;
+    padding: 1.4rem 1.5rem 1.5rem; box-shadow: 0 24px 70px rgba(10,20,50,.4); }
+  .rev-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; }
+  .rev-head h3 { margin: 0; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.18rem; }
+  .rev-close { border: none; background: #f0f2f7; color: #4a5568; width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; font-size: 1.1rem; line-height: 1; }
+  .rev-close:hover { background: #e2e6ef; }
+  .rev-sub-info { background: #f6f8fc; border: 1px solid #e6eaf3; border-radius: 9px; padding: .6rem .8rem;
+    font-size: .85rem; color: #4a5568; line-height: 1.6; margin: .6rem 0 .4rem; }
+  .rev-sub-info b { color: #1c2b4a; }
+  .rev-label { font-weight: 600; font-size: .86rem; color: #25355a; margin: .9rem 0 .55rem; }
+  .rev-mark-row { display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem; }
+  .rev-mark-row .n { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: #fff1ec; color: #c2410c;
+    font: 700 .78rem 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; border: 1px solid #ffd9c7; }
+  .rev-mark-row input { flex: 1; min-width: 0; padding: .5rem .7rem; border: 1px solid #d3d8e2; border-radius: 8px;
+    font: inherit; font-size: .88rem; }
+  .rev-mark-row input:focus { outline: none; border-color: #1f3d7a; box-shadow: 0 0 0 3px rgba(31,61,122,.12); }
+  .rev-mark-row .rm { border: none; background: #fdeeee; color: #b91c1c; width: 30px; height: 30px; border-radius: 8px;
+    cursor: pointer; flex: 0 0 auto; }
+  .rev-mark-row .rm:hover { background: #f9d6d6; }
+  .rev-hist { margin-top: 1rem; border-top: 1px dashed #dfe4ee; padding-top: .8rem; }
+  .rev-hist h4 { margin: 0 0 .5rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: #8a92a1; }
+  .rev-hist-item { font-size: .82rem; color: #55607a; line-height: 1.6; padding: .35rem 0; border-bottom: 1px solid #f1f3f8; }
+  .rev-hist-item b { color: #1f3d7a; }
+  .rev-foot { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; margin-top: 1.1rem; }
+  .rev-foot .hint { font-size: .74rem; color: #8a92a1; line-height: 1.5; flex: 1; min-width: 190px; }
+
+  /* ---- review log (who reviewed what) ---- */
+  .revlog-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+  .revlog-item { display: flex; gap: .8rem; align-items: baseline; flex-wrap: wrap; background: #fff; border: 1px solid #e6e8ee;
+    border-radius: 10px; padding: .6rem .85rem; font-size: .83rem; color: #55607a; }
+  .revlog-act { flex: 0 0 auto; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    padding: 3px 9px; border-radius: 12px; }
+  .revlog-act.sent-for-revision { background: #fff1ec; color: #c2410c; border: 1px solid #ffd9c7; }
+  .revlog-act.approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
+  .revlog-act.unpublished { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
+  .revlog-act.resubmitted { background: #eef2fa; color: #1f3d7a; border: 1px solid #d9e1f2; }
+  .revlog-item .t { color: #1c2b4a; font-weight: 600; }
+  .revlog-item .when { font-size: .74rem; color: #8a92a1; margin-left: auto; }
+  .revlog-item .note { width: 100%; font-size: .8rem; color: #66707f; border-left: 3px solid #f0f2f7;
+    padding-left: .6rem; margin-top: .15rem; }
 
   @media (max-width: 860px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 520px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
@@ -157,6 +216,7 @@
     <div class="stat-card ap"><b id="stApproved">–</b><span>Approved</span></div>
     <div class="stat-card"><b id="stUsers">–</b><span>Registered Users</span></div>
     <div class="stat-card mo"><b id="stMonth">–</b><span>Last 30 Days</span></div>
+    <div class="stat-card rv"><b id="stRevision">–</b><span>Needs Revision</span></div>
   </div>
 
   <!-- submissions management -->
@@ -169,6 +229,7 @@
       <option value="all">All statuses</option>
       <option value="pending">Pending</option>
       <option value="approved">Approved</option>
+      <option value="revision">Needs Revision</option>
     </select>
     <select id="fCat" aria-label="Filter by category">
       <option value="all">All categories</option>
@@ -182,6 +243,18 @@
   <p class="count-note" id="subCount"></p>
   <div id="submissionsList">Loading...</div>
   <div class="pager" id="subPager"></div>
+
+  <!-- review log: every review action with its reviewer -->
+  <div class="sec-head">
+    <h3><i class="fas fa-clipboard-check"></i> Review Log — who reviewed what</h3>
+  </div>
+  <div class="toolbar">
+    <select id="revWho" aria-label="Filter the review log by reviewer">
+      <option value="all">All reviewers</option>
+    </select>
+  </div>
+  <p class="count-note" id="revLogCount"></p>
+  <div class="revlog-list" id="revLogList">Loading...</div>
 
   <!-- registered users -->
   <div class="sec-head">
@@ -205,6 +278,28 @@
   </footer>
 </div><!-- /site-wrapper -->
 
+<!-- ===== review & corrections modal — the admin marks the mistakes, the author gets them back ===== -->
+<div class="modal-mask" id="revModal">
+  <div class="rev-modal" role="dialog" aria-modal="true" aria-labelledby="revTitle">
+    <div class="rev-head">
+      <h3 id="revTitle"><i class="fas fa-marker"></i> Review — Mark the Corrections</h3>
+      <button class="rev-close" id="revClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="rev-sub-info" id="revSubInfo"></div>
+    <div class="rev-label">Where / what must the author correct? (one point per box)</div>
+    <div id="revMarks"></div>
+    <button class="btn btn-addmark" id="revAddMark" type="button"><i class="fas fa-plus"></i> Add another point</button>
+    <div class="rev-hist" id="revHist" style="display:none;">
+      <h4>Previous review history of this submission</h4>
+      <div id="revHistList"></div>
+    </div>
+    <div class="rev-foot">
+      <button class="btn btn-review" id="revSend" type="button"><i class="fas fa-paper-plane"></i> Send back to the author</button>
+      <div class="hint">The author sees these points on their profile page, can upload a corrected file, and the submission comes back here as <b>Pending</b> for final approval.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== site scripts (same set and order as the other pages) ===== -->
 <script src="journals-data.js"></script>
 <script src="menu.js"></script>
@@ -214,7 +309,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy }
+  import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, arrayUnion }
     from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -241,6 +336,17 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  /* EmailJS — mails the author when corrections are requested. Same account
+     and template as the submit page; the email is best-effort and never
+     blocks the review itself. */
+  const EMAILJS_PUBLIC_KEY = "ttN27BmvyDkBRaCDP";
+  const EMAILJS_SERVICE_ID = "service_2d8znb7";
+  const EMAILJS_TEMPLATE_ID = "template_2l9t2j8";
+  let emailjsReady = false;
+  try {
+    if (typeof emailjs !== "undefined") { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); emailjsReady = true; }
+  } catch (e) { console.warn("[ARC admin] EmailJS init failed:", e); }
+
   const CATEGORIES = [
     "Arts & Culture", "Comparative & International Studies", "Economics & Business",
     "Education Studies", "Future & Space Studies", "Health, Psychology & Bioethics",
@@ -255,6 +361,7 @@
   let subs = [];      /* all submissions */
   let users = [];     /* all users docs */
   let loaded = false;
+  let myEmail = "";   /* signed-in admin's email — stamped on every review action */
 
   /* pagination: 9 cards per page (3 rows × 3 columns) */
   const PAGE_SIZE = 9;
@@ -280,6 +387,21 @@
   function isApproved(d) {
     return d.approved === true || d.approved === "true" || d.approved === 1;
   }
+  /* three dashboard states: approved / revision (sent back for correction) / pending */
+  function revStatus(d) {
+    if (isApproved(d)) return "approved";
+    const st = String(d.status || "").toLowerCase();
+    return (st === "revision" || st === "sent-for-revision" || st === "needs-revision") ? "revision" : "pending";
+  }
+  function reviewLogOf(d) {
+    return Array.isArray(d.reviewLog) ? d.reviewLog.slice() : [];
+  }
+  function fmtDateTime(v) {
+    const t = tsNum(v);
+    if (!t) return "";
+    return new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) +
+      ", " + new Date(t).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
   function initials(name) {
     return String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
   }
@@ -291,6 +413,7 @@
   onAuthStateChanged(auth, (user) => {
     if (!user) { window.location.href = "admin-login.html"; return; }
     if (!isAdminEmail(user.email)) { renderAccessDenied(user.email); return; }
+    myEmail = String(user.email || "").trim().toLowerCase();
     document.getElementById("whoEmail").textContent = user.email || "";
     if (!loaded) loadAll();
   });
@@ -353,17 +476,20 @@
     renderStats();
     renderSubs();
     renderUsers();
+    renderReviewLog();
   }
 
   /* ---------------- overview stats ---------------- */
   function renderStats() {
-    const pending = subs.filter((d) => !isApproved(d)).length;
-    const approved = subs.length - pending;
+    const approved = subs.filter((d) => revStatus(d) === "approved").length;
+    const revision = subs.filter((d) => revStatus(d) === "revision").length;
+    const pending = subs.length - approved - revision;
     const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const thisMonth = subs.filter((d) => tsNum(d.submittedAt) >= monthAgo).length;
     document.getElementById("stTotal").textContent = subs.length;
     document.getElementById("stPending").textContent = pending;
     document.getElementById("stApproved").textContent = approved;
+    document.getElementById("stRevision").textContent = revision;
     document.getElementById("stUsers").textContent = users.length;
     document.getElementById("stMonth").textContent = thisMonth;
   }
@@ -375,8 +501,9 @@
     const cat = document.getElementById("fCat").value;
     const sort = document.getElementById("fSort").value;
     let list = subs.slice();
-    if (st === "pending") list = list.filter((d) => !isApproved(d));
-    if (st === "approved") list = list.filter(isApproved);
+    if (st === "pending") list = list.filter((d) => revStatus(d) === "pending");
+    if (st === "approved") list = list.filter((d) => revStatus(d) === "approved");
+    if (st === "revision") list = list.filter((d) => revStatus(d) === "revision");
     if (cat !== "all") list = list.filter((d) => String(d.category || "") === cat);
     if (q) {
       list = list.filter((d) =>
@@ -413,15 +540,35 @@
 
     box.innerHTML = list.map((d) => {
       const id = d.id;
-      const approved = isApproved(d);
+      const st = revStatus(d);
       const author = d.uid
         ? '<a href="author.html?uid=' + encodeURIComponent(d.uid) + '" target="_blank" rel="noopener">' + esc(d.fullName || "(no name)") + "</a>"
         : esc(d.fullName || "(no name)");
       const abs = String(d.abstract || "");
       const view = "submission-view.html?sub=" + encodeURIComponent(id);
+      const log = reviewLogOf(d);
+      const reviewers = [];
+      log.forEach((r) => { if (r && r.by && reviewers.indexOf(r.by) === -1) reviewers.push(r.by); });
+      const badge = st === "approved"
+        ? '<span class="status-badge status-approved">Approved</span>'
+        : st === "revision"
+        ? '<span class="status-badge status-revision">Needs Revision</span>'
+        : '<span class="status-badge status-pending">Pending</span>';
+      /* the corrections the admin marked, shown on the card when sent back */
+      let revNote = "";
+      if (st === "revision") {
+        const mm = Array.isArray(d.revisionMarks) && d.revisionMarks.filter(Boolean).length
+          ? d.revisionMarks.filter(Boolean)
+          : String(d.revisionNote || "").split("\n").filter(Boolean);
+        const joined = mm.join(" · ");
+        revNote = '<div class="rev-note"><b><i class="fas fa-marker"></i> Corrections requested:</b> ' +
+          esc(joined.slice(0, 150)) + (joined.length > 150 ? "…" : "") +
+          (d.revisionBy ? '<span class="rev-by">Marked by ' + esc(d.revisionBy) +
+            (d.revisionAt ? " · " + esc(fmtDate(d.revisionAt)) : "") + "</span>" : "") +
+          "</div>";
+      }
       return '<div class="sub-card" data-id="' + esc(id) + '">' +
-        '<div class="sub-top">' +
-          '<span class="status-badge ' + (approved ? "status-approved" : "status-pending") + '">' + (approved ? "Approved" : "Pending") + "</span>" +
+        '<div class="sub-top">' + badge +
           (d.category ? '<span class="cat-chip">' + esc(d.category) + "</span>" : "") +
         "</div>" +
         '<h3>' + esc(d.title || "(Untitled)") + "</h3>" +
@@ -430,12 +577,16 @@
           (d.institution ? " &middot; " + esc(d.institution) : "") +
           (d.submittedAt ? " &middot; " + esc(fmtDate(d.submittedAt)) : "") + "</div>" +
         (abs ? '<p class="sub-abs">' + esc(abs.slice(0, 260)) + (abs.length > 260 ? "..." : "") + "</p>" : "") +
+        revNote +
+        (reviewers.length ? '<p class="rev-who"><i class="fas fa-user-check"></i>Reviewed by: ' + esc(reviewers.join(", ")) + "</p>" : "") +
         '<div class="sub-links">' +
           '<a href="' + view + '"><i class="fas fa-book-open"></i> View</a>' +
-          (d.fileUrl ? '<a href="' + esc(d.fileUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> See the PDF</a>' : "") +
+          (d.fileUrl ? '<button type="button" class="lnk-preview" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-file-pdf"></i> Preview PDF</button>' +
+                      '<button type="button" class="lnk-dl" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-download"></i> Download</button>' : "") +
         "</div>" +
         '<div class="btn-row">' +
-          (approved
+          '<button class="btn btn-review" data-id="' + esc(id) + '"><i class="fas fa-marker"></i> Review</button>' +
+          (st === "approved"
             ? '<button class="btn btn-unpublish" data-id="' + esc(id) + '"><i class="fas fa-undo"></i> Unpublish</button>'
             : '<button class="btn btn-approve" data-id="' + esc(id) + '"><i class="fas fa-check"></i> Approve</button>') +
           '<button class="btn btn-delete" data-id="' + esc(id) + '" data-fileurl="' + esc(d.fileUrl || "") + '"><i class="fas fa-trash-alt"></i> Delete</button>' +
@@ -472,12 +623,27 @@
   }
 
   function wireSubButtons() {
+    /* preview / download — the PDF never auto-downloads any more;
+       Preview opens the browser's own viewer, Download is an explicit button */
+    document.querySelectorAll(".lnk-preview").forEach((btn) => {
+      btn.addEventListener("click", () => openPdfPreview(btn.dataset.url));
+    });
+    document.querySelectorAll(".lnk-dl").forEach((btn) => {
+      btn.addEventListener("click", () => downloadFile(btn.dataset.url));
+    });
+    /* review — opens the corrections modal */
+    document.querySelectorAll(".btn-review").forEach((btn) => {
+      btn.addEventListener("click", () => openReview(btn.dataset.id));
+    });
     document.querySelectorAll(".btn-approve").forEach((btn) => {
       btn.addEventListener("click", async () => {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Approving...';
         try {
-          await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: true });
+          await updateDoc(doc(db, "submissions", btn.dataset.id), {
+            approved: true, status: "approved",
+            reviewLog: arrayUnion({ by: myEmail, at: Date.now(), action: "approved", note: "Approved for publication" })
+          });
           loadAll();
         } catch (err) {
           console.error("[ARC admin] approve:", err);
@@ -492,7 +658,10 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Unpublishing...';
         try {
-          await updateDoc(doc(db, "submissions", btn.dataset.id), { approved: false });
+          await updateDoc(doc(db, "submissions", btn.dataset.id), {
+            approved: false, status: "pending",
+            reviewLog: arrayUnion({ by: myEmail, at: Date.now(), action: "unpublished", note: "Unpublished — back to pending review" })
+          });
           loadAll();
         } catch (err) {
           console.error("[ARC admin] unpublish:", err);
@@ -539,6 +708,223 @@
     el.addEventListener("input", () => { subPage = 1; renderSubs(); });
     el.addEventListener("change", () => { subPage = 1; renderSubs(); });
   });
+
+  /* ---------------- PDF preview + download (no auto-download) ----------------
+     The file host serves PDFs as a download, so a plain link starts
+     downloading the moment it is clicked. Instead we fetch the file as a
+     Blob and open the Blob URL — the browser then shows its own PDF
+     viewer. The separate Download button is the only way the file is saved. */
+  function fileNameFromUrl(url) {
+    try {
+      const u = decodeURIComponent(String(url).split("?")[0].split("#")[0]);
+      const last = u.substring(u.lastIndexOf("/") + 1);
+      return last || "submission.pdf";
+    } catch (e) { return "submission.pdf"; }
+  }
+  async function openPdfPreview(url) {
+    if (!url) return;
+    const w = window.open("", "_blank"); /* opened during the click, before any await */
+    try {
+      if (w) w.document.write("<!doctype html><html><head><title>Loading PDF…</title></head>" +
+        "<body style=\"font-family:sans-serif;color:#66707f;padding:2rem\">Loading PDF…</body></html>");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      let blob = await res.blob();
+      if (blob.type !== "application/pdf") blob = new Blob([blob], { type: "application/pdf" });
+      const objUrl = URL.createObjectURL(blob);
+      if (w) w.location.replace(objUrl); else window.open(objUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
+    } catch (err) {
+      console.warn("[ARC admin] preview fetch failed:", err);
+      if (w) w.close();
+      window.open(url, "_blank"); /* fallback: open the direct link */
+    }
+  }
+  async function downloadFile(url, name) {
+    if (!url) return;
+    const fname = name || fileNameFromUrl(url);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 30000);
+    } catch (err) {
+      console.warn("[ARC admin] download fetch failed:", err);
+      const a = document.createElement("a"); /* fallback: let the host serve the file */
+      a.href = url; a.download = fname; a.target = "_blank"; a.rel = "noopener";
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  }
+
+  /* ---------------- review & corrections modal ---------------- */
+  let revTargetId = null;
+
+  function actionLabel(a) {
+    if (a === "sent-for-revision") return "sent the submission back for correction";
+    if (a === "approved") return "approved the submission";
+    if (a === "unpublished") return "unpublished the submission";
+    if (a === "resubmitted") return "uploaded a corrected file";
+    return "reviewed the submission";
+  }
+  function actionShort(a) {
+    if (a === "sent-for-revision") return "Sent back";
+    if (a === "approved") return "Approved";
+    if (a === "unpublished") return "Unpublished";
+    if (a === "resubmitted") return "Re-uploaded";
+    return "Review";
+  }
+
+  function renumberMarks() {
+    document.querySelectorAll("#revMarks .rev-mark-row").forEach((r, i) => {
+      r.querySelector(".n").textContent = i + 1;
+    });
+  }
+  function addMarkRow(text) {
+    const box = document.getElementById("revMarks");
+    const row = document.createElement("div");
+    row.className = "rev-mark-row";
+    row.innerHTML = '<span class="n">' + (box.children.length + 1) + "</span>" +
+      '<input type="text" class="rev-mark-input" placeholder="e.g. The abstract is too long — shorten it to 150 words" value="' + esc(text || "") + '">' +
+      '<button type="button" class="rm" title="Remove this point"><i class="fas fa-times"></i></button>';
+    row.querySelector(".rm").addEventListener("click", () => { row.remove(); renumberMarks(); });
+    row.querySelector("input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); addMarkRow(""); renumberMarks(); }
+    });
+    box.appendChild(row);
+  }
+  function openReview(id) {
+    const d = subs.find((s) => s.id === id);
+    if (!d) return;
+    revTargetId = id;
+    document.getElementById("revSubInfo").innerHTML =
+      "<b>" + esc(d.title || "(Untitled)") + "</b><br>" +
+      esc(d.fullName || "(no name)") + (d.email ? " &middot; " + esc(d.email) : "") +
+      (d.submittedAt ? " &middot; submitted " + esc(fmtDate(d.submittedAt)) : "");
+    const box = document.getElementById("revMarks");
+    box.innerHTML = "";
+    const marks = Array.isArray(d.revisionMarks) ? d.revisionMarks.filter(Boolean) : [];
+    if (marks.length) marks.forEach((m) => addMarkRow(m));
+    else addMarkRow("");
+    /* previous review history of this submission */
+    const log = reviewLogOf(d).sort((a, b) => tsNum(b.at) - tsNum(a.at));
+    const hist = document.getElementById("revHist");
+    const hl = document.getElementById("revHistList");
+    if (log.length) {
+      hist.style.display = "block";
+      hl.innerHTML = log.map((r) =>
+        '<div class="rev-hist-item"><b>' + esc(r.by || "?") + "</b> " + esc(actionLabel(r.action)) +
+        (r.at ? " · " + esc(fmtDateTime(r.at)) : "") + (r.note ? "<br>" + esc(r.note).replace(/\n/g, "<br>") : "") + "</div>").join("");
+    } else { hist.style.display = "none"; hl.innerHTML = ""; }
+    document.getElementById("revModal").classList.add("open");
+    const first = box.querySelector("input");
+    if (first) setTimeout(() => first.focus(), 60);
+  }
+  function closeReview() {
+    document.getElementById("revModal").classList.remove("open");
+    revTargetId = null;
+  }
+  document.getElementById("revAddMark").addEventListener("click", () => addMarkRow(""));
+  document.getElementById("revClose").addEventListener("click", closeReview);
+  document.getElementById("revModal").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("revModal")) closeReview();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("revModal").classList.contains("open")) closeReview();
+  });
+
+  document.getElementById("revSend").addEventListener("click", async () => {
+    const marks = Array.from(document.querySelectorAll("#revMarks .rev-mark-input"))
+      .map((i) => i.value.trim()).filter(Boolean);
+    if (!marks.length) { alert("Please write at least one point the author must correct."); return; }
+    const d = subs.find((s) => s.id === revTargetId);
+    if (!d) return;
+    const btn = document.getElementById("revSend");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
+    const note = marks.map((m, i) => (i + 1) + ") " + m).join("\n");
+    try {
+      await updateDoc(doc(db, "submissions", revTargetId), {
+        approved: false,
+        status: "revision",
+        revisionMarks: marks,
+        revisionNote: note,
+        revisionBy: myEmail,
+        revisionAt: Date.now(),
+        reviewLog: arrayUnion({ by: myEmail, at: Date.now(), action: "sent-for-revision", note: note })
+      });
+      /* best-effort email — a failure never blocks the review itself */
+      if (emailjsReady && d.email) {
+        try {
+          const link = new URL("profile.html", location.href).href;
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            to_email: d.email, email: d.email, recipient: d.email,
+            full_name: d.fullName, name: d.fullName, user_name: d.fullName,
+            title: d.title, article_title: d.title,
+            subject: "Corrections requested: " + (d.title || "your submission"),
+            message: "Dear " + (d.fullName || "author") + ",\n\nYour submission \"" + (d.title || "") +
+              "\" has been reviewed and needs correction before it can be published:\n\n" + note +
+              "\n\nPlease log in, open your profile page and upload the corrected file: " + link
+          });
+        } catch (emailErr) { console.warn("[ARC admin] revision email failed:", emailErr); }
+      }
+      closeReview();
+      loadAll();
+    } catch (err) {
+      console.error("[ARC admin] send revision:", err);
+      alert("Could not send the submission back. " + (err && err.message ? err.message : ""));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send back to the author';
+    }
+  });
+
+  /* ---------------- review log — who reviewed what ---------------- */
+  function allReviewEntries() {
+    const out = [];
+    subs.forEach((d) => {
+      reviewLogOf(d).forEach((r) => {
+        if (r && r.by) out.push({ by: r.by, at: tsNum(r.at), action: r.action, note: r.note || "",
+          title: d.title || "(Untitled)", subId: d.id });
+      });
+    });
+    out.sort((a, b) => b.at - a.at);
+    return out;
+  }
+  function renderReviewLog() {
+    const box = document.getElementById("revLogList");
+    const sel = document.getElementById("revWho");
+    if (!box || !sel) return;
+    const entries = allReviewEntries();
+    /* reviewer filter options */
+    const who = [];
+    entries.forEach((e) => { if (who.indexOf(e.by) === -1) who.push(e.by); });
+    const cur = sel.value || "all";
+    sel.innerHTML = '<option value="all">All reviewers (' + who.length + ")</option>" +
+      who.map((w) => '<option value="' + esc(w) + '">' + esc(w) + "</option>").join("");
+    sel.value = (cur === "all" || who.indexOf(cur) !== -1) ? cur : "all";
+    const filtered = sel.value === "all" ? entries : entries.filter((e) => e.by === sel.value);
+    document.getElementById("revLogCount").textContent =
+      filtered.length + " review action" + (filtered.length === 1 ? "" : "s") +
+      (filtered.length !== entries.length ? " (of " + entries.length + " total)" : "");
+    if (!entries.length) {
+      box.innerHTML = '<div class="empty-note"><i class="fas fa-clipboard"></i> No review actions yet.<br>' +
+        "Every time an administrator reviews, approves or sends back a submission — and every time an author uploads a corrected file — it is listed here.</div>";
+      return;
+    }
+    box.innerHTML = filtered.map((e) =>
+      '<div class="revlog-item">' +
+        '<span class="revlog-act ' + esc(e.action || "") + '">' + esc(actionShort(e.action)) + "</span>" +
+        "<b>" + esc(e.by) + "</b>" +
+        '<span class="t">' + esc(e.title) + "</span>" +
+        (e.at ? '<span class="when">' + esc(fmtDateTime(e.at)) + "</span>" : "") +
+        (e.note ? '<div class="note">' + esc(e.note).replace(/\n/g, "<br>") + "</div>" : "") +
+      "</div>").join("");
+  }
+  document.getElementById("revWho").addEventListener("change", renderReviewLog);
 
   /* ---------------- users list ---------------- */
   function subCountFor(uid) {
