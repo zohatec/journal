@@ -11,7 +11,7 @@
   /* The site frame (top bar, main menu, hero banner, footer) is styled by the
      shared style.css — exactly like author.html / profile.html. Only the admin
      panel's own components are styled below. */
-  .admin-wrap { max-width: 1080px; margin: 2rem auto; padding: 0 1rem; }
+  .admin-wrap { max-width: 1500px; margin: 2rem auto; padding: 0 1.2rem; }
 
   /* ---- header ---- */
   .admin-header { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
@@ -44,9 +44,22 @@
     background: #fff; color: #333; cursor: pointer; }
   .count-note { font-size: .78rem; color: #8a92a1; margin: 0 0 .8rem; }
 
-  /* ---- submission cards ---- */
-  .sub-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 1.2rem 1.3rem; margin-bottom: 1rem;
-    box-shadow: 0 2px 10px rgba(20,30,60,.05); }
+  /* ---- submission cards: 3 per row grid (9 per page) ---- */
+  #submissionsList { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: stretch; }
+  .sub-card { background: #fff; border: 1px solid #e6e8ee; border-radius: 12px; padding: 1.1rem 1.15rem;
+    box-shadow: 0 2px 10px rgba(20,30,60,.05); display: flex; flex-direction: column; }
+  .sub-card .btn-row { margin-top: auto; }
+  #submissionsList .empty-note { grid-column: 1 / -1; }
+  @media (max-width: 1150px) { #submissionsList { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 740px) { #submissionsList { grid-template-columns: 1fr; } }
+
+  /* ---- pagination bar (Prev / numbers / Next) ---- */
+  .pager { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: center; margin-top: 1.3rem; }
+  .pager button { min-width: 38px; height: 36px; padding: 0 .7rem; border-radius: 8px; border: 1px solid #d3d8e2;
+    background: #fff; color: #1f3d7a; font: 600 .84rem 'Inter', sans-serif; cursor: pointer; transition: background .15s; }
+  .pager button:hover:not(:disabled):not(.on) { background: #f0f4fb; }
+  .pager button.on { background: #1f3d7a; border-color: #1f3d7a; color: #fff; }
+  .pager button:disabled { opacity: .45; cursor: default; }
   .sub-top { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
   .sub-card h3 { margin: .45rem 0 .35rem; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.08rem; line-height: 1.35; }
   .cat-chip { font-size: .64rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #1f3d7a;
@@ -168,6 +181,7 @@
   </div>
   <p class="count-note" id="subCount"></p>
   <div id="submissionsList">Loading...</div>
+  <div class="pager" id="subPager"></div>
 
   <!-- registered users -->
   <div class="sec-head">
@@ -241,6 +255,10 @@
   let subs = [];      /* all submissions */
   let users = [];     /* all users docs */
   let loaded = false;
+
+  /* pagination: 9 cards per page (3 rows × 3 columns) */
+  const PAGE_SIZE = 9;
+  let subPage = 1;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
@@ -373,17 +391,23 @@
 
   function renderSubs() {
     const box = document.getElementById("submissionsList");
-    const list = filteredSubs();
+    const all = filteredSubs();
+    const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+    if (subPage > pages) subPage = pages;
+    const list = all.slice((subPage - 1) * PAGE_SIZE, subPage * PAGE_SIZE);
     document.getElementById("subCount").textContent =
-      "Showing " + list.length + " of " + subs.length + " submission" + (subs.length === 1 ? "" : "s");
+      "Showing " + all.length + " of " + subs.length + " submission" + (subs.length === 1 ? "" : "s") +
+      (pages > 1 ? " · Page " + subPage + " of " + pages + " · 9 per page" : "");
 
     if (!subs.length) {
       box.innerHTML = '<div class="empty-note"><i class="fas fa-inbox"></i> No submissions yet.<br>' +
         'New submissions will appear here the moment authors send them.</div>';
+      renderPager(1);
       return;
     }
-    if (!list.length) {
+    if (!all.length) {
       box.innerHTML = '<div class="empty-note"><i class="fas fa-search"></i> No submissions match your search / filters.</div>';
+      renderPager(1);
       return;
     }
 
@@ -420,6 +444,31 @@
     }).join("");
 
     wireSubButtons();
+    renderPager(pages);
+  }
+
+  /* ---------------- pagination bar ---------------- */
+  function renderPager(pages) {
+    const bar = document.getElementById("subPager");
+    if (!bar) return;
+    if (pages <= 1) { bar.innerHTML = ""; return; }
+    let html = '<button data-p="' + (subPage - 1) + '"' + (subPage === 1 ? " disabled" : "") + '>‹ Prev</button>';
+    for (let p = 1; p <= pages; p++) {
+      html += '<button data-p="' + p + '"' + (p === subPage ? ' class="on"' : "") + '>' + p + "</button>";
+    }
+    html += '<button data-p="' + (subPage + 1) + '"' + (subPage === pages ? " disabled" : "") + '>Next ›</button>';
+    bar.innerHTML = html;
+    bar.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const p = parseInt(btn.dataset.p, 10);
+        if (p >= 1 && p <= pages && p !== subPage) {
+          subPage = p;
+          renderSubs();
+          const list = document.getElementById("submissionsList");
+          if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
   }
 
   function wireSubButtons() {
@@ -487,8 +536,8 @@
 
   ["q", "fStatus", "fCat", "fSort"].forEach((id) => {
     const el = document.getElementById(id);
-    el.addEventListener("input", renderSubs);
-    el.addEventListener("change", renderSubs);
+    el.addEventListener("input", () => { subPage = 1; renderSubs(); });
+    el.addEventListener("change", () => { subPage = 1; renderSubs(); });
   });
 
   /* ---------------- users list ---------------- */
