@@ -50,6 +50,13 @@
     .auth-btn:active { transform: translateY(1px); }
     .auth-btn:disabled { opacity: .65; cursor: default; }
 
+    /* "or" divider + Google sign-in button (Task 36 #2) */
+    .auth-or { display: flex; align-items: center; gap: .8rem; margin: 1.05rem 0 .85rem; color: #8a92a1; font-size: .78rem; }
+    .auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: #e3e7ef; }
+    .g-btn { background: #fff; border: 1px solid #dadce0; color: #3c4043; }
+    .g-btn:hover { background: #f8f9fa; border-color: #c6cad1; }
+    .g-btn svg { flex: 0 0 auto; }
+
     .auth-note { margin: 1.1rem 0 0; font-size: .82rem; color: #8a92a1; line-height: 1.6; text-align: center; }
     .auth-note a { color: #1f3d7a; font-weight: 600; }
 
@@ -129,6 +136,8 @@
           </div>
 
           <button type="submit" class="auth-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Log In</button>
+          <div class="auth-or">or</div>
+          <button type="button" class="auth-btn g-btn g-signin"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 8.78 3.23l6.02-6.02C35.64 2.64 30.18 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.77 24c0-1.6.28-3.14.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.88.93 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google</button>
           <div class="auth-status" id="loginStatus" role="alert" aria-live="polite"></div>
         </form>
 
@@ -161,6 +170,8 @@
           </div>
 
           <button type="submit" class="auth-btn" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+          <div class="auth-or">or</div>
+          <button type="button" class="auth-btn g-btn g-signin"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 8.78 3.23l6.02-6.02C35.64 2.64 30.18 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.77 24c0-1.6.28-3.14.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.88.93 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google</button>
           <div class="auth-status" id="registerStatus" role="alert" aria-live="polite"></div>
           <p class="auth-note">By creating an account you agree that your <b>public author profile</b>
             (name, title, institution, biography) and your <b>approved articles</b> will be visible to site visitors.</p>
@@ -206,8 +217,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile,
-           sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+           sendPasswordResetEmail, onAuthStateChanged,
+           GoogleAuthProvider, signInWithPopup, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   /* ---------------- Firebase ---------------- */
   const firebaseConfig = {
@@ -292,7 +304,11 @@
       "auth/invalid-email": "That does not look like a valid email address.",
       "auth/too-many-requests": "Too many attempts — please wait a moment and try again.",
       "auth/network-request-failed": "A network error occurred. Please check your internet connection and try again.",
-      "auth/operation-not-allowed": "Email/Password sign-in is not enabled in Firebase yet. The site administrator must enable it: Firebase Console → Authentication → Sign-in method → Email/Password → Enable."
+      "auth/operation-not-allowed": "Email/Password sign-in is not enabled in Firebase yet. The site administrator must enable it: Firebase Console → Authentication → Sign-in method → Email/Password → Enable.",
+      "auth/popup-closed-by-user": "The Google window was closed before finishing. Please try again.",
+      "auth/cancelled-popup-request": "Another sign-in window is still open — please close it and try again.",
+      "auth/popup-blocked": "Your browser blocked the Google pop-up. Allow pop-ups for this site and try again.",
+      "auth/unauthorized-domain": "This site's domain is not yet authorized in Firebase. The administrator must add it: Firebase Console → Authentication → Settings → Authorized domains → Add domain."
     };
     return map[code] || ((err && err.message ? err.message : String(err)).replace("Firebase: ", ""));
   }
@@ -302,6 +318,19 @@
     loading.style.display = "none";
     body.style.display = "block";
     if (user) {
+      /* Task 36 #1 — a session whose email was never verified (an account
+         made with a fake address) is closed on the spot. Administrators are
+         exempt (their emails are hardcoded and trusted); Google accounts
+         are always verified by Google. */
+      if (!user.emailVerified && !isAdminEmail(user.email)) {
+        sendEmailVerification(user).catch(() => {});
+        signOut(auth).catch(() => {});
+        setStatus($("loginStatus"), "error",
+          '<i class="fas fa-envelope-open-text"></i> <b>Your email is not verified yet.</b> ' +
+          'We sent a fresh verification link to <b>' + escHtml(user.email || "your address") + '</b> — ' +
+          'open it, click <b>Verify</b>, then log in again. (No email? Check the spam folder.)');
+        return;
+      }
       /* already logged in — administrators go to the dashboard,
          everyone else to their profile (or back to ?next=) */
       const dest = destFor(user);
@@ -325,6 +354,20 @@
     clearStatus(st);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, pw);
+      /* Task 36 #1 — fake-mail accounts stay locked out until the address
+         is verified. Admins are exempt; Google accounts are verified by Google. */
+      if (!cred.user.emailVerified && !isAdminEmail(email)) {
+        try { await sendEmailVerification(cred.user); } catch (e) { console.warn("[ARC login] resend verification:", e); }
+        signOut(auth).catch(() => {});
+        setStatus(st, "error",
+          '<i class="fas fa-envelope-open-text"></i> <b>Email not verified yet.</b> ' +
+          'The address <b>' + escHtml(email) + '</b> has not been verified, so the login is blocked. ' +
+          'We just sent a fresh verification link to it — open it, click <b>Verify</b>, then log in again. ' +
+          '(No email? Check the spam folder.)');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log In';
+        return;
+      }
       const dest = destFor(cred.user);
       setStatus(st, "success",
         dest === "admin.html"
@@ -388,8 +431,24 @@
           ") — it will be created automatically the first time you open your profile.</small>";
       }
 
-      setStatus(st, "success", '<i class="fas fa-check-circle"></i> <b>Account created!</b> Taking you to your new profile...' + profileNote);
-      setTimeout(() => { location.href = "profile.html"; }, 900);
+      /* 4. send the verification email — until the link in it is clicked,
+            this account CANNOT log in (Task 36 #1: blocks fake addresses).
+            Signing out keeps the account unusable in the meantime. */
+      let verifyNote = "";
+      try { await sendEmailVerification(user); }
+      catch (e) {
+        console.warn("[ARC register] verification email:", e);
+        verifyNote = "<small>Note: the verification email could not be sent right now — try logging in later to receive a new one.</small>";
+      }
+      try { await signOut(auth); } catch (e) { console.warn(e); }
+
+      setStatus(st, "success",
+        '<i class="fas fa-check-circle"></i> <b>Account created!</b> ' +
+        'A verification link was sent to <b>' + escHtml(email) + '</b>. ' +
+        'Open that email (check the spam folder too), click <b>Verify</b>, then come back and log in.' +
+        profileNote + verifyNote);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
     } catch (err) {
       console.error("[ARC register]", err);
       setStatus(st, "error", '<i class="fas fa-times-circle"></i> <b>Sign-up failed:</b> ' + escHtml(friendlyAuthError(err)));
@@ -423,6 +482,61 @@
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
     }
+  });
+
+  /* ================= CONTINUE WITH GOOGLE (Task 36 #2) =================
+     One click creates/logs into the account. Google addresses are always
+     verified by Google, so no extra verification step is needed. */
+  async function googleSignIn(statusEl, btn) {
+    clearStatus(statusEl);
+    btn.disabled = true;
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const cred = await signInWithPopup(auth, provider);
+      const user = cred.user;
+
+      /* first-time Google users get the same profile document as everyone
+         else; existing users keep theirs untouched */
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (!snap.exists()) {
+          await setDoc(doc(db, "users", user.uid), {
+            fullName: user.displayName || (user.email || "New Author").split("@")[0],
+            email: user.email || "",
+            academicTitle: null,
+            institution: null,
+            country: null,
+            website: null,
+            bio: null,
+            avatarUrl: user.photoURL || null,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          });
+        }
+      } catch (e) { console.warn("[ARC google] users doc:", e); }
+
+      const dest = destFor(user);
+      setStatus(statusEl, "success",
+        dest === "admin.html"
+          ? '<i class="fas fa-shield-alt"></i> <b>Welcome back, administrator!</b> Opening the admin dashboard...'
+          : '<i class="fas fa-check-circle"></i> Signed in with Google! Taking you to your profile...');
+      setTimeout(() => { location.href = dest; }, 600);
+    } catch (err) {
+      console.error("[ARC google]", err);
+      let msg = friendlyAuthError(err);
+      if (err && err.code === "auth/operation-not-allowed") {
+        msg = "Google sign-in is not enabled in Firebase yet. The site administrator must enable it: Firebase Console → Authentication → Sign-in method → Google → Enable.";
+      }
+      setStatus(statusEl, "error", '<i class="fas fa-times-circle"></i> <b>Google sign-in failed:</b> ' + escHtml(msg));
+      btn.disabled = false;
+    }
+  }
+  document.querySelectorAll(".g-signin").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const form = btn.closest("form");
+      googleSignIn(form.querySelector(".auth-status"), btn);
+    });
   });
 
   function escHtml(s) {
