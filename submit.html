@@ -248,7 +248,11 @@
   const WORKER_FILE_FIELD = "file"; // if your Worker expects a different field name (e.g. "pdf"), change it here
   const UPLOAD_TIMEOUT_MS = 90000; // 90 seconds
 
-  // NOTE: Verify this Public Key in EmailJS Dashboard -> Account -> General
+  // EmailJS — VERIFIED WORKING IDs (supplied by the site owner + confirmed
+  // by a live API test on 2026-11-03). History: the earlier "email could not
+  // be sent" failure was a one-letter typo in the public key — ttN27Bmv"y"
+  // DkBRaCDP (wrong) vs ttN27Bmv"j"DkBRaCDP (correct). Keep these exact
+  // values in sync with admin.html.
   const EMAILJS_PUBLIC_KEY = "ttN27BmvjDkBRaCDP";
   const EMAILJS_SERVICE_ID = "service_2d8znb7";
   const EMAILJS_TEMPLATE_ID = "template_2l9t2j8";
@@ -537,7 +541,7 @@
             user_name: fullNameEl.value.trim(),
             title: titleEl.value.trim(),
             article_title: titleEl.value.trim(),
-            subject: titleEl.value.trim(),
+            subject: "ARC Journals — your submission has been received",
             category: categoryEl.value,
             institution: institutionEl.value.trim(),
             submission_id: docRef.id,
@@ -545,11 +549,20 @@
             link: viewLink,
             message: "Dear " + fullNameEl.value.trim() + ", your submission '" + titleEl.value.trim() + "' has been received successfully. It will be published on ARC Journals after editorial approval."
           });
-          emailNote = "A confirmation email has been sent to you.";
+          emailNote = "A confirmation email has been sent to you." +
+            '<br><small style="display:block;margin-top:4px;opacity:.9;">If you do not see it within a few minutes, please check your <b>spam folder</b> and mark it as <b>Not Spam</b> — that teaches your email provider to deliver our future emails to your inbox.</small>';
           console.log("[ARC submit] Confirmation email sent");
         } catch (emailErr) {
           console.error("[ARC submit] Email failed:", emailErr);
-          emailNote = "Note: the confirmation email could not be sent, but your submission was received successfully.";
+          /* v3: surface the REAL EmailJS reason on the page so the site owner
+             can fix it without opening the browser console. The most common
+             reason is 404 "No records found..." — the Public Key / Service ID /
+             Template ID constants near the top of this file do not match the
+             account's real IDs in the EmailJS dashboard. */
+          var ereason = (emailErr && (emailErr.text || emailErr.message)) ? String(emailErr.text || emailErr.message) : String(emailErr);
+          emailNote = "Note: the confirmation email could not be sent, but your submission was received successfully." +
+            '<br><small style="display:block;margin-top:4px;opacity:.9;">Email service said: <b>' + esc(ereason) +
+            '</b> — fix: copy the real Public Key / Service ID / Template ID from your EmailJS dashboard and update EMAILJS_PUBLIC_KEY / EMAILJS_SERVICE_ID / EMAILJS_TEMPLATE_ID in submit.html (near line 252) and the same three in admin.html.</small>';
         }
       } else {
         emailNote = "Note: the email service is currently unavailable, but your submission was received successfully.";
