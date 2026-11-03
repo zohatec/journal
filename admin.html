@@ -581,7 +581,7 @@
         (reviewers.length ? '<p class="rev-who"><i class="fas fa-user-check"></i>Reviewed by: ' + esc(reviewers.join(", ")) + "</p>" : "") +
         '<div class="sub-links">' +
           '<a href="' + view + '"><i class="fas fa-book-open"></i> View</a>' +
-          (d.fileUrl ? '<button type="button" class="lnk-preview" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-file-pdf"></i> Preview PDF</button>' +
+          (d.fileUrl ? '<button type="button" class="lnk-preview" data-url="' + esc(d.fileUrl) + '"><i class="fas ' + (isDocUrl(d.fileUrl) ? "fa-file-word" : "fa-file-pdf") + '"></i> ' + (isDocUrl(d.fileUrl) ? "Preview (Word)" : "Preview PDF") + '</button>' +
                       '<button type="button" class="lnk-dl" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-download"></i> Download</button>' : "") +
         "</div>" +
         '<div class="btn-row">' +
@@ -623,10 +623,11 @@
   }
 
   function wireSubButtons() {
-    /* preview / download — the PDF never auto-downloads any more;
-       Preview opens the browser's own viewer, Download is an explicit button */
+    /* preview / download — the file never auto-downloads any more;
+       Preview opens the browser's own viewer (Word files via Google's
+       document viewer), Download is an explicit button */
     document.querySelectorAll(".lnk-preview").forEach((btn) => {
-      btn.addEventListener("click", () => openPdfPreview(btn.dataset.url));
+      btn.addEventListener("click", () => openFilePreview(btn.dataset.url));
     });
     document.querySelectorAll(".lnk-dl").forEach((btn) => {
       btn.addEventListener("click", () => downloadFile(btn.dataset.url));
@@ -709,20 +710,36 @@
     el.addEventListener("change", () => { subPage = 1; renderSubs(); });
   });
 
-  /* ---------------- PDF preview + download (no auto-download) ----------------
-     The file host serves PDFs as a download, so a plain link starts
+  /* ---------------- file preview + download (no auto-download) ----------------
+     The file host serves files as a download, so a plain link starts
      downloading the moment it is clicked. Instead we fetch the file as a
      Blob and open the Blob URL — the browser then shows its own PDF
-     viewer. The separate Download button is the only way the file is saved. */
+     viewer. The separate Download button is the only way the file is saved.
+     Task 36 #5: DOC/DOCX articles are previewed through Google's document
+     viewer (browsers cannot draw Word files themselves). */
   function fileNameFromUrl(url) {
     try {
       const u = decodeURIComponent(String(url).split("?")[0].split("#")[0]);
       const last = u.substring(u.lastIndexOf("/") + 1);
-      return last || "submission.pdf";
-    } catch (e) { return "submission.pdf"; }
+      return last || "article";
+    } catch (e) { return "article"; }
   }
-  async function openPdfPreview(url) {
+  function fileExtOf(url) {
+    const n = fileNameFromUrl(url);
+    const i = n.lastIndexOf(".");
+    return i === -1 ? "" : n.slice(i + 1).toLowerCase();
+  }
+  function isDocUrl(url) {
+    return fileExtOf(url) === "doc" || fileExtOf(url) === "docx";
+  }
+  async function openFilePreview(url) {
     if (!url) return;
+    if (isDocUrl(url)) {
+      /* Word files: open Google's document viewer in a new tab — the
+         document is shown without triggering a download */
+      window.open("https://docs.google.com/viewer?url=" + encodeURIComponent(url) + "&embedded=true", "_blank");
+      return;
+    }
     const w = window.open("", "_blank"); /* opened during the click, before any await */
     try {
       if (w) w.document.write("<!doctype html><html><head><title>Loading PDF…</title></head>" +
