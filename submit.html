@@ -157,9 +157,9 @@
           <textarea id="abstract" placeholder="Write a short summary of your article (at least 20 characters)"></textarea>
         </div>
         <div class="form-group">
-          <label for="pdfFile">Article PDF <span class="req">*</span></label>
-          <input type="file" id="pdfFile" accept=".pdf,application/pdf">
-          <div class="file-hint">PDF files only · Maximum size 20 MB</div>
+          <label for="pdfFile">Article File — PDF or Word <span class="req">*</span></label>
+          <input type="file" id="pdfFile" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <div class="file-hint">PDF, DOC or DOCX · Maximum size 20 MB</div>
         </div>
         <div class="form-group">
           <label for="imageFile">Cover Image (optional)</label>
@@ -352,9 +352,12 @@
     if (abstractEl.value.trim().length < 20) return "The abstract must be at least 20 characters long.";
 
     const pdf = pdfInput.files[0];
-    if (!pdf) return "Please select the PDF file of your article.";
-    if (pdf.size > 20 * 1048576) return "The PDF must be smaller than 20 MB (current size: " + fmtSize(pdf.size) + ").";
-    if (pdf.type && pdf.type !== "application/pdf" && !pdf.name.toLowerCase().endsWith(".pdf")) return "The article file must be a PDF.";
+    if (!pdf) return "Please select the article file (PDF or Word).";
+    if (pdf.size > 20 * 1048576) return "The article file must be smaller than 20 MB (current size: " + fmtSize(pdf.size) + ").";
+    /* Task 36 #5 — PDF, DOC and DOCX are all accepted now */
+    const extOk = /\.(pdf|doc|docx)$/i.test(pdf.name || "");
+    const mimeOk = !pdf.type || /^(application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)(;.*)?)$/i.test(pdf.type);
+    if (!extOk && !mimeOk) return "The article file must be a PDF, DOC or DOCX document.";
 
     const img = imageInput.files[0];
     if (img) {
@@ -489,11 +492,11 @@
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
     try {
-      /* Step 1: upload PDF */
-      setStatus("loading", '<i class="fas fa-spinner fa-spin"></i> <b>Step 1 of 4:</b> Uploading your PDF... <br><small>This can take 1-2 minutes depending on file size and connection — please do not close this page</small>');
-      console.log("[ARC submit] Step 1: PDF upload started");
-      const pdfUrl = await uploadToWorker(pdfInput.files[0], "PDF");
-      console.log("[ARC submit] PDF upload done:", pdfUrl);
+      /* Step 1: upload the article file (PDF / DOC / DOCX) */
+      setStatus("loading", '<i class="fas fa-spinner fa-spin"></i> <b>Step 1 of 4:</b> Uploading your article file... <br><small>This can take 1-2 minutes depending on file size and connection — please do not close this page</small>');
+      console.log("[ARC submit] Step 1: article file upload started");
+      const pdfUrl = await uploadToWorker(pdfInput.files[0], "Article file");
+      console.log("[ARC submit] article file upload done:", pdfUrl);
 
       /* Step 2: upload cover image (if provided) */
       let imageUrl = null;
