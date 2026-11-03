@@ -14,7 +14,7 @@
     .sub-author { font-size: 0.95rem; color: #4a627a; margin-bottom: 0.4rem; }
     .sub-meta { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem; color: #5b6e8c; margin-bottom: 1.2rem; }
     .sub-abstract { background: #fafcfd; border: 1px solid #eef2f8; border-radius: 16px; padding: 1.2rem 1.4rem; font-size: 0.95rem; line-height: 1.6; color: #2c4c6e; margin-bottom: 1.5rem; }
-    .pdf-btn { display: inline-flex; align-items: center; gap: 8px; background: #c4452c; color: white; text-decoration: none; padding: 0.8rem 1.8rem; border-radius: 40px; font-weight: 600; transition: background 0.2s; }
+    .pdf-btn { display: inline-flex; align-items: center; gap: 8px; background: #c4452c; color: white; text-decoration: none; padding: 0.8rem 1.8rem; border-radius: 40px; font-weight: 600; transition: background 0.2s; cursor: pointer; }
     .pdf-btn:hover { background: #0a2540; }
     .back-link { display: inline-block; margin-top: 2rem; color: #c4452c; text-decoration: none; font-weight: 500; }
     @media (max-width: 650px) { .sub-view-container { padding: 1.2rem; margin: 1rem; } .sub-view-container h1 { font-size: 1.4rem; } }
@@ -47,7 +47,7 @@
     <div class="sub-author" id="subAuthor"></div>
     <div class="sub-meta" id="subMeta"></div>
     <div class="sub-abstract" id="subAbstract"></div>
-    <a id="pdfLink" class="pdf-btn" href="#" target="_blank"><i class="fas fa-file-pdf"></i> View Full PDF</a>
+    <a id="pdfLink" class="pdf-btn" href="#"><i class="fas fa-file-pdf"></i> View Full PDF</a>
     <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
   </div>
 </div>
@@ -86,6 +86,53 @@
     document.getElementById("subType").style.display = "none";
   }
 
+  /* ---------------- file preview — NO auto-download (Task 36 #3) ---------------- */
+  /* The button used to point straight at the raw file URL, and the file host
+     sends it with a "download this file" header — so the browser saved the
+     file instead of showing it. Now the file is fetched quietly, turned into
+     a blob and opened in the browser's own viewer, exactly like the proven
+     buttons in admin.html and profile.html. */
+  function fileNameFromUrl(url) {
+    try {
+      const u = decodeURIComponent(String(url).split("?")[0].split("#")[0]);
+      const last = u.substring(u.lastIndexOf("/") + 1);
+      return last || "article";
+    } catch (e) { return "article"; }
+  }
+  function fileExtOf(url) {
+    const n = fileNameFromUrl(url);
+    const i = n.lastIndexOf(".");
+    return i === -1 ? "" : n.slice(i + 1).toLowerCase();
+  }
+  function isDocUrl(url) {
+    return fileExtOf(url) === "doc" || fileExtOf(url) === "docx";
+  }
+  async function openFilePreview(url) {
+    if (!url) return;
+    if (isDocUrl(url)) {
+      /* Word files: Google's document viewer shows them in a new tab —
+         no download is triggered */
+      window.open("https://docs.google.com/viewer?url=" + encodeURIComponent(url) + "&embedded=true", "_blank");
+      return;
+    }
+    const w = window.open("", "_blank"); /* opened during the click, before any await */
+    try {
+      if (w) w.document.write("<!doctype html><html><head><title>Loading PDF…</title></head>" +
+        "<body style=\"font-family:sans-serif;color:#66707f;padding:2rem\">Loading PDF…</body></html>");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      let blob = await res.blob();
+      if (blob.type !== "application/pdf") blob = new Blob([blob], { type: "application/pdf" });
+      const objUrl = URL.createObjectURL(blob);
+      if (w) w.location.replace(objUrl); else window.open(objUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
+    } catch (err) {
+      console.warn("[ARC submission-view] preview fetch failed:", err);
+      if (w) w.close();
+      window.open(url, "_blank"); /* fallback: open the direct link */
+    }
+  }
+
   const subId = new URLSearchParams(location.search).get("sub");
   if (!subId) { notFound(); }
   else {
@@ -110,7 +157,22 @@
         `<span><i class="far fa-calendar-alt"></i> ${fmtDate(d.submittedAt)}</span>`;
       document.getElementById("subAbstract").innerText = d.abstract || "No abstract provided.";
       const pdfLink = document.getElementById("pdfLink");
-      if (d.fileUrl) pdfLink.href = d.fileUrl; else pdfLink.style.display = "none";
+      if (d.fileUrl) {
+        /* Task 36 #3 — the button no longer points at the raw file URL (that
+           is what caused the automatic download). Clicking now opens the
+           file in the browser's own viewer; Word files open in Google's
+           viewer, and the label/icon match the file type. */
+        const word = isDocUrl(d.fileUrl);
+        pdfLink.innerHTML = '<i class="fas ' + (word ? "fa-file-word" : "fa-file-pdf") + '"></i> ' +
+                            (word ? "View Full Document" : "View Full PDF");
+        pdfLink.removeAttribute("target");
+        pdfLink.addEventListener("click", function (e) {
+          e.preventDefault();
+          openFilePreview(d.fileUrl);
+        });
+      } else {
+        pdfLink.style.display = "none";
+      }
     }).catch(notFound);
   }
 </script>
