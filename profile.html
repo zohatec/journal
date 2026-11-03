@@ -277,6 +277,9 @@
               <button type="button" class="pf-btn ghost" id="copyLinkBtn" title="Copy your public profile link"><i class="fas fa-link"></i> Copy Link</button>
               <a class="pf-btn" href="submit.html"><i class="fas fa-paper-plane"></i> Submit New Article</a>
               <a class="pf-btn" id="adminDashBtn" href="admin.html" style="display:none; background:#0a2540;"><i class="fas fa-shield-alt"></i> Admin Dashboard</a>
+              <!-- Task 36 #4 — Log Out now lives at the TOP of the page, next to
+                   the other profile actions, instead of the bottom account box -->
+              <button type="button" class="pf-btn ghost" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
             </div>
           </div>
         </div>
@@ -304,8 +307,8 @@
       </div>
       <div class="pf-subs" id="pfSubs"></div>
       <div class="pager" id="pfPager"></div>
-      <!-- hidden input: the corrected PDF of a submission sent back for revision -->
-      <input type="file" id="revFileInput" accept="application/pdf,.pdf" hidden>
+      <!-- hidden input: the corrected article file of a submission sent back for revision -->
+      <input type="file" id="revFileInput" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
 
       <!-- ============ edit profile (toggle) ============ -->
       <div class="pf-sec"><h3><i class="fas fa-user-edit"></i> Edit Profile</h3></div>
@@ -427,8 +430,7 @@
         <div class="pf-acc-box">
           <h4><i class="fas fa-sign-out-alt"></i> Session &amp; Account</h4>
           <p>Logged in as <b id="accEmail"></b>.</p>
-          <button type="button" class="pf-btn ghost" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
-          <button type="button" class="pf-btn danger" id="deleteBtn" style="margin-left:.5rem;"><i class="fas fa-trash-alt"></i> Delete Account</button>
+          <button type="button" class="pf-btn danger" id="deleteBtn"><i class="fas fa-trash-alt"></i> Delete Account</button>
           <div class="pf-danger-note"><i class="fas fa-exclamation-triangle"></i> Deleting your account removes your profile and logs you out everywhere.
             Your already-published articles stay on the site (the author link will simply show the article information instead of a profile).
             This cannot be undone.</div>
@@ -773,7 +775,7 @@
           revBox + hist +
           '<div class="pf-sub-actions">' +
             '<a class="pf-mini read" href="' + view + '"><i class="fas fa-book-open"></i> Read</a>' +
-            (d.fileUrl ? '<button type="button" class="pf-mini pdf" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-file-pdf"></i> Preview</button>' +
+            (d.fileUrl ? '<button type="button" class="pf-mini pdf" data-url="' + esc(d.fileUrl) + '"><i class="fas ' + (isDocUrl(d.fileUrl) ? "fa-file-word" : "fa-file-pdf") + '"></i> ' + (isDocUrl(d.fileUrl) ? "Preview (Word)" : "Preview") + '</button>' +
                         '<button type="button" class="pf-mini dl" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-download"></i> Download</button>' : "") +
           "</div>" +
         "</div>" +
@@ -817,20 +819,36 @@
     renderSubs();
   });
 
-  /* ================= PDF preview + download (no auto-download) =================
-     The file host serves PDFs as a download, so a plain link starts
+  /* ================= file preview + download (no auto-download) =================
+     The file host serves files as a download, so a plain link starts
      downloading the moment it is clicked. Instead we fetch the file as a
      Blob and open the Blob URL — the browser then shows its own PDF
-     viewer. The separate Download button is the only way the file is saved. */
+     viewer. The separate Download button is the only way the file is saved.
+     Task 36 #5: DOC/DOCX articles preview through Google's document viewer
+     (browsers cannot draw Word files themselves). */
   function fileNameFromUrl(url) {
     try {
       const u = decodeURIComponent(String(url).split("?")[0].split("#")[0]);
       const last = u.substring(u.lastIndexOf("/") + 1);
-      return last || "submission.pdf";
-    } catch (e) { return "submission.pdf"; }
+      return last || "article";
+    } catch (e) { return "article"; }
   }
-  async function openPdfPreview(url) {
+  function fileExtOf(url) {
+    const n = fileNameFromUrl(url);
+    const i = n.lastIndexOf(".");
+    return i === -1 ? "" : n.slice(i + 1).toLowerCase();
+  }
+  function isDocUrl(url) {
+    return fileExtOf(url) === "doc" || fileExtOf(url) === "docx";
+  }
+  async function openFilePreview(url) {
     if (!url) return;
+    if (isDocUrl(url)) {
+      /* Word files: open Google's document viewer in a new tab — the
+         document is shown without triggering a download */
+      window.open("https://docs.google.com/viewer?url=" + encodeURIComponent(url) + "&embedded=true", "_blank");
+      return;
+    }
     const w = window.open("", "_blank"); /* opened during the click, before any await */
     try {
       if (w) w.document.write("<!doctype html><html><head><title>Loading PDF…</title></head>" +
@@ -871,7 +889,7 @@
   /* ================= review system: wire the card buttons ================= */
   function wireSubFileButtons() {
     document.querySelectorAll("#pfSubs .pf-mini.pdf").forEach((btn) => {
-      btn.addEventListener("click", () => openPdfPreview(btn.dataset.url));
+      btn.addEventListener("click", () => openFilePreview(btn.dataset.url));
     });
     document.querySelectorAll("#pfSubs .pf-mini.dl").forEach((btn) => {
       btn.addEventListener("click", () => downloadFile(btn.dataset.url));
@@ -885,15 +903,18 @@
     });
   }
 
-  /* the author uploads the corrected PDF — it goes back to the editors as Pending */
+  /* the author uploads the corrected file — it goes back to the editors as Pending */
   $("revFileInput").addEventListener("change", async () => {
     const f = $("revFileInput").files[0];
     $("revFileInput").value = "";
     if (!f || !revUploadId) return;
-    if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
-      toast("Please choose the corrected article as a PDF file.", "err"); return;
+    /* Task 36 #5 — the corrected file may be a PDF, DOC or DOCX */
+    const rExtOk = /\.(pdf|doc|docx)$/i.test(f.name || "");
+    const rMimeOk = !f.type || /^(application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)(;.*)?)$/i.test(f.type);
+    if (!rExtOk && !rMimeOk) {
+      toast("Please choose the corrected article as a PDF, DOC or DOCX file.", "err"); return;
     }
-    if (f.size > 20 * 1048576) { toast("The PDF must be smaller than 20 MB.", "err"); return; }
+    if (f.size > 20 * 1048576) { toast("The file must be smaller than 20 MB.", "err"); return; }
     toast('<i class="fas fa-circle-notch fa-spin"></i> Uploading the corrected file…');
     try {
       const url = await uploadToWorker(f);
