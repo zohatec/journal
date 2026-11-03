@@ -339,7 +339,7 @@
   /* EmailJS — mails the author when corrections are requested. Same account
      and template as the submit page; the email is best-effort and never
      blocks the review itself. */
-  const EMAILJS_PUBLIC_KEY = "ttN27BmvjDkBRaCDP";
+  const EMAILJS_PUBLIC_KEY = "ttN27BmvjDkBRaCDP"; /* verified working 2026-11-03 — keep in sync with submit.html */
   const EMAILJS_SERVICE_ID = "service_2d8znb7";
   const EMAILJS_TEMPLATE_ID = "template_2l9t2j8";
   let emailjsReady = false;
@@ -864,12 +864,18 @@
             to_email: d.email, email: d.email, recipient: d.email,
             full_name: d.fullName, name: d.fullName, user_name: d.fullName,
             title: d.title, article_title: d.title,
-            subject: "Corrections requested: " + (d.title || "your submission"),
+            subject: "ARC Journals — corrections requested: " + (d.title || "your submission"),
             message: "Dear " + (d.fullName || "author") + ",\n\nYour submission \"" + (d.title || "") +
               "\" has been reviewed and needs correction before it can be published:\n\n" + note +
               "\n\nPlease log in, open your profile page and upload the corrected file: " + link
           });
-        } catch (emailErr) { console.warn("[ARC admin] revision email failed:", emailErr); }
+        } catch (emailErr) {
+          /* best-effort: log the REAL EmailJS reason too (usually 404
+             "No records found" = Public Key / Service ID / Template ID
+             mismatch with the EmailJS dashboard — same fix as submit.html) */
+          var ereason = (emailErr && (emailErr.text || emailErr.message)) ? String(emailErr.text || emailErr.message) : String(emailErr);
+          console.warn("[ARC admin] revision email failed:", ereason, emailErr);
+        }
       }
       closeReview();
       loadAll();
