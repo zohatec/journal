@@ -124,6 +124,8 @@
     .pf-sub-top { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .pf-sub-cat { font-size: .64rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: #1f3d7a;
       background: #eef2fa; border: 1px solid #d9e1f2; padding: 2px 9px; border-radius: 20px; }
+    .pf-sub-journal { font-size: .72rem; font-weight: 600; color: #5a3d1f; background: #faf3e8; border: 1px solid #ecd9bd;
+      padding: 2px 10px; border-radius: 20px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pf-badge { font-size: .68rem; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
     .pf-badge.approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
     .pf-badge.pending { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
@@ -767,6 +769,7 @@
         '<div class="pf-sub-body">' +
           '<div class="pf-sub-top">' +
             (d.category ? '<span class="pf-sub-cat">' + esc(d.category) + "</span>" : "") +
+            (d.journalTitle ? '<span class="pf-sub-journal" title="Journal (sub-category)"><i class="fas fa-book" style="margin-right:4px;color:#b07d2b;"></i>' + esc(d.journalTitle) + "</span>" : "") +
             '<span class="pf-badge ' + st + '">' + badgeTxt + "</span>" +
           "</div>" +
           '<h3 class="pf-sub-title"><a href="' + view + '">' + esc(d.title || "(Untitled)") + "</a></h3>" +
