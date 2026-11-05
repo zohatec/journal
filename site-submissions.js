@@ -81,10 +81,6 @@
      walk results per page, which strategy was used).
    • Database read failures show a red banner with the real reason.
 
-   INSTALL
-   1. Overwrite the old site-submissions.js with this file (all pages
-      load the same file — no HTML changes needed).
-   2. Hard refresh (Ctrl+F5).
    ===================================================================== */
 
 (function () {
