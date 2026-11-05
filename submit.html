@@ -148,6 +148,13 @@
             <option>Technology &amp; Digital Studies</option>
           </select>
         </div>
+        <div class="form-group full" id="journalGroup" style="display:none;">
+          <label for="journalSelect">Journal (Sub-Category) <span class="req">*</span></label>
+          <select id="journalSelect" disabled>
+            <option value="">— Select a sub-category (journal) —</option>
+          </select>
+          <div class="file-hint" id="journalHint">Choose a category above first — its journals (sub-categories) will fill this list. No typing or searching needed: just open the list and pick one.</div>
+        </div>
         <div class="form-group full">
           <label for="title">Article Title <span class="req">*</span></label>
           <input type="text" id="title" placeholder="e.g. Climate Justice and Coastal Communities in Bangladesh">
@@ -178,7 +185,7 @@
       <button type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Submit Article</button>
       <div id="statusBox" class="status-box" role="status" aria-live="polite"></div>
     </form>
-    <p class="submit-note">Once approved by the editor, your article will be published on its category page.</p>
+    <p class="submit-note">Once approved by the editor, your article will be published inside the journal (sub-category) you selected above.</p>
   </div>
 
 </div>
@@ -287,6 +294,71 @@
   const statusBox = document.getElementById("statusBox");
   const originalBtnHtml = submitBtn.innerHTML;
 
+  /* ---------------- Journal (sub-category) dropdown ----------------
+     The 14 categories each contain the site's real journals (from
+     journals-data.js, already loaded by this page). The author picks
+     category first, then one of ITS journals from a PLAIN DROPDOWN —
+     no typing, no searching, exactly like the category select above.
+     The submission is saved with journalTitle / journalCat / journalId
+     so the journal page (article-listing.html) can show the article
+     inside that journal. */
+  const journalGroup = document.getElementById("journalGroup");
+  const journalSelect = document.getElementById("journalSelect");
+  const journalHint = document.getElementById("journalHint");
+  let selectedJournal = null; /* { title, cat, id } */
+  const CAT_TO_KEY = {
+    "Arts & Culture": "arts",
+    "Comparative & International Studies": "comparative",
+    "Economics & Business": "economics",
+    "Education Studies": "education",
+    "Future & Space Studies": "space",
+    "Health, Psychology & Bioethics": "health",
+    "History & Memory Studies": "history",
+    "Human Rights & Indigenous Studies": "human",
+    "Interdisciplinary Studies": "inter",
+    "Law & Environment": "law",
+    "Law & Justice": "justice",
+    "Migration & Geopolitics": "migration",
+    "Philosophy & Ethics": "philosophy",
+    "Technology & Digital Studies": "digital"
+  };
+  function journalsOf(catName) {
+    const k = CAT_TO_KEY[catName];
+    try { return (typeof journalData !== "undefined" && k && journalData[k]) ? journalData[k] : []; }
+    catch (e) { return []; }
+  }
+  /* Category chosen -> fill the journal dropdown with that category's
+     journals. A native <select> shows every journal in its own scrollable
+     box — the author just picks one, nothing to type or search. */
+  categoryEl.addEventListener("change", () => {
+    selectedJournal = null;               /* new category -> old choice is invalid */
+    const all = journalsOf(categoryEl.value);
+    if (categoryEl.value && all.length) {
+      journalGroup.style.display = "";
+      journalSelect.disabled = false;
+      journalSelect.innerHTML =
+        '<option value="">— Select a sub-category (journal) —</option>' +
+        all.map((j, i) => '<option value="' + i + '">' + esc(String(j.title || "")) + '</option>').join("");
+      journalHint.textContent = all.length + " journal(s) available under " + categoryEl.value + " — open the list and pick the one this article belongs to.";
+    } else if (categoryEl.value) {
+      journalGroup.style.display = "";
+      journalSelect.disabled = true;
+      journalSelect.innerHTML = '<option value="">— No journals in this category —</option>';
+      journalHint.textContent = "No journals found in this category — please choose another category.";
+    } else {
+      journalGroup.style.display = "none";
+      journalSelect.disabled = true;
+    }
+    hideStatus();
+  });
+  journalSelect.addEventListener("change", () => {
+    const idx = parseInt(journalSelect.value, 10);
+    const all = journalsOf(categoryEl.value);
+    if (isNaN(idx) || !all[idx]) { selectedJournal = null; return; }
+    selectedJournal = { title: String(all[idx].title || ""), cat: CAT_TO_KEY[categoryEl.value], id: idx };
+    hideStatus();
+  });
+
   /* ---------------- Helpers ---------------- */
   function esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -348,6 +420,7 @@
     const ev = emailEl.value.trim();
     if (!ev || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ev)) return "Please enter a valid email address.";
     if (!categoryEl.value) return "Please select a category.";
+    if (!selectedJournal) return "Please select the journal (sub-category) that this article belongs to.";
     if (!titleEl.value.trim()) return "Please enter the article title.";
     if (abstractEl.value.trim().length < 20) return "The abstract must be at least 20 characters long.";
 
@@ -519,6 +592,9 @@
         email: emailEl.value.trim(),
         institution: institutionEl.value.trim() || null,
         category: categoryEl.value,
+        journalTitle: selectedJournal.title,
+        journalCat: selectedJournal.cat,
+        journalId: selectedJournal.id,
         abstract: abstractEl.value.trim(),
         fileUrl: pdfUrl,
         imageUrl: imageUrl || null,
@@ -546,6 +622,7 @@
             article_title: titleEl.value.trim(),
             subject: "ARC Journals — your submission has been received",
             category: categoryEl.value,
+            journal: selectedJournal.title,
             institution: institutionEl.value.trim(),
             submission_id: docRef.id,
             view_link: viewLink,
@@ -577,9 +654,15 @@
         'Your submission ID is: <code>' + docRef.id + '</code><br>' +
         emailNote + '<br>' +
         '<a href="submission-view.html?sub=' + docRef.id + '"><i class="fas fa-external-link-alt"></i> View your submission</a><br>' +
-        '<small>It will appear on the category page once approved by the editor.</small>');
+        '<small>It will appear in the journal <b>' + esc(selectedJournal.title) + '</b> (under ' + esc(categoryEl.value) + ') once approved by the editor.</small>');
 
       form.reset();
+      /* the journal dropdown must reset with the form (category select is empty again) */
+      selectedJournal = null;
+      journalGroup.style.display = "none";
+      journalSelect.disabled = true;
+      journalSelect.innerHTML = '<option value="">— Select a sub-category (journal) —</option>';
+      journalHint.textContent = "Choose a category above first — its journals (sub-categories) will fill this list. No typing or searching needed: just open the list and pick one.";
       clearImage();
       prefillFromProfile(); /* put the logged-in author's details back after the reset */
       window.scrollTo({ top: form.offsetTop - 100, behavior: "smooth" });
