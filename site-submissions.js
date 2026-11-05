@@ -1,5 +1,90 @@
 /* =====================================================================
-   ARC Journals — site-submissions.js  (v9 — clickable author names + auto account button)
+   ARC Journals — site-submissions.js  (v10 — sub-category system)
+   ---------------------------------------------------------------------
+   v10 NEW — SUB-CATEGORIES (journals inside categories):
+   • Submitted articles are no longer shown on the 14 CATEGORY pages.
+     The category pages go back to the site's own native behaviour:
+     they list journals (= sub-categories) only, with the site's own
+     pagination. The old "New Submissions" block and the merged-card
+     takeover are both retired.
+   • journals.html no longer shows a "Submitted Journals" section —
+     a submission is an ARTICLE inside an existing journal now, not
+     a journal of its own.
+   • article-listing.html (each journal's own page) is where submitted
+     articles appear: approved submissions that carry this journal's
+     journalCat + journalId (saved by submit.html's new journal picker)
+     are placed at the TOP of the journal's article list — newest
+     first — followed by the journal's static articles, paginated
+     6 per page. The pagination bar uses the site's own markup
+     (.pagination-controls / .page-prev / .page-num / .page-next),
+     so the existing style.css styles it without any changes. The
+     bar lives INSIDE #articleListContainer, so it hides together
+     with the list when the journal menu switches views.
+   • Submissions without journal fields (created before v10) appear
+     nowhere on the public site — the site owner deletes them from
+     the admin dashboard.
+   ---------------------------------------------------------------------
+   v9 — clickable author names + auto account button.
+   v9 NEW — FEATURE #3 + #11 (user profiles):
+   • Every submission card now shows the author name as a LINK to the
+     author's public profile page (author.html?uid=...) — on journals.html,
+     on category pages (merged cards), in empty categories and in every
+     fallback. Cards of submitters WITHOUT an account keep the plain
+     text (their uid is null, so there is no profile to link to).
+   • This file also auto-loads profile-auth.js (the floating
+     Log In / My Profile button) on every page that includes it.
+     Missing file = silent no-op, nothing breaks.
+   v8 FIX — STRICT 6 cards per page. v7 collected the snapshotted static
+   cards with holder.childNodes, which also picked up the INVISIBLE
+   whitespace text nodes the site's script.js leaves between its cards
+   (newlines/indentation in its innerHTML templates). Those text nodes
+   occupied slots in the 6-per-page slicing, so pages showed fewer than
+   6 visible cards (e.g. journals-arts rendered 5 / 3 / 2 / 3 across 4
+   pages) and the page count was inflated. v8 keeps ONLY real element
+   nodes, so every page now shows exactly 6 visible cards (last page
+   gets the remainder) and extra pages are created automatically:
+   item 7 lands on page 2, item 13 on page 3, and so on.
+   v7 FIX — the pagination bar on category pages is now the SITE'S OWN
+   bar (‹ Previous · pills · Next ›) preserved 1:1: only the clicks are
+   re-wired to the merged pages, extra pages are added by cloning the
+   site's REAL buttons, and the site's own active/disabled styling is
+   mirrored exactly. v6 rebuilt the bar from scratch, which lost the
+   ‹ Previous / Next › buttons and rendered unstyled number buttons
+   (the crammed "123456" box on journals-arts / journals-comparative).
+   WHAT IT DOES
+   • journals-<category>.html  → approved submissions become REAL cards
+     inside the EXISTING journal grid and the EXISTING pagination flow
+     (6 cards per page, extra pages created automatically).
+     Submissions appear FIRST (page 1, newest first), followed by the
+     site's own journals — same card design, same size, same grid.
+   • journals.html             → "Submitted Journals" section at the top
+     (all approved submissions, latest first, journal-card design).
+   • Every other page          → does nothing.
+
+   HOW IT WORKS (no assumptions about script.js internals!)
+   v5 tried to guess how script.js renders and failed. v6 does NOT
+   re-run or modify script.js. Instead:
+     1. It lets script.js render normally.
+     2. It "walks" the site's own pagination (via the site's own
+        hash navigation / page buttons) and snapshots the REAL
+        rendered HTML of every page — pixel-perfect static cards,
+        links untouched.
+     3. It then takes over the grid + pagination bar and renders
+        [submission cards] + [snapshotted static cards], 6 per page.
+   Submission cards are cloned from a real rendered card when one
+   exists (identical design), or built in the same horizontal
+   journal-card style when the category is empty.
+
+   DIAGNOSTICS
+   • Add #subdebug to the URL → black box shows every step (version,
+     page detection, query results, per-document category/approved,
+     walk results per page, which strategy was used).
+   • Database read failures show a red banner with the real reason.
+
+   INSTALL
+   1. Overwrite the old site-submissions.js with this file (all pages
+      load the same file — no HTML changes needed).
+   2. Hard refresh (Ctrl+F5).
    ===================================================================== */
 
 (function () {
@@ -8,7 +93,7 @@
   if (window.__ARC_SUBMISSIONS_LOADED) return; /* double-load guard */
   window.__ARC_SUBMISSIONS_LOADED = true;
 
-  var VERSION = "v9";
+  var VERSION = "v10";
 
   /* v9: load the floating account button (login / my profile).
      Runs on EVERY page that includes site-submissions.js — if
@@ -177,7 +262,11 @@
       ".arc-page-btn.arc-disabled{opacity:.45;pointer-events:none;cursor:default;}",
       ".arc-page-btn.arc-dots{border-color:transparent;background:transparent;pointer-events:none;min-width:26px;color:#8a92a1;}",
       "#pagination .arc-active{background:#1f3d7a !important;border-color:#1f3d7a !important;color:#fff !important;}",
-      "@media (max-width:640px){.us-grid{grid-template-columns:1fr;}}"
+      "@media (max-width:640px){.us-grid{grid-template-columns:1fr;}}",
+      /* v10 flash-guard: the "New Submissions" block that category-listing.js
+         fills is always removed at boot — hiding it via CSS too means it can
+         never flash on screen before the removal, even on a very slow phone */
+      "#newSubmissionsList{display:none !important;}"
     ].join("");
     document.head.appendChild(style);
   }
@@ -1231,6 +1320,141 @@
   }
 
   /* =====================================================================
+     v10 — JOURNAL PAGE (article-listing.html)
+     ---------------------------------------------------------------------
+     Approved submissions that carry THIS journal's id are prepended to
+     the site's own article list (newest first). The merged list is
+     paginated 6 per page with a bar built from the exact same markup
+     the site's own pagination uses (.pagination-controls with
+     .page-prev / .page-num / .page-next), so style.css styles it
+     without any changes. The bar lives INSIDE #articleListContainer,
+     so it hides together with the list whenever the journal menu
+     switches to another view (script.js only toggles the container).
+     ===================================================================== */
+  var JOURNAL_PER_PAGE = 6;
+
+  function journalSubItemNode(d) {
+    var a = document.createElement("a");
+    a.className = "article-list-item";
+    a.href = "submission-view.html?sub=" + encodeURIComponent(d.id);
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    var icon = "fa-file-pdf";
+    if (/\.(docx?)(\?|#|$)/i.test(String(d.fileUrl || ""))) icon = "fa-file-word";
+    a.innerHTML = '<div class="article-item-icon"><i class="fas ' + icon + '"></i></div>' +
+      '<span class="article-item-title">' + esc(d.title || "(Untitled)") + '</span>' +
+      '<i class="fas fa-external-link-alt article-item-arrow"></i>';
+    return a;
+  }
+
+  function journalBarNode(page, pages) {
+    var wrap = document.createElement("div");
+    wrap.className = "pagination";
+    wrap.setAttribute("role", "navigation");
+    wrap.setAttribute("aria-label", "Articles pagination");
+    var html = '<div class="pagination-controls">';
+    html += '<button class="page-prev"' + (page === 1 ? " disabled" : "") + '>&#8249; Previous</button>';
+    for (var i = 1; i <= pages; i++) {
+      html += '<button class="page-num' + (i === page ? " active" : "") + '" data-page="' + i + '">' + i + "</button>";
+    }
+    html += '<button class="page-next"' + (page === pages ? " disabled" : "") + '>Next &#8250;</button>';
+    html += "</div>";
+    wrap.innerHTML = html;
+    return wrap;
+  }
+
+  function waitJournalRender(timeoutMs) {
+    return new Promise(function (resolve) {
+      var t0 = Date.now();
+      (function poll() {
+        var c = document.getElementById("articleListContainer");
+        if ((c && c.children.length) || Date.now() - t0 > timeoutMs) {
+          resolve(!!(c && c.children.length));
+          return;
+        }
+        setTimeout(poll, 120);
+      })();
+    });
+  }
+
+  async function journalPageMerge(approved) {
+    var params = new URLSearchParams(location.search);
+    var cat = params.get("cat");
+    var id = parseInt(params.get("id"), 10);
+    if (!cat || isNaN(id) || typeof journalData === "undefined" || !journalData[cat] || !journalData[cat][id]) {
+      dbg("journal page: no journal in the URL — nothing to merge");
+      return;
+    }
+    var journal = journalData[cat][id];
+    var jTitle = normText(journal.title);
+    var subs = approved.filter(function (d) {
+      /* primary match: the exact journal the author picked in submit.html */
+      if (d.journalCat === cat && typeof d.journalId === "number" && d.journalId === id) return true;
+      /* fallback: same journal title (covers a re-indexed journals-data file) */
+      if (d.journalTitle && normText(d.journalTitle) === jTitle) return true;
+      return false;
+    });
+    dbg("journal page: '" + jTitle + "' (cat=" + cat + " id=" + id + ") — " + subs.length +
+      " approved submission(s) of " + approved.length + " total");
+
+    var container = document.getElementById("articleListContainer");
+    if (!container) { dbgErr("#articleListContainer not found on this page"); return; }
+
+    var rendered = await waitJournalRender(6000);
+    dbg("static render: " + (rendered ? "ready" : "timeout — continuing with what is there"));
+
+    /* the site's own article items, untouched (links keep working) */
+    var staticItems = Array.prototype.slice.call(container.children).filter(function (n) {
+      return n.nodeType === 1;
+    });
+
+    /* merged list: submissions first (newest first — fetchApproved sorts),
+       then the journal's static articles */
+    var all = subs.map(journalSubItemNode).concat(staticItems);
+    var pages = Math.max(1, Math.ceil(all.length / JOURNAL_PER_PAGE));
+
+    var countEl = document.getElementById("resultCount");
+    if (countEl) countEl.textContent = all.length + " article" + (all.length !== 1 ? "s" : "");
+    var noRes = document.getElementById("noResultsMsg");
+    if (noRes) noRes.style.display = all.length ? "none" : "block";
+
+    var currentPage = parseHash() || 1;
+
+    function renderPage(p) {
+      p = Math.max(1, Math.min(pages, p));
+      container.innerHTML = "";
+      var slice = all.slice((p - 1) * JOURNAL_PER_PAGE, p * JOURNAL_PER_PAGE);
+      for (var s = 0; s < slice.length; s++) container.appendChild(slice[s]);
+      if (pages > 1) container.appendChild(journalBarNode(p, pages));
+      currentPage = p;
+      try {
+        history.replaceState(history.state, "", location.pathname + location.search + (p > 1 ? "#page-" + p : ""));
+      } catch (e) {}
+    }
+
+    /* clicks inside the container: pagination buttons are handled here,
+       clicks on the article <a> items are NOT touched (normal navigation) */
+    container.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest("button") : null;
+      if (!btn || btn.disabled || !container.contains(btn)) return;
+      e.preventDefault();
+      if (btn.classList.contains("page-prev")) { renderPage(currentPage - 1); return; }
+      if (btn.classList.contains("page-next")) { renderPage(currentPage + 1); return; }
+      var n = parseInt(btn.getAttribute("data-page"), 10);
+      if (!isNaN(n) && n !== currentPage) renderPage(n);
+    });
+
+    window.addEventListener("hashchange", function () {
+      var p = parseHash() || 1;
+      if (p !== currentPage) renderPage(p);
+    });
+
+    renderPage(currentPage);
+    dbg("journal page merged: " + all.length + " item(s) (" + subs.length + " submission(s) + " +
+      staticItems.length + " static) — " + pages + " page(s) of " + JOURNAL_PER_PAGE);
+  }
+
+  /* =====================================================================
      Boot
      ===================================================================== */
   function boot() {
@@ -1240,11 +1464,17 @@
       var slug = catMatch ? catMatch[1] : null;
       var isCategoryPage = !!slug && Object.prototype.hasOwnProperty.call(CAT_NAMES, slug);
       var isJournalsHome = page === "journals.html";
+      var isJournalPage = page.indexOf("article-listing") === 0;
 
       dbg("page: " + page);
-      if (!isCategoryPage && !isJournalsHome) { dbg("not a submissions page"); return; }
+      if (!isCategoryPage && !isJournalsHome && !isJournalPage) { dbg("not a submissions page"); return; }
 
-      /* remove the old duplicate "New Submissions" block if still present */
+      /* v10 styles early (contains the #newSubmissionsList flash-guard) */
+      ensureStyles();
+
+      /* remove the old duplicate "New Submissions" block wherever it exists.
+         v10: submitted articles live inside their journal's own page now —
+         never as cards on a category page. */
       var old = document.getElementById("newSubmissionsList");
       if (old) {
         var head = old.previousElementSibling;
@@ -1256,68 +1486,28 @@
       var approved = await fetchApproved();
       if (approved === null) return; /* error already shown */
 
+      /* -------- v10: JOURNAL PAGE (article-listing.html) — the only place
+         submitted articles are shown now: merged on top of the journal's
+         own article list, 6 per page -------- */
+      if (isJournalPage) {
+        await journalPageMerge(approved);
+        return;
+      }
+
+      /* -------- journals.html — the old "Submitted Journals" section is
+         retired in v10: a submission is an article inside an existing
+         journal, not a journal of its own -------- */
       if (isJournalsHome) {
-        renderHomeSection(approved, { atBottom: false, heading: "Submitted Journals" });
+        dbg("journals home: submissions are no longer listed here (v10)");
         return;
       }
 
-      /* ---------------- category page ---------------- */
-      var container = getContainer();
-      if (!container) { dbgErr("#articlesContainer not found on this page"); return; }
-
-      var target = CAT_NAMES[slug];
-      var subs = approved.filter(function (d) { return catMatches(d.category, target); });
-      dbg("category '" + target + "': " + subs.length + " approved submission(s) (of " + approved.length + " total)");
-
-      if (!subs.length) {
-        showNote("No approved submissions in this category yet" +
-          (approved.length ? " — " + approved.length + " approved in other categories." : "."));
-        dbg("nothing for this category — note shown");
-        return;
-      }
-
-      var pag = getPag();
-      var barMax = maxPageNumber(pag);
-      var staticTotal = 0;
-      try {
-        if (typeof journalData !== "undefined" && journalData[slug]) staticTotal = journalData[slug].length;
-      } catch (e) {}
-      var targetPages = Math.max(barMax, Math.ceil(staticTotal / SUBS_PER_PAGE), 1);
-      dbg("bar max page: " + barMax + " · journalData['" + slug + "']: " + staticTotal + " journal(s) · walk target: " + targetPages + " page(s)");
-
-      /* wait for the site's initial render (skip when there is nothing to wait for) */
-      if (staticTotal > 0 || barMax > 0) {
-        var rendered = await waitInitialRender(6000);
-        dbg("initial render: " + (rendered ? "ready" : "timeout — continuing anyway"));
-      }
-
-      var initialPage = parseHash() || 1;
-
-      function finishWithFallback() {
-        if (fallbackB(subs, slug)) { dbg("done — fallback B (extra pages appended, notice shown)"); return; }
-        layerC(subs, slug);
-        dbg("done — fallback C (bottom section)");
-      }
-
-      if (targetPages > MAX_WALK_PAGES) {
-        dbg("too many pages (" + targetPages + " > " + MAX_WALK_PAGES + ") — using fallback");
-        return finishWithFallback();
-      }
-
-      var snapshots = null;
-      if (targetPages <= 1) {
-        snapshots = [null, (getContainer() || container).innerHTML];
-        captureBarProto();
-        dbg("single page — no walk needed");
-      } else {
-        snapshots = await walkPages(targetPages, initialPage);
-      }
-
-      if (snapshots && takeover(snapshots, subs, slug, initialPage)) {
-        dbg("done — takeover (merged grid + pagination)");
-        return;
-      }
-      finishWithFallback();
+      /* -------- category page (journals-<slug>.html) --------
+         v10: submissions are no longer merged into the category grid.
+         The site's own journals + pagination render untouched — the
+         category page lists journals (= sub-categories) only, and the
+         articles live inside each journal's page. */
+      dbg("category page: native journal grid only — submitted articles appear inside each journal (v10)");
     })().catch(function (err) {
       dbgErr("unexpected error: " + (err && err.message ? err.message : err));
       showErrorBanner(String((err && err.message) || err));
