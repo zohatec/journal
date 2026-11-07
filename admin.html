@@ -208,6 +208,20 @@
   .rf-hintbox b { color: #1f3d7a; }
   .rf-mailrow { font-size: .8rem; color: #55607a; line-height: 1.6; margin: .95rem 0 .3rem; }
   .rf-mailrow b { color: #1f3d7a; word-break: break-all; }
+  /* Task 43 — box where the admin pastes the DEDICATED review-template ID so the
+     review email no longer looks like the submission confirmation email */
+  .rf-tplrow { background: #fff8ea; border: 1px solid #eedcab; border-radius: 9px; padding: .55rem .7rem .65rem;
+    margin: .6rem 0 .3rem; font-size: .78rem; color: #55607a; }
+  .rf-tpl-head { font-weight: 700; color: #7a5c14; display: flex; align-items: center; gap: .4rem; margin-bottom: .45rem; }
+  .rf-tplrow input { display: block; width: 100%; box-sizing: border-box; font: inherit; font-family: inherit; font-size: .78rem;
+    color: #1f3d7a; padding: .38rem .5rem; border: 1px solid #d9c896; border-radius: 6px; background: #fff; margin-bottom: .45rem; }
+  .rf-tplrow input:focus { outline: 2px solid #e8c56a; border-color: #c9a94e; }
+  .rf-tpl-save { display: block; width: 100%; font: inherit; font-family: inherit; font-size: .78rem; font-weight: 700; color: #fff;
+    background: #b98a1e; border: 0; border-radius: 6px; padding: .42rem .5rem; cursor: pointer; margin-bottom: .5rem; }
+  .rf-tpl-save:hover { background: #a1761a; }
+  .rf-tpl-hint { line-height: 1.55; color: #6b5a2c; }
+  .rf-tpl-hint code { background: #fff; border: 1px solid #e3d5a8; border-radius: 4px; padding: 0 .25rem; font-size: .72rem; word-break: break-all; }
+  .rf-tpl-hint.ok { color: #1e6b3a; }
   .rf-check { display: flex; gap: .55rem; align-items: flex-start; font-size: .8rem; color: #55607a; line-height: 1.55;
     margin: .85rem 0; cursor: pointer; }
   .rf-check input { margin-top: .2rem; flex: 0 0 auto; }
@@ -389,6 +403,12 @@
         <div id="rfPts"></div>
         <button class="btn btn-addmark" id="rfAddPt" type="button"><i class="fas fa-plus"></i> Add another point</button>
         <div class="rf-mailrow">The edited file will be emailed to<br><b id="rfMailTo"></b></div>
+        <div class="rf-tplrow" id="rfTplRow">
+          <div class="rf-tpl-head"><i class="fas fa-envelope-open-text"></i> Review email — separate template</div>
+          <input type="text" id="rfTplId" placeholder="Paste the new EmailJS Template ID, e.g. template_a1b2c3d" spellcheck="false" autocomplete="off">
+          <button class="rf-tpl-save" id="rfTplSave" type="button"><i class="fas fa-save"></i> Save template ID</button>
+          <div class="rf-tpl-hint" id="rfTplHint"></div>
+        </div>
         <label class="rf-check"><input type="checkbox" id="rfMarkRev" checked>
           <span>Also mark this submission as <b>Needs Revision</b> — the points are shown on the author's profile page and they must upload the corrected file.</span></label>
         <div class="rf-btns">
@@ -456,7 +476,17 @@
      blocks the review itself. */
   const EMAILJS_PUBLIC_KEY = "ttN27BmvjDkBRaCDP"; /* verified working 2026-11-03 — keep in sync with submit.html */
   const EMAILJS_SERVICE_ID = "service_2d8znb7";
-  const EMAILJS_TEMPLATE_ID = "template_2l9t2j8";
+  const EMAILJS_TEMPLATE_ID = "template_2l9t2j8";  /* the submission-confirmation template (same one submit.html uses) */
+  /* Task 43 — the review email gets its OWN EmailJS template so it no longer
+     looks like the submission confirmation. The site owner creates a second
+     template in the EmailJS dashboard ("reviewed file"), then pastes its ID
+     in the "Review email template" box inside the review modal (saved in
+     localStorage) — or hard-codes it below. Empty = fall back to the shared
+     submission template (the old, identical-looking behaviour). */
+  const EMAILJS_REVIEW_TEMPLATE_DEFAULT = "";  /* hard-code here, e.g. "template_a1b2c3d", to skip the UI box */
+  let EMAILJS_REVIEW_TEMPLATE_ID = EMAILJS_REVIEW_TEMPLATE_DEFAULT;
+  try { EMAILJS_REVIEW_TEMPLATE_ID = (localStorage.getItem("arcReviewTemplateId") || EMAILJS_REVIEW_TEMPLATE_DEFAULT || "").trim(); } catch (e) {}
+  function rfReviewTplId() { return (EMAILJS_REVIEW_TEMPLATE_ID || "").trim(); }
   let emailjsReady = false;
   try {
     if (typeof emailjs !== "undefined") { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); emailjsReady = true; }
@@ -1569,9 +1599,15 @@
        always works is the author's profile page: it now shows the reviewed
        file with View / Download buttons right on the submission card. The
        direct file URL travels along too, in several template variables. */
+    /* Task 43 — sent with the DEDICATED review template when one is set (the
+       "Review email template" box), so the review email no longer looks like
+       the submission confirmation that submit.html sends. Falls back to the
+       shared template only while no review template has been configured. */
+    const tpl = rfReviewTplId() || EMAILJS_TEMPLATE_ID;
     const profileLink = new URL("profile.html?sub=" + encodeURIComponent(d.id), location.href).href;
     const params = {
       to_email: d.email, email: d.email, recipient: d.email,
+      from_name: "ARC Journals Editorial Board",
       full_name: d.fullName, name: d.fullName, user_name: d.fullName,
       title: d.title, article_title: d.title,
       subject: "ARC Journals \u2014 reviewed file: " + (d.title || "your submission"),
@@ -1595,12 +1631,12 @@
       hadAttach = true;
     }
     try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
-      return { ok: true, hadAttach };
+      await emailjs.send(EMAILJS_SERVICE_ID, tpl, params);
+      return { ok: true, hadAttach, tpl };
     } catch (e) {
       const why = (e && (e.text || e.message)) ? String(e.text || e.message) : String(e);
-      console.warn("[ARC review] email failed" + (hadAttach ? " (with the attachment variable)" : "") + ":", why, e);
-      return { ok: false, why, hadAttach };
+      console.warn("[ARC review] email failed (template " + tpl + ")" + (hadAttach ? " (with the attachment variable)" : "") + ":", why, e);
+      return { ok: false, why, hadAttach, tpl };
     }
   }
   function rfSaveBlob(bytes, filename) {
@@ -1673,13 +1709,17 @@
       let html = '<b><i class="fas fa-check-circle"></i> Sent.</b> The edited file (' + esc(built.filename) + ") was built and uploaded to the file host" +
         ' (<a href="' + esc(upUrl) + '" target="_blank" rel="noopener">open</a>)' +
         (mail && mail.ok
-          ? " and <b>emailed to " + esc(rf.sub.email) + "</b>"
-          : '. <b>The email could not be sent</b>' + (mail && mail.why ? " \u2014 " + esc(mail.why) : "")) +
+          ? " and <b>emailed to " + esc(rf.sub.email) + "</b>" +
+            (rfReviewTplId()
+              ? ' with the review template <code>' + esc(rfReviewTplId()) + '</code>'
+              : ' — <b>note:</b> it used the <b>same template as the submission confirmation</b> (<code>' + esc(EMAILJS_TEMPLATE_ID) + '</code>), so the email looks exactly like the submit email. Create a separate review template in your EmailJS dashboard and paste its ID in the \u201cReview email template\u201d box above \u2014 ready-made content is in README.md')
+          : '. <b>The email could not be sent</b>' + (mail && mail.why ? " \u2014 " + esc(mail.why) : "") +
+            (rfReviewTplId() ? ' — the review template ID <code>' + esc(rfReviewTplId()) + '</code> may be wrong; copy it again from the EmailJS dashboard (the fallback template was not tried)' : '')) +
         "." +
         '<br><b>How the author opens it:</b> the submission card on their profile page now shows the reviewed file with <b>View</b> and <b>Download</b> buttons \u2014 ' +
         '<a href="' + esc(authorLink) + '" target="_blank" rel="noopener">open that card</a> (the email carries this same link).' +
         (mail && mail.ok
-          ? '<br><small>Tip: the free EmailJS plan cannot attach files, so the email links to that card instead. To also print the correction list and both links inside the email body itself, open this template in the EmailJS dashboard and add <b>{{{message}}}</b> where you want them.</small>'
+          ? '<br><small>Tip: the free EmailJS plan cannot attach files, so the email links to that card instead. To also print the correction list and both links inside the email body itself, open the review template in the EmailJS dashboard and add <b>{{{message}}}</b> where you want them.</small>'
           : "") +
         (markRev
           ? '<br>The submission is now marked <b>Needs Revision</b>' +
@@ -1706,6 +1746,38 @@
     }
   }
   /* ---- bindings ---- */
+  /* Task 43 — "Review email template" box: paste the dedicated template ID
+     once; it is saved in localStorage and used for every review email from
+     then on (submit.html keeps the confirmation template untouched). */
+  function rfTplUpdateUI() {
+    const input = document.getElementById("rfTplId");
+    const hint = document.getElementById("rfTplHint");
+    const cur = rfReviewTplId();
+    if (input && document.activeElement !== input) input.value = cur;
+    if (!hint) return;
+    if (cur) {
+      hint.className = "rf-tpl-hint ok";
+      hint.innerHTML = '<i class="fas fa-check-circle"></i> Saved. Review emails are sent with this separate template, while submission confirmations keep using <code>' + esc(EMAILJS_TEMPLATE_ID) + '</code> \u2014 the two emails now look different.';
+    } else {
+      hint.className = "rf-tpl-hint";
+      hint.innerHTML = 'Not set \u2014 the review email currently goes out with the <b>same template as the submission confirmation</b> (<code>' + esc(EMAILJS_TEMPLATE_ID) + '</code>), so both emails look identical. Create a second template in your EmailJS dashboard (ready-made subject + content in README.md), then paste its Template ID here.';
+    }
+  }
+  document.getElementById("rfTplSave").addEventListener("click", () => {
+    const v = (document.getElementById("rfTplId").value || "").trim();
+    EMAILJS_REVIEW_TEMPLATE_ID = v;
+    try { if (v) localStorage.setItem("arcReviewTemplateId", v); else localStorage.removeItem("arcReviewTemplateId"); } catch (e) {}
+    rfTplUpdateUI();
+    const hint = document.getElementById("rfTplHint");
+    if (hint && v) {
+      hint.className = "rf-tpl-hint ok";
+      hint.innerHTML = '<i class="fas fa-check-circle"></i> Saved \u2014 review emails will now use <code>' + esc(v) + '</code>. If the next send fails with a \u201ctemplate not found\u201d error, the ID was copied wrongly \u2014 copy it again from the EmailJS dashboard.';
+    }
+  });
+  document.getElementById("rfTplId").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); document.getElementById("rfTplSave").click(); }
+  });
+  rfTplUpdateUI();
   document.querySelectorAll("#rfTools .rf-tool[data-tool]").forEach((b) => {
     b.addEventListener("click", () => {
       rf.tool = b.dataset.tool;
