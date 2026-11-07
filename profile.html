@@ -154,6 +154,19 @@
     .pf-rev-hist { font-size: .78rem; color: #66707f; margin: .35rem 0; }
     .pf-rev-hist summary { cursor: pointer; font-weight: 600; color: #1f3d7a; font-size: .74rem; }
     .pf-rev-hist summary:hover { text-decoration: underline; }
+    /* Task 42 — the editor's reviewed file (marked PDF / review report) shown
+       on the Needs Revision card with its own View + Download buttons */
+    .pf-rev-file { background: #fff; border: 1px solid #ffd9c7; border-radius: 8px; padding: .5rem .6rem .55rem; margin: .5rem 0 .55rem; }
+    .pf-rev-file-head { font-size: .76rem; font-weight: 700; color: #1f3d7a; display: flex; align-items: center; gap: .35rem; }
+    .pf-rev-file-name { font-size: .72rem; color: #66707f; margin: .25rem 0 .5rem; word-break: break-all; }
+    .pf-rev-file-btns { display: flex; gap: .45rem; flex-wrap: wrap; }
+    /* Task 42 — email deep link (profile.html?sub=<id>): the card flashes */
+    .pf-sub.pf-flash { animation: pfFlash 2.8s ease-out 1; }
+    @keyframes pfFlash {
+      0%   { box-shadow: 0 0 0 4px #f59e0b; background: #fff8ec; }
+      70%  { box-shadow: 0 0 0 4px rgba(245, 158, 11, .5); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
     .pf-hist-row { padding: .3rem 0; border-bottom: 1px dashed #e6e8ee; line-height: 1.55; }
     .pf-hist-row b { color: #1c2b4a; }
     .pf-hist-note { color: #8a92a1; font-size: .74rem; }
@@ -559,7 +572,12 @@
   /* ================= gate — only logged-in users ================= */
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      $("pfGateText").innerHTML = 'You are not logged in. <a href="login.html?next=profile.html" style="color:#1f3d7a;font-weight:600;">Log in or create an account</a> to see your profile.';
+      /* Task 42 — keep the ?sub= deep link from the review email through the
+         login round-trip: login.html accepts ?next=page.html?query and sends
+         the user straight back to the same card after signing in. */
+      const backTo = location.pathname.split("/").pop() + location.search; /* e.g. profile.html?sub=xyz */
+      $("pfGateText").innerHTML = 'You are not logged in. <a href="login.html?next=' + encodeURIComponent(backTo) +
+        '" style="color:#1f3d7a;font-weight:600;">Log in or create an account</a> to see your profile.';
       $("pfGate").querySelector("i").className = "fas fa-user-lock big";
       return;
     }
@@ -631,9 +649,55 @@
     mySubs.sort((a, b) => tsNum(b.submittedAt) - tsNum(a.submittedAt));
     renderStats();
     renderSubs();
+    pfFocusDeep();
+  }
+
+  /* ================= Task 42 — email deep link =================
+     profile.html?sub=<id> (the link inside the "reviewed file" email) jumps
+     straight to that submission card: right filter, right page, smooth
+     scroll and a short amber flash. Called after the list renders. */
+  function pfFocusDeep() {
+    const id = new URLSearchParams(location.search).get("sub");
+    if (!id) return;
+    const d = mySubs.find((s) => s.id === id);
+    if (!d) return;
+    if (subFilter !== "all" && subFilter !== statusOf(d)) {
+      subFilter = "all";
+      document.querySelectorAll(".pf-chip").forEach((c) => c.classList.toggle("on", c.getAttribute("data-f") === "all"));
+      pfPage = 1;
+      renderSubs();
+    }
+    const idx = mySubs.findIndex((x) => x.id === id);
+    if (idx === -1) return;
+    const page = Math.floor(idx / PF_PAGE_SIZE) + 1;
+    if (page !== pfPage) { pfPage = page; renderSubs(); }
+    const el = document.getElementById("sub-" + id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.remove("pf-flash");
+    void el.offsetWidth; /* restart the animation cleanly */
+    el.classList.add("pf-flash");
+    setTimeout(() => el.classList.remove("pf-flash"), 3000);
   }
 
   /* ================= rendering ================= */
+  /* Task 42 — HTML block for the editor's reviewed file (the marked PDF, or
+     the review-report PDF for Word files). Reuses the existing preview /
+     download wiring: .pf-mini.pdf and .pf-mini.dl inside #pfSubs are wired
+     automatically by wireSubFileButtons(). */
+  function revFileHTML(d) {
+    const isMarked = String(d.reviewedFileKind || "") === "annotated";
+    const fname = d.reviewedFileName || fileNameFromUrl(d.reviewedFileUrl);
+    return '<div class="pf-rev-file">' +
+      '<div class="pf-rev-file-head"><i class="fas fa-file-signature"></i> ' +
+        (isMarked ? "Reviewed file — the corrections are marked on it" : "Reviewed file (review report)") + "</div>" +
+      '<div class="pf-rev-file-name"><i class="fas fa-paperclip" style="margin-right:4px;"></i>' + esc(fname) + "</div>" +
+      '<div class="pf-rev-file-btns">' +
+        '<button type="button" class="pf-mini pdf" data-url="' + esc(d.reviewedFileUrl) + '"><i class="fas fa-file-pdf"></i> View</button>' +
+        '<button type="button" class="pf-mini dl" data-url="' + esc(d.reviewedFileUrl) + '" data-name="' + esc(fname) + '"><i class="fas fa-download"></i> Download</button>' +
+      "</div></div>";
+  }
+
   async function renderHeader() {
     $("pfAvatar").innerHTML = avatarHTML(userData.avatarUrl, userData.fullName);
     $("pfName").textContent = userData.fullName || "New Author";
@@ -739,7 +803,11 @@
         : '<i class="fas fa-file-pdf"></i>';
       const abs = String(d.abstract || "");
       const badgeTxt = st === "approved" ? "Approved" : st === "revision" ? "Needs Revision" : st === "rejected" ? "Rejected" : "Pending Review";
-      /* corrections requested — the reviewer's marked points come back to the author here */
+      /* corrections requested — the reviewer's marked points come back to the author here.
+         Task 42: the reviewed file itself (with the corrections marked on it) is
+         shown right on the card too — the email cannot carry attachments on the
+         free EmailJS plan, so this card is where the author always finds it. */
+      const revFile = d.reviewedFileUrl ? revFileHTML(d) : "";
       let revBox = "";
       if (st === "revision") {
         const marks = (Array.isArray(d.revisionMarks) && d.revisionMarks.filter(Boolean).length)
@@ -751,8 +819,12 @@
               (d.revisionAt ? " · " + esc(fmtDate(d.revisionAt)) : "") + "</span>" : "") +
           "</div>" +
           (marks.length ? '<ol class="pf-rev-marks">' + marks.map((m) => "<li>" + esc(m) + "</li>").join("") + "</ol>" : "") +
+          revFile +
           '<button type="button" class="pf-mini revup" data-id="' + esc(d.id) + '"><i class="fas fa-upload"></i> Upload Corrected File</button>' +
         "</div>";
+      } else if (revFile) {
+        /* review sent without changing the status (send-only) — the file is still shown */
+        revBox = revFile;
       }
       /* review history — who reviewed this submission and when */
       const rlog = Array.isArray(d.reviewLog) ? d.reviewLog.slice() : [];
@@ -764,7 +836,7 @@
               (r.note ? '<div class="pf-hist-note">' + esc(r.note).replace(/\n/g, "<br>") + "</div>" : "") + "</div>").join("") +
           "</details>"
         : "";
-      return '<div class="pf-sub" data-id="' + esc(d.id) + '">' +
+      return '<div class="pf-sub" id="sub-' + esc(d.id) + '" data-id="' + esc(d.id) + '">' +
         '<div class="pf-sub-thumb">' + thumb + "</div>" +
         '<div class="pf-sub-body">' +
           '<div class="pf-sub-top">' +
@@ -895,7 +967,7 @@
       btn.addEventListener("click", () => openFilePreview(btn.dataset.url));
     });
     document.querySelectorAll("#pfSubs .pf-mini.dl").forEach((btn) => {
-      btn.addEventListener("click", () => downloadFile(btn.dataset.url));
+      btn.addEventListener("click", () => downloadFile(btn.dataset.url, btn.dataset.name || ""));
     });
     document.querySelectorAll("#pfSubs .pf-mini.revup").forEach((btn) => {
       btn.addEventListener("click", () => {
