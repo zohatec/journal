@@ -123,19 +123,12 @@
   .denied p { margin: 0 0 1.3rem; color: #66707f; font-size: .92rem; line-height: 1.7; }
   .denied .btn-admin { background: #1f3d7a; color: #fff; }
 
-  /* ---- review & corrections modal ---- */
-  .modal-mask { position: fixed; inset: 0; background: rgba(13,23,48,.58); display: none; align-items: center;
-    justify-content: center; z-index: 1200; padding: 1rem; }
-  .modal-mask.open { display: flex; }
-  .rev-modal { background: #fff; border-radius: 14px; width: 100%; max-width: 660px; max-height: 92vh; overflow: auto;
-    padding: 1.4rem 1.5rem 1.5rem; box-shadow: 0 24px 70px rgba(10,20,50,.4); }
-  .rev-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; }
-  .rev-head h3 { margin: 0; font-family: 'Lora', serif; color: #1c2b4a; font-size: 1.18rem; }
-  .rev-close { border: none; background: #f0f2f7; color: #4a5568; width: 34px; height: 34px; border-radius: 50%;
-    cursor: pointer; font-size: 1.1rem; line-height: 1; }
-  .rev-close:hover { background: #e2e6ef; }
+  /* ---- Review File editor (Task 41) — the Review button opens the uploaded
+     PDF/DOC itself; the admin marks it and the edited file goes to the
+     author's email. The shared .rev-* rules below are reused by it. ---- */
+  /* RF-CSS-BEGIN */
   .rev-sub-info { background: #f6f8fc; border: 1px solid #e6eaf3; border-radius: 9px; padding: .6rem .8rem;
-    font-size: .85rem; color: #4a5568; line-height: 1.6; margin: .6rem 0 .4rem; }
+    font-size: .85rem; color: #4a5568; line-height: 1.6; margin: 0 0 .6rem; }
   .rev-sub-info b { color: #1c2b4a; }
   .rev-label { font-weight: 600; font-size: .86rem; color: #25355a; margin: .9rem 0 .55rem; }
   .rev-mark-row { display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem; }
@@ -151,8 +144,88 @@
   .rev-hist h4 { margin: 0 0 .5rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: #8a92a1; }
   .rev-hist-item { font-size: .82rem; color: #55607a; line-height: 1.6; padding: .35rem 0; border-bottom: 1px solid #f1f3f8; }
   .rev-hist-item b { color: #1f3d7a; }
-  .rev-foot { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; margin-top: 1.1rem; }
-  .rev-foot .hint { font-size: .74rem; color: #8a92a1; line-height: 1.5; flex: 1; min-width: 190px; }
+
+  /* full-screen editor shell */
+  .rf-mask { position: fixed; inset: 0; background: rgba(10,18,38,.66); display: none; z-index: 1300; }
+  .rf-mask.open { display: block; }
+  .rf-panel { background: #f2f5fa; width: 100%; height: 100vh; display: flex; flex-direction: column; animation: rfIn .18s ease; }
+  @keyframes rfIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .rf-head { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: #1f3d7a; color: #fff; padding: .75rem 1.15rem; }
+  .rf-head h3 { margin: 0; font-family: 'Lora', serif; font-size: 1.12rem; color: #fff; }
+  .rf-head .rf-sub { font-size: .78rem; opacity: .88; margin-top: .15rem; }
+  .rf-close { border: none; background: rgba(255,255,255,.18); color: #fff; width: 36px; height: 36px; border-radius: 50%;
+    cursor: pointer; font-size: 1.2rem; line-height: 1; margin-left: auto; flex: 0 0 auto; }
+  .rf-close:hover { background: rgba(255,255,255,.32); }
+  .rf-cols { flex: 1; display: flex; min-height: 0; }
+  .rf-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .rf-tools { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; padding: .55rem .95rem;
+    background: #fff; border-bottom: 1px solid #e6e8ee; }
+  .rf-tool { border: 1px solid #d3d8e2; background: #fff; color: #1f3d7a; border-radius: 8px; padding: .42rem .72rem;
+    cursor: pointer; font: 600 .8rem 'Inter', sans-serif; display: inline-flex; align-items: center; gap: .38rem; }
+  .rf-tool:hover:not(:disabled) { background: #f0f4fb; }
+  .rf-tool.on { background: #c2410c; border-color: #c2410c; color: #fff; }
+  .rf-tool:disabled { opacity: .45; cursor: default; }
+  .rf-tool-sep { width: 1px; height: 24px; background: #e2e6ef; margin: 0 .35rem; }
+  .rf-count { margin-left: auto; font-size: .76rem; color: #66707f; text-align: right; }
+  .rf-body { flex: 1; overflow: auto; padding: 1.6rem 1.1rem 2.6rem; background: #e9edf4; }
+  .rf-page { position: relative; width: min(860px, 100%); margin: 0 auto; box-shadow: 0 8px 30px rgba(15,25,55,.2);
+    background: #fff; }
+  .rf-page canvas { display: block; width: 100%; height: auto; }
+  .rf-page canvas.rf-over { position: absolute; top: 0; left: 0; touch-action: none; cursor: crosshair; }
+  .rf-pagenum { position: absolute; top: -1.32rem; right: 0; font-size: .72rem; font-weight: 600; color: #5a6580;
+    background: #dde4ef; padding: 2px 10px; border-radius: 20px; }
+  .rf-loading { max-width: 620px; margin: 3.2rem auto; background: #fff; border: 1px dashed #c9d4e4; border-radius: 12px;
+    padding: 1.7rem 1.5rem; text-align: center; color: #66707f; font-size: .9rem; line-height: 1.85; }
+  .rf-loading i { font-size: 1.5rem; color: #1f3d7a; display: block; margin-bottom: .55rem; }
+  .rf-loading p { margin: .8rem 0 0; }
+  .rf-word { max-width: 860px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 2.4rem 3rem;
+    box-shadow: 0 8px 30px rgba(15,25,55,.2); line-height: 1.75; color: #2c364e; font-size: .95rem; overflow-wrap: break-word; }
+  .rf-word h1, .rf-word h2, .rf-word h3 { font-family: 'Lora', serif; color: #1c2b4a; margin: 1.1rem 0 .45rem; line-height: 1.35; }
+  .rf-word h1 { font-size: 1.45rem; } .rf-word h2 { font-size: 1.2rem; } .rf-word h3 { font-size: 1.05rem; }
+  .rf-word p { margin: .65rem 0; }
+  .rf-word img { max-width: 100%; height: auto; }
+  .rf-word table { border-collapse: collapse; } .rf-word td, .rf-word th { border: 1px solid #ccd4e0; padding: .35rem .55rem; }
+  .rf-note-box { position: absolute; z-index: 6; width: 302px; background: #fff; border: 2px solid #d0342c; border-radius: 10px;
+    box-shadow: 0 12px 34px rgba(20,30,60,.3); padding: .55rem; }
+  .rf-note-box textarea { width: 100%; height: 96px; border: 1px solid #d3d8e2; border-radius: 8px; padding: .5rem .6rem;
+    font: 500 .86rem 'Inter', sans-serif; resize: vertical; color: #2c364e; }
+  .rf-note-box textarea:focus { outline: none; border-color: #c2410c; }
+  .rf-note-box .nb-btns { display: flex; gap: .45rem; justify-content: flex-end; margin-top: .45rem; }
+  .rf-note-box .nb-ok, .rf-note-box .nb-no { border: none; border-radius: 7px; padding: .32rem .75rem; cursor: pointer;
+    font: 600 .78rem 'Inter', sans-serif; }
+  .rf-note-box .nb-ok { background: #c2410c; color: #fff; }
+  .rf-note-box .nb-ok:hover { background: #9a3412; }
+  .rf-note-box .nb-no { background: #f0f2f7; color: #4a5568; }
+  .rf-note-box .nb-no:hover { background: #e2e6ef; }
+
+  /* right column of the editor */
+  .rf-side { width: 356px; flex: 0 0 auto; background: #fff; border-left: 1px solid #e6e8ee; overflow-y: auto;
+    padding: 1.05rem 1.1rem 1.5rem; }
+  .rf-pt-title { margin: .1rem 0 .55rem; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    color: #8a92a1; }
+  .rf-hintbox { background: #f6f8fc; border: 1px solid #e6eaf3; border-radius: 9px; padding: .6rem .75rem;
+    font-size: .78rem; color: #55607a; line-height: 1.6; margin: 0 0 .85rem; }
+  .rf-hintbox b { color: #1f3d7a; }
+  .rf-mailrow { font-size: .8rem; color: #55607a; line-height: 1.6; margin: .95rem 0 .3rem; }
+  .rf-mailrow b { color: #1f3d7a; word-break: break-all; }
+  .rf-check { display: flex; gap: .55rem; align-items: flex-start; font-size: .8rem; color: #55607a; line-height: 1.55;
+    margin: .85rem 0; cursor: pointer; }
+  .rf-check input { margin-top: .2rem; flex: 0 0 auto; }
+  .rf-btns { display: flex; flex-direction: column; gap: .55rem; margin: .45rem 0 .7rem; }
+  .rf-btns .btn { justify-content: center; }
+  .rf-status { font-size: .8rem; color: #66707f; min-height: 1.25em; margin: .25rem 0 .65rem; }
+  .rf-status.err { color: #b91c1c; }
+  .rf-result { display: none; border-radius: 10px; padding: .85rem .95rem; font-size: .84rem; line-height: 1.7; margin-bottom: .85rem; }
+  .rf-result.ok { display: block; background: #eefaf0; border: 1px solid #bfe5c8; color: #1e7b34; }
+  .rf-result.err { display: block; background: #fff1ec; border: 1px solid #ffd9c7; color: #9a3412; }
+  .rf-result a { color: #1f3d7a; font-weight: 600; }
+  @media (max-width: 920px) {
+    .rf-cols { flex-direction: column; }
+    .rf-side { width: auto; border-left: none; border-top: 1px solid #e6e8ee; max-height: 46vh; }
+    .rf-body { padding: 1.2rem .8rem 2rem; }
+    .rf-word { padding: 1.6rem 1.2rem; }
+  }
+  /* RF-CSS-END */
 
   /* ---- review log (who reviewed what) ---- */
   .revlog-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
@@ -164,6 +237,7 @@
   .revlog-act.approved { background: #eefaf0; color: #1e7b34; border: 1px solid #bfe5c8; }
   .revlog-act.unpublished { background: #fdf6e7; color: #b7791f; border: 1px solid #ecd9ad; }
   .revlog-act.resubmitted { background: #eef2fa; color: #1f3d7a; border: 1px solid #d9e1f2; }
+  .revlog-act.file-reviewed { background: #e7f3fb; color: #0c6a9e; border: 1px solid #c5e2f1; }
   .revlog-item .t { color: #1c2b4a; font-weight: 600; }
   .revlog-item .when { font-size: .74rem; color: #8a92a1; margin-left: auto; }
   .revlog-item .note { width: 100%; font-size: .8rem; color: #66707f; border-left: 3px solid #f0f2f7;
@@ -281,33 +355,71 @@
   </footer>
 </div><!-- /site-wrapper -->
 
-<!-- ===== review & corrections modal — the admin marks the mistakes, the author gets them back ===== -->
-<div class="modal-mask" id="revModal">
-  <div class="rev-modal" role="dialog" aria-modal="true" aria-labelledby="revTitle">
-    <div class="rev-head">
-      <h3 id="revTitle"><i class="fas fa-marker"></i> Review — Mark the Corrections</h3>
-      <button class="rev-close" id="revClose" type="button" aria-label="Close">&times;</button>
+<!-- ===== Review File editor (Task 41) — the Review button opens the uploaded
+       PDF/DOC itself. PDFs are marked with pen / highlighter / notes; the edited
+       file (original + marks burned in) is sent to the author's email. Word
+       files become a Review Report PDF from the typed correction points. ===== -->
+<!-- RF-MODAL-BEGIN -->
+<div class="rf-mask" id="fileRevModal">
+  <div class="rf-panel" role="dialog" aria-modal="true" aria-labelledby="rfTitle">
+    <div class="rf-head">
+      <div>
+        <h3 id="rfTitle"><i class="fas fa-marker"></i> Review File</h3>
+        <div class="rf-sub" id="rfSubLine"></div>
+      </div>
+      <button class="rf-close" id="rfClose" type="button" aria-label="Close">&times;</button>
     </div>
-    <div class="rev-sub-info" id="revSubInfo"></div>
-    <div class="rev-label">Where / what must the author correct? (one point per box)</div>
-    <div id="revMarks"></div>
-    <button class="btn btn-addmark" id="revAddMark" type="button"><i class="fas fa-plus"></i> Add another point</button>
-    <div class="rev-hist" id="revHist" style="display:none;">
-      <h4>Previous review history of this submission</h4>
-      <div id="revHistList"></div>
-    </div>
-    <div class="rev-foot">
-      <button class="btn btn-review" id="revSend" type="button"><i class="fas fa-paper-plane"></i> Send back to the author</button>
-      <div class="hint">The author sees these points on their profile page, can upload a corrected file, and the submission comes back here as <b>Pending</b> for final approval.</div>
+    <div class="rf-cols">
+      <div class="rf-main">
+        <div class="rf-tools" id="rfTools">
+          <button class="rf-tool on" data-tool="pen" type="button" title="Draw freehand red corrections"><i class="fas fa-pen-nib"></i> Pen</button>
+          <button class="rf-tool" data-tool="hl" type="button" title="Drag to highlight a passage"><i class="fas fa-highlighter"></i> Highlight</button>
+          <button class="rf-tool" data-tool="note" type="button" title="Click the page to pin a written note"><i class="fas fa-comment-dots"></i> Note</button>
+          <span class="rf-tool-sep"></span>
+          <button class="rf-tool" id="rfUndo" type="button" disabled><i class="fas fa-undo"></i> Undo</button>
+          <button class="rf-tool" id="rfClearPg" type="button" disabled><i class="fas fa-eraser"></i> Clear page</button>
+          <span class="rf-count" id="rfCount"></span>
+        </div>
+        <div class="rf-body" id="rfBody"></div>
+      </div>
+      <aside class="rf-side">
+        <div class="rev-sub-info" id="rfInfo"></div>
+        <div class="rf-hintbox" id="rfModeHint"></div>
+        <div class="rf-pt-title">Correction points (typed)</div>
+        <div id="rfPts"></div>
+        <button class="btn btn-addmark" id="rfAddPt" type="button"><i class="fas fa-plus"></i> Add another point</button>
+        <div class="rf-mailrow">The edited file will be emailed to<br><b id="rfMailTo"></b></div>
+        <label class="rf-check"><input type="checkbox" id="rfMarkRev" checked>
+          <span>Also mark this submission as <b>Needs Revision</b> — the points are shown on the author's profile page and they must upload the corrected file.</span></label>
+        <div class="rf-btns">
+          <button class="btn btn-review" id="rfSend" type="button" disabled><i class="fas fa-paper-plane"></i> Send edited file to the author's email</button>
+          <button class="btn btn-view" id="rfSave" type="button" disabled><i class="fas fa-download"></i> Download the edited file only (no email)</button>
+        </div>
+        <div class="rf-status" id="rfStatus"></div>
+        <div class="rf-result" id="rfResult"></div>
+        <div class="rev-hist" id="rfHist" style="display:none;">
+          <h4>Previous review history</h4>
+          <div id="rfHistList"></div>
+        </div>
+      </aside>
     </div>
   </div>
 </div>
+<!-- RF-MODAL-END -->
 
 <!-- ===== site scripts (same set and order as the other pages) ===== -->
 <script src="journals-data.js"></script>
 <script src="menu.js"></script>
 <script src="script.js"></script>
 <script src="footer.js"></script>
+<!-- Task 41 — Review File editor libraries: PDF renderer (pdf.js), PDF
+     writer (pdf-lib) and .docx reader (mammoth). Each is optional at runtime:
+     if one fails to load the editor still works and degrades to typed
+     correction points + a Review Report PDF. -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; }</script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -589,7 +701,7 @@
                       '<button type="button" class="lnk-dl" data-url="' + esc(d.fileUrl) + '"><i class="fas fa-download"></i> Download</button>' : "") +
         "</div>" +
         '<div class="btn-row">' +
-          '<button class="btn btn-review" data-id="' + esc(id) + '"><i class="fas fa-marker"></i> Review</button>' +
+          '<button class="btn btn-review" data-id="' + esc(id) + '"><i class="fas fa-marker"></i> Review File</button>' +
           (st === "approved"
             ? '<button class="btn btn-unpublish" data-id="' + esc(id) + '"><i class="fas fa-undo"></i> Unpublish</button>'
             : '<button class="btn btn-approve" data-id="' + esc(id) + '"><i class="fas fa-check"></i> Approve</button>') +
@@ -638,7 +750,7 @@
     });
     /* review — opens the corrections modal */
     document.querySelectorAll(".btn-review").forEach((btn) => {
-      btn.addEventListener("click", () => openReview(btn.dataset.id));
+      btn.addEventListener("click", () => openFileReview(btn.dataset.id));
     });
     document.querySelectorAll(".btn-approve").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -781,14 +893,13 @@
     }
   }
 
-  /* ---------------- review & corrections modal ---------------- */
-  let revTargetId = null;
-
+  /* ---------------- review log labels (used by the log and the editor history) ---------------- */
   function actionLabel(a) {
     if (a === "sent-for-revision") return "sent the submission back for correction";
     if (a === "approved") return "approved the submission";
     if (a === "unpublished") return "unpublished the submission";
     if (a === "resubmitted") return "uploaded a corrected file";
+    if (a === "file-reviewed") return "reviewed the file and emailed the edited copy";
     return "reviewed the submission";
   }
   function actionShort(a) {
@@ -796,118 +907,802 @@
     if (a === "approved") return "Approved";
     if (a === "unpublished") return "Unpublished";
     if (a === "resubmitted") return "Re-uploaded";
+    if (a === "file-reviewed") return "File emailed";
     return "Review";
   }
 
-  function renumberMarks() {
-    document.querySelectorAll("#revMarks .rev-mark-row").forEach((r, i) => {
-      r.querySelector(".n").textContent = i + 1;
+  /* ================================================================
+     REVIEW FILE EDITOR — Task 41
+     The Review button opens the uploaded file itself. PDFs are marked
+     with pen / highlighter / notes directly on the pages; the edited file
+     (original + the marks burned in) is sent to the author's (uploader's)
+     email. Word files cannot be edited by a browser, so the typed
+     correction points become a Review Report PDF that is emailed with a
+     link to the original file.
+     ================================================================ */
+  const WORKER_URL = "https://journal-upload.ssbcpoint.workers.dev"; /* same host submit.html uploads to */
+  const RF_RENDER_W = 1000;           /* canvas width (px) a PDF page is rendered at */
+  const RF_MAX_ATTACH = 480 * 1024;   /* EmailJS attachment variables are kept small; bigger files are linked */
+
+  const rf = {
+    sub: null, mode: "nofile", origBytes: null, pdf: null,
+    pages: [],        /* pdf mode: { over, marks, rotation, chip, holder } */
+    log: [],          /* undo stack: { p, m } */
+    tool: "pen", active: -1, drag: null, noteEd: null, busy: false
+  };
+
+  /* ---- RF-CORE-BEGIN (pure drawing + PDF building — the exact same code
+     is extracted into the review-file test harness, so keep this block
+     self-contained: no rf-state/UI references inside) ---- */
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function rfWrapLines(ctx, text, maxW) {
+    const out = [];
+    String(text == null ? "" : text).split(/\n/).forEach((para) => {
+      const words = String(para).replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+      if (!words.length) { out.push(""); return; }
+      let ln = "";
+      words.forEach((w) => {
+        const t = ln ? ln + " " + w : w;
+        if (ctx.measureText(t).width <= maxW || !ln) ln = t;
+        else { out.push(ln); ln = w; }
+      });
+      if (ln) out.push(ln);
+    });
+    return out;
+  }
+  function rfDrawMark(ctx, m) {
+    if (!m) return;
+    if (m.t === "pen") {
+      const pts = m.pts || [];
+      if (!pts.length) return;
+      ctx.save();
+      ctx.strokeStyle = "#d0342c"; ctx.lineWidth = 3.4; ctx.lineJoin = ctx.lineCap = "round"; ctx.globalAlpha = .92;
+      if (pts.length === 1) {  /* a plain tap becomes a dot */
+        ctx.fillStyle = "#d0342c";
+        ctx.beginPath(); ctx.arc(pts[0][0], pts[0][1], 3.4, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (m.t === "hl") {
+      ctx.save(); ctx.globalAlpha = .3; ctx.fillStyle = "#ffd400";
+      ctx.fillRect(m.x, m.y, Math.max(0, m.w), Math.max(0, m.h)); ctx.restore();
+    } else if (m.t === "note") {
+      const bw = 292, pad = 14, lh = 20;
+      ctx.save();
+      ctx.font = "600 15px 'Inter', sans-serif";
+      const lines = rfWrapLines(ctx, m.text || "", bw - pad * 2);
+      const bh = 14 + lines.length * lh + 12;
+      ctx.globalAlpha = .97;
+      roundRect(ctx, m.x, m.y, bw, bh, 9);
+      ctx.fillStyle = "#fffbe6"; ctx.fill();
+      roundRect(ctx, m.x, m.y, bw, bh, 9);
+      ctx.strokeStyle = "#d0342c"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = "#7a2016"; ctx.textBaseline = "top";
+      lines.forEach((ln, i) => ctx.fillText(ln, m.x + pad, m.y + 14 + i * lh));
+      ctx.restore();
+    }
+  }
+  function rfRedrawPage(pg) {
+    if (!pg || !pg.over) return;
+    const ctx = pg.over.getContext("2d");
+    ctx.clearRect(0, 0, pg.over.width, pg.over.height);
+    (pg.marks || []).forEach((m) => rfDrawMark(ctx, m));
+  }
+  /* The overlay is drawn in the DISPLAYED (rotated) coordinate system of
+     the page; before it can be burned into the original PDF it must be
+     rotated back into the page's own unrotated box. */
+  function rfRotateOverlay(over, rotation, W, H) {
+    const t = document.createElement("canvas");
+    t.width = Math.max(1, Math.round(W));
+    t.height = Math.max(1, Math.round(H));
+    const tc = t.getContext("2d");
+    const ow = over.width, oh = over.height;
+    const rot = ((Number(rotation) || 0) % 360 + 360) % 360;
+    if (rot === 90) tc.setTransform(0, -H / ow, W / oh, 0, 0, H);
+    else if (rot === 270) tc.setTransform(0, H / ow, -(W / oh), 0, W, 0);
+    else if (rot === 180) tc.setTransform(-(W / ow), 0, 0, -(H / oh), W, H);
+    else tc.setTransform(W / ow, 0, 0, H / oh, 0, 0);
+    tc.drawImage(over, 0, 0, ow, oh);
+    return t;
+  }
+  /* pdf-lib's built-in fonts are WinAnsi — anything outside it (e.g. Bangla
+     titles) would make drawText throw, so unknown characters become '?'. */
+  const RF_WIN_EXTRA = /[\u0152\u0153\u0160\u0161\u0178\u017D\u017E\u0192\u02C6\u02DC\u2013\u2014\u2018\u2019\u201A\u201C\u201D\u201E\u2020\u2021\u2022\u2026\u2030\u2039\u203A\u20AC\u2122]/;
+  function rfWinAnsi(s) {
+    return String(s == null ? "" : s).split("").map((ch) => {
+      const c = ch.codePointAt(0);
+      if (c < 0x100 || RF_WIN_EXTRA.test(ch)) return ch;
+      return "?";
+    }).join("");
+  }
+  function rfPdfWrap(font, text, size, maxW) {
+    const breakWord = (w) => {  /* hard-split very long tokens (URLs) */
+      if (font.widthOfTextAtSize(w, size) <= maxW) return [w];
+      const parts = []; let cur = "";
+      for (const ch of w) {
+        if (font.widthOfTextAtSize(cur + ch, size) > maxW) { if (cur) parts.push(cur); cur = ch; }
+        else cur += ch;
+      }
+      if (cur) parts.push(cur);
+      return parts;
+    };
+    const out = [];
+    String(text == null ? "" : text).split(/\n/).forEach((para) => {
+      const words = String(para).replace(/\s+/g, " ").trim().split(" ").filter(Boolean).flatMap(breakWord);
+      if (!words.length) { out.push(""); return; }
+      let ln = "";
+      words.forEach((w) => {
+        const t = ln ? ln + " " + w : w;
+        if (font.widthOfTextAtSize(t, size) <= maxW || !ln) ln = t;
+        else { out.push(ln); ln = w; }
+      });
+      if (ln) out.push(ln);
+    });
+    return out;
+  }
+  /* Burn every page overlay into a copy of the original PDF and (when the
+     admin typed points) append a summary page listing them. */
+  async function rfBuildAnnotatedPdf(origBytes, pages, points, meta) {
+    const out = await PDFLib.PDFDocument.load(origBytes, { ignoreEncryption: true });
+    const outPages = out.getPages();
+    for (let i = 0; i < pages.length; i++) {
+      const pg = pages[i];
+      if (!pg || !pg.over || !(pg.marks || []).length || i >= outPages.length) continue;
+      const op = outPages[i];
+      const sz = op.getSize();
+      const W = sz.width, H = sz.height;
+      const rot = rfRotateOverlay(pg.over, pg.rotation || 0, W, H);
+      const png = await out.embedPng(rot.toDataURL("image/png"));
+      op.drawImage(png, { x: 0, y: 0, width: W, height: H });
+    }
+    if (points && points.length) await rfAppendPointsPage(out, points, meta || {}, false);
+    return out.save();
+  }
+  /* The "Corrections required" page — appended to an annotated PDF, or the
+     whole Review Report when the file itself cannot be edited. */
+  async function rfAppendPointsPage(pdfDoc, points, meta, fullReport) {
+    const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const fontB = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    const PW = 595.28, PH = 841.89, MX = 56, MAXW = PW - MX * 2;
+    const navy = PDFLib.rgb(.12, .24, .48), red = PDFLib.rgb(.76, .25, .05);
+    const gray = PDFLib.rgb(.42, .47, .55), dark = PDFLib.rgb(.18, .22, .31);
+    const lineC = PDFLib.rgb(.85, .88, .93);
+    let page = null, y = 0;
+    const newPage = () => {
+      page = pdfDoc.addPage([PW, PH]);
+      y = PH - 72;
+      const t = rfWinAnsi("Reviewed by " + (meta.reviewer || "\u2014") + (meta.dateStr ? " \u00b7 " + meta.dateStr : "") + " \u00b7 ARC Journals");
+      const w = font.widthOfTextAtSize(t, 8.5);
+      page.drawText(t, { x: (PW - w) / 2, y: 42, size: 8.5, font, color: gray });
+    };
+    const need = (h) => { if (y - h < 95) newPage(); };
+    const say = (txt, o) => {
+      o = o || {};
+      const size = o.size || 11, f = o.font || font, lh = o.lh || size * 1.45;
+      const maxW = o.maxW || (o.x ? PW - MX - o.x : MAXW);
+      rfPdfWrap(font, rfWinAnsi(txt), size, maxW).forEach((ln) => {
+        need(lh);
+        page.drawText(ln, { x: o.x || MX, y: y - size, size, font: f, color: o.color || dark });
+        y -= lh;
+      });
+      if (o.gapAfter) y -= o.gapAfter;
+    };
+    newPage();
+    page.drawText("ARC Journals", { x: MX, y: y - 21, size: 21, font: fontB, color: navy });
+    y -= 32;
+    page.drawText(rfWinAnsi(fullReport ? "Review Report" : "Corrections on the reviewed file"),
+      { x: MX, y: y - 12, size: 12, font, color: gray });
+    y -= 24;
+    page.drawLine({ start: { x: MX, y }, end: { x: PW - MX, y }, thickness: 1.2, color: lineC });
+    y -= 28;
+
+    if (fullReport) {
+      say(meta.title || "(Untitled)", { size: 14, font: fontB, gapAfter: 6 });
+      say("Author: " + (meta.author || "\u2014") + (meta.email ? " \u00b7 " + meta.email : ""), { size: 10.5, color: gray, gapAfter: 2 });
+      const bits = [];
+      if (meta.category) bits.push(meta.category);
+      if (meta.journal) bits.push("Journal: " + meta.journal);
+      if (bits.length) say(bits.join(" \u00b7 "), { size: 10.5, color: gray, gapAfter: 2 });
+      if (meta.fileLabel) say("Original file: " + meta.fileLabel, { size: 10.5, color: gray, gapAfter: 2 });
+      y -= 6;
+      if (meta.wordNote) {
+        const noteLines = rfPdfWrap(font, rfWinAnsi(meta.wordNote), 10.5, MAXW - 24);
+        const boxH = noteLines.length * 15.5 + 22;
+        need(boxH + 12);
+        page.drawRectangle({ x: MX, y: y - boxH, width: MAXW, height: boxH,
+          color: PDFLib.rgb(.99, .97, .90), borderColor: PDFLib.rgb(.89, .83, .68), borderWidth: 1 });
+        let ny = y - 18;
+        noteLines.forEach((ln) => {
+          page.drawText(ln, { x: MX + 12, y: ny, size: 10.5, font, color: PDFLib.rgb(.45, .30, .10) });
+          ny -= 15.5;
+        });
+        y -= boxH + 14;
+      }
+      if (meta.fileUrl) {
+        say("The original file can be downloaded from:", { size: 10.5, color: gray, gapAfter: 3 });
+        say(meta.fileUrl, { size: 9.5, color: navy, gapAfter: 10 });
+      }
+    }
+    page.drawText(points.length === 1 ? "Correction required" : "Corrections required",
+      { x: MX, y: y - 13, size: 13, font: fontB, color: red });
+    y -= 30;
+    if (!points.length) say("No typed points \u2014 see the marks on the reviewed file.", { size: 10.5, color: gray, gapAfter: 4 });
+    points.forEach((pt, i) => {
+      const numTxt = (i + 1) + ")";
+      const numW = fontB.widthOfTextAtSize(numTxt, 11);
+      const lines = rfPdfWrap(font, rfWinAnsi(pt), 11, MAXW - 20 - numW);
+      need(lines.length * 16 + 14);
+      page.drawText(numTxt, { x: MX, y: y - 11, size: 11, font: fontB, color: red });
+      lines.forEach((ln) => {
+        page.drawText(ln, { x: MX + 20 + numW, y: y - 11, size: 11, font, color: dark });
+        y -= 16;
+      });
+      y -= 12;
+    });
+    y -= 6;
+    page.drawLine({ start: { x: MX, y }, end: { x: PW - MX, y }, thickness: 1, color: lineC });
+    y -= 22;
+    say("After correcting the article, please upload the corrected file from your profile page so the submission can be approved.",
+      { size: 10.5, color: gray });
+    return pdfDoc;
+  }
+  /* ---- RF-CORE-END ---- */
+  /* ---- RF-UI-BEGIN (editor UI + send flow) ---- */
+  function rfToday() {
+    return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }
+  function rfBaseName() {
+    let n = rf.sub.fileUrl ? fileNameFromUrl(rf.sub.fileUrl) : String(rf.sub.title || "submission");
+    n = String(n).replace(/\.[^.]+$/, "").replace(/[^\w\-. ]+/g, "_").replace(/^_+|_+$/g, "").trim().slice(0, 60);
+    return n || "submission";
+  }
+  function rfStatus(txt, isErr) {
+    const el = document.getElementById("rfStatus");
+    if (!el) return;
+    el.textContent = txt || "";
+    el.className = "rf-status" + (isErr ? " err" : "");
+  }
+  function rfShowResult(kind, html) {
+    const el = document.getElementById("rfResult");
+    if (!el) return;
+    el.className = "rf-result " + (kind || "");
+    el.innerHTML = html || "";
+  }
+  function rfModeFail(htmlMsg) {
+    rf.pages = [];
+    document.getElementById("rfBody").innerHTML =
+      '<div class="rf-loading"><i class="fas fa-info-circle"></i>' + htmlMsg + "</div>";
+    document.getElementById("rfModeHint").innerHTML =
+      "Write the correction points below \u2014 they will be compiled into a <b>Review Report PDF</b> and emailed to the author.";
+    rfStatus("");
+    rfUpdateChrome();
+  }
+  function rfLoadPointsOnly() {
+    let card = "";
+    if (rf.mode === "doc") {
+      card = 'This is a legacy <b>.doc</b> (binary Word) file \u2014 a browser cannot display or edit it.' +
+        '<p><button class="rf-tool" id="rfOpenViewer" type="button"><i class="fas fa-external-link-alt"></i> Open in Google viewer (new tab)</button></p>';
+    } else if (rf.mode === "other") {
+      card = 'This file is not a PDF or Word document, so it cannot be marked here.' +
+        '<p><button class="rf-tool" id="rfOpenViewer" type="button"><i class="fas fa-external-link-alt"></i> Open the file (new tab)</button></p>';
+    } else {
+      card = "No file was uploaded with this submission (or its link is missing).";
+    }
+    rfModeFail(card);
+    const btn = document.getElementById("rfOpenViewer");
+    if (btn) btn.addEventListener("click", () => window.open(
+      rf.mode === "other" ? rf.sub.fileUrl
+        : "https://docs.google.com/viewer?url=" + encodeURIComponent(rf.sub.fileUrl) + "&embedded=true",
+      "_blank"));
+    document.getElementById("rfModeHint").innerHTML =
+      "Browsers cannot edit Word documents. Type the correction points below \u2014 they are compiled into a " +
+      "<b>Review Report PDF</b> (with a link to the original file) and emailed to the author.";
+  }
+  async function rfLoadPdf() {
+    document.getElementById("rfModeHint").innerHTML =
+      "Mark the file with the <b>Pen</b>, <b>Highlighter</b> and <b>Note</b> tools \u2014 your marks are burned into a copy of this PDF. " +
+      "Typed points (right) go on a summary page at the end and into the email body.";
+    rfStatus("Opening the PDF\u2026");
+    let res;
+    try {
+      res = await fetch(rf.sub.fileUrl);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+    } catch (e) {
+      rfModeFail("The PDF could not be downloaded (" + esc(e.message || String(e)) + "). " +
+        "You can still write the correction points \u2014 they become a Review Report PDF.");
+      return;
+    }
+    rf.origBytes = new Uint8Array(await res.arrayBuffer());
+    if (typeof pdfjsLib === "undefined") {
+      rfModeFail("The PDF renderer could not be loaded. You can still write the correction points \u2014 they become a Review Report PDF.");
+      return;
+    }
+    try {
+      /* pdf.js may detach the buffer, so it always gets its own copy */
+      rf.pdf = await pdfjsLib.getDocument({ data: rf.origBytes.slice(0) }).promise;
+    } catch (e) {
+      rfModeFail("This PDF could not be opened (" + esc(e.message || String(e)) + "). " +
+        "You can still write the correction points \u2014 they become a Review Report PDF.");
+      return;
+    }
+    const body = document.getElementById("rfBody");
+    body.innerHTML = "";
+    const N = rf.pdf.numPages;
+    const renderW = N > 30 ? 720 : RF_RENDER_W;
+    for (let i = 1; i <= N; i++) {
+      rfStatus("Rendering page " + i + " of " + N + "\u2026");
+      const page = await rf.pdf.getPage(i);
+      const vp1 = page.getViewport({ scale: 1 });
+      const vp = page.getViewport({ scale: renderW / vp1.width });
+      const holder = document.createElement("div");
+      holder.className = "rf-page";
+      const base = document.createElement("canvas");
+      const over = document.createElement("canvas");
+      over.className = "rf-over";
+      base.width = over.width = Math.round(vp.width);
+      base.height = over.height = Math.round(vp.height);
+      await page.render({ canvasContext: base.getContext("2d"), viewport: vp }).promise;
+      const chip = document.createElement("div");
+      chip.className = "rf-pagenum";
+      holder.appendChild(base); holder.appendChild(over); holder.appendChild(chip);
+      body.appendChild(holder);
+      const pg = { over: over, marks: [], rotation: page.rotate || 0, chip: chip, holder: holder };
+      rf.pages.push(pg);
+      rfAttachPointer(pg, rf.pages.length - 1);
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    rfStatus("Ready \u2014 " + N + (N === 1 ? " page. " : " pages. ") + "Mark with the tools above; extra points go on the right.");
+    rfUpdateChrome();
+  }
+  async function rfLoadDocx() {
+    document.getElementById("rfModeHint").innerHTML =
+      "Browsers cannot edit .docx files, so this is a read-only preview. Type the correction points on the right \u2014 " +
+      "they become a <b>Review Report PDF</b> emailed to the author (with a link to the original file).";
+    rfStatus("Opening the Word document\u2026");
+    try {
+      if (typeof mammoth === "undefined") throw new Error("the .docx reader could not be loaded");
+      const res = await fetch(rf.sub.fileUrl);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      rf.origBytes = new Uint8Array(await res.arrayBuffer());
+      const r = await mammoth.convertToHtml({ arrayBuffer: rf.origBytes.slice().buffer });
+      document.getElementById("rfBody").innerHTML = '<div class="rf-word">' + (r.value || "") + "</div>";
+      document.querySelectorAll('#rfBody a[href^="javascript:"]').forEach((a) => a.removeAttribute("href"));
+      rfStatus("Ready \u2014 the document is shown as a read-only preview.");
+    } catch (e) {
+      console.warn("[ARC review] docx preview failed:", e);
+      rfModeFail("The Word document could not be previewed (" + esc(e.message || String(e)) + "). " +
+        "You can still write the correction points \u2014 they become a Review Report PDF.");
+    }
+    rfUpdateChrome();
+  }
+  function rfLoadContent() {
+    if (rf.mode === "pdf") rfLoadPdf();
+    else if (rf.mode === "docx") rfLoadDocx();
+    else rfLoadPointsOnly();
+  }
+  /* ---- pointer tools ---- */
+  function rfCanvasPos(e, cv) {
+    const r = cv.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) * (cv.width / Math.max(1, r.width)),
+      y: (e.clientY - r.top) * (cv.height / Math.max(1, r.height))
+    };
+  }
+  function rfAttachPointer(pg, pi) {
+    const cv = pg.over;
+    cv.addEventListener("pointerdown", (e) => {
+      if (rf.busy) return;
+      if (rf.noteEd) rfCommitNoteEd();
+      if (rf.tool === "note") { rfOpenNoteEditor(pi, rfCanvasPos(e, cv)); e.preventDefault(); return; }
+      try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+      rf.active = pi;
+      const p = rfCanvasPos(e, cv);
+      const m = rf.tool === "hl"
+        ? { t: "hl", x: p.x, y: p.y, w: 0, h: 0, _sx: p.x, _sy: p.y }
+        : { t: "pen", pts: [[p.x, p.y]] };
+      pg.marks.push(m);
+      rf.log.push({ p: pi, m });
+      rf.drag = { pg, m, cv, last: [p.x, p.y] };
+      rfUpdateChrome();
+      e.preventDefault();
+    });
+    cv.addEventListener("pointermove", (e) => {
+      if (!rf.drag || rf.drag.cv !== cv) return;
+      const p = rfCanvasPos(e, cv);
+      const m = rf.drag.m;
+      const ctx = cv.getContext("2d");
+      if (m.t === "pen") {
+        ctx.save();
+        ctx.strokeStyle = "#d0342c"; ctx.lineWidth = 3.4; ctx.lineCap = ctx.lineJoin = "round"; ctx.globalAlpha = .92;
+        ctx.beginPath();
+        ctx.moveTo(rf.drag.last[0], rf.drag.last[1]);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        ctx.restore();
+        m.pts.push([p.x, p.y]);
+        rf.drag.last = [p.x, p.y];
+      } else if (m.t === "hl") {
+        m.x = Math.min(m._sx, p.x); m.y = Math.min(m._sy, p.y);
+        m.w = Math.abs(p.x - m._sx); m.h = Math.abs(p.y - m._sy);
+        rfRedrawPage(pg);
+        ctx.save(); ctx.globalAlpha = .3; ctx.fillStyle = "#ffd400";
+        ctx.fillRect(m.x, m.y, m.w, m.h); ctx.restore();
+      }
+      e.preventDefault();
+    });
+    const up = () => {
+      if (!rf.drag || rf.drag.cv !== cv) return;
+      if (rf.drag.m.t === "hl") rfRedrawPage(pg);  /* clean final replay */
+      rf.drag = null;
+      rfUpdateChrome();
+    };
+    cv.addEventListener("pointerup", up);
+    cv.addEventListener("pointercancel", up);
+  }
+  /* ---- pinned notes ---- */
+  function rfOpenNoteEditor(pi, pos) {
+    const pg = rf.pages[pi];
+    rfCommitNoteEd();  /* finish any note already open */
+    const r = pg.over.getBoundingClientRect();
+    const left = Math.max(4, Math.min((pos.x / pg.over.width) * r.width, r.width - 312));
+    const top = Math.max(4, Math.min((pos.y / pg.over.height) * r.height, r.height - 175));
+    const box = document.createElement("div");
+    box.className = "rf-note-box";
+    box.style.left = left + "px";
+    box.style.top = top + "px";
+    box.innerHTML = '<textarea placeholder="Write the correction the author must make here\u2026"></textarea>' +
+      '<div class="nb-btns"><button class="nb-no" type="button">Cancel</button>' +
+      '<button class="nb-ok" type="button"><i class="fas fa-check"></i> Add note</button></div>';
+    pg.holder.appendChild(box);
+    const ta = box.querySelector("textarea");
+    rf.noteEd = { pg, pi, box, ta, pos };
+    setTimeout(() => ta.focus(), 30);
+    box.querySelector(".nb-no").addEventListener("click", () => { rf.noteEd = null; box.remove(); });
+    box.querySelector(".nb-ok").addEventListener("click", () => rfCommitNoteEd());
+    ta.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { rf.noteEd = null; box.remove(); }
     });
   }
-  function addMarkRow(text) {
-    const box = document.getElementById("revMarks");
+  function rfCommitNoteEd() {
+    const ne = rf.noteEd;
+    if (!ne) return;
+    rf.noteEd = null;
+    const txt = ne.ta.value.trim();
+    ne.box.remove();
+    if (!txt) return;
+    const m = { t: "note", x: ne.pos.x, y: ne.pos.y, text: txt };
+    ne.pg.marks.push(m);
+    rf.log.push({ p: ne.pi, m });
+    rfRedrawPage(ne.pg);
+    rfUpdateChrome();
+  }
+  /* ---- typed correction points ---- */
+  function rfRenumberPts() {
+    document.querySelectorAll("#rfPts .rev-mark-row").forEach((rw, i) => {
+      const n = rw.querySelector(".n");
+      if (n) n.textContent = i + 1;
+    });
+  }
+  function rfAddPointRow(text) {
+    const box = document.getElementById("rfPts");
     const row = document.createElement("div");
     row.className = "rev-mark-row";
     row.innerHTML = '<span class="n">' + (box.children.length + 1) + "</span>" +
-      '<input type="text" class="rev-mark-input" placeholder="e.g. The abstract is too long — shorten it to 150 words" value="' + esc(text || "") + '">' +
+      '<input type="text" class="rf-pt-input" placeholder="e.g. Shorten the abstract to 150 words" value="' + esc(text || "") + '">' +
       '<button type="button" class="rm" title="Remove this point"><i class="fas fa-times"></i></button>';
-    row.querySelector(".rm").addEventListener("click", () => { row.remove(); renumberMarks(); });
+    row.querySelector(".rm").addEventListener("click", () => { row.remove(); rfRenumberPts(); rfUpdateChrome(); });
+    row.querySelector("input").addEventListener("input", () => rfUpdateChrome());
     row.querySelector("input").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); addMarkRow(""); renumberMarks(); }
+      if (e.key === "Enter") { e.preventDefault(); rfAddPointRow(""); rfRenumberPts(); }
     });
     box.appendChild(row);
+    return row;
   }
-  function openReview(id) {
+  function rfCollectPoints() {
+    return Array.from(document.querySelectorAll("#rfPts .rf-pt-input"))
+      .map((i) => i.value.trim()).filter(Boolean);
+  }
+  /* ---- chrome (buttons, counters) ---- */
+  function rfClearTarget() {
+    if (rf.active >= 0 && rf.pages[rf.active] && rf.pages[rf.active].marks.length) return rf.active;
+    for (let i = rf.pages.length - 1; i >= 0; i--) if (rf.pages[i].marks.length) return i;
+    return -1;
+  }
+  function rfCanSend() {
+    const pts = rfCollectPoints().length;
+    const marks = rf.pages.some((p) => (p.marks || []).length);
+    return rf.mode === "pdf" ? (marks || pts > 0) : pts > 0;
+  }
+  function rfUpdateChrome() {
+    let total = 0, withMarks = 0;
+    rf.pages.forEach((p, i) => {
+      const n = (p.marks || []).length;
+      total += n;
+      if (n) withMarks++;
+      if (p.chip) p.chip.textContent = "Page " + (i + 1) + " \u00b7 " + n + (n === 1 ? " mark" : " marks");
+    });
+    document.getElementById("rfCount").textContent = rf.pages.length
+      ? total + (total === 1 ? " mark" : " marks") + " \u00b7 " + withMarks + (withMarks === 1 ? " page" : " pages") + " \u00b7 " + rf.pages.length + " total"
+      : "";
+    document.getElementById("rfUndo").disabled = !rf.log.length || rf.busy;
+    document.getElementById("rfClearPg").disabled = rfClearTarget() === -1 || rf.busy;
+    const ok = rfCanSend();
+    document.getElementById("rfSend").disabled = !ok || rf.busy;
+    document.getElementById("rfSave").disabled = !ok || rf.busy;
+    document.getElementById("rfSend").title = ok ? "" : "Mark something on the file or type at least one correction point first";
+  }
+  /* ---- open / close ---- */
+  function openFileReview(id) {
     const d = subs.find((s) => s.id === id);
     if (!d) return;
-    revTargetId = id;
-    document.getElementById("revSubInfo").innerHTML =
+    rf.sub = d; rf.pdf = null; rf.origBytes = null; rf.pages = []; rf.log = [];
+    rf.active = -1; rf.drag = null; rf.noteEd = null; rf.busy = false; rf.tool = "pen";
+    const url = d.fileUrl || "";
+    const ext = fileExtOf(url);
+    rf.mode = !url ? "nofile" : ext === "pdf" ? "pdf" : ext === "docx" ? "docx" : ext === "doc" ? "doc" : "other";
+    document.getElementById("rfSubLine").innerHTML =
+      esc(d.title || "(Untitled)") + " \u2014 " + esc(d.fullName || "(no name)") +
+      (d.email ? " \u00b7 " + esc(d.email) : "") + (d.submittedAt ? " \u00b7 " + esc(fmtDate(d.submittedAt)) : "");
+    document.getElementById("rfInfo").innerHTML =
       "<b>" + esc(d.title || "(Untitled)") + "</b><br>" +
       esc(d.fullName || "(no name)") + (d.email ? " &middot; " + esc(d.email) : "") +
-      (d.submittedAt ? " &middot; submitted " + esc(fmtDate(d.submittedAt)) : "");
-    const box = document.getElementById("revMarks");
-    box.innerHTML = "";
-    const marks = Array.isArray(d.revisionMarks) ? d.revisionMarks.filter(Boolean) : [];
-    if (marks.length) marks.forEach((m) => addMarkRow(m));
-    else addMarkRow("");
-    /* previous review history of this submission */
+      (d.category ? " &middot; " + esc(d.category) : "") +
+      (d.journalTitle ? " &middot; " + esc(d.journalTitle) : "") + "<br>" +
+      (url ? "File: " + esc(fileNameFromUrl(url)) : "No file was uploaded with this submission.");
+    document.getElementById("rfMailTo").textContent = d.email || "(no email on this submission)";
+    rfShowResult("", "");
+    rfStatus("");
+    document.getElementById("rfPts").innerHTML = "";
+    rfAddPointRow("");
     const log = reviewLogOf(d).sort((a, b) => tsNum(b.at) - tsNum(a.at));
-    const hist = document.getElementById("revHist");
-    const hl = document.getElementById("revHistList");
+    const hist = document.getElementById("rfHist");
+    const hl = document.getElementById("rfHistList");
     if (log.length) {
       hist.style.display = "block";
       hl.innerHTML = log.map((r) =>
         '<div class="rev-hist-item"><b>' + esc(r.by || "?") + "</b> " + esc(actionLabel(r.action)) +
-        (r.at ? " · " + esc(fmtDateTime(r.at)) : "") + (r.note ? "<br>" + esc(r.note).replace(/\n/g, "<br>") : "") + "</div>").join("");
+        (r.at ? " \u00b7 " + esc(fmtDateTime(r.at)) : "") + (r.note ? "<br>" + esc(r.note).replace(/\n/g, "<br>") : "") + "</div>").join("");
     } else { hist.style.display = "none"; hl.innerHTML = ""; }
-    document.getElementById("revModal").classList.add("open");
-    const first = box.querySelector("input");
-    if (first) setTimeout(() => first.focus(), 60);
+    document.getElementById("fileRevModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+    rfLoadContent();
+    rfUpdateChrome();
+    const first = document.querySelector("#rfPts .rf-pt-input");
+    if (first) setTimeout(() => first.focus(), 80);
   }
-  function closeReview() {
-    document.getElementById("revModal").classList.remove("open");
-    revTargetId = null;
+  function rfClose() {
+    if ((rf.pages.some((p) => p.marks.length) || rfCollectPoints().length) &&
+        !confirm("Close the review? Your marks and points on this screen will be discarded (nothing has been sent yet).")) return;
+    document.getElementById("fileRevModal").classList.remove("open");
+    document.body.style.overflow = "";
+    rf.sub = null; rf.pages = []; rf.log = []; rf.pdf = null; rf.origBytes = null;
+    rf.noteEd = null; rf.drag = null; rf.active = -1;
   }
-  document.getElementById("revAddMark").addEventListener("click", () => addMarkRow(""));
-  document.getElementById("revClose").addEventListener("click", closeReview);
-  document.getElementById("revModal").addEventListener("click", (e) => {
-    if (e.target === document.getElementById("revModal")) closeReview();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && document.getElementById("revModal").classList.contains("open")) closeReview();
-  });
-
-  document.getElementById("revSend").addEventListener("click", async () => {
-    const marks = Array.from(document.querySelectorAll("#revMarks .rev-mark-input"))
-      .map((i) => i.value.trim()).filter(Boolean);
-    if (!marks.length) { alert("Please write at least one point the author must correct."); return; }
-    const d = subs.find((s) => s.id === revTargetId);
-    if (!d) return;
-    const btn = document.getElementById("revSend");
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
-    const note = marks.map((m, i) => (i + 1) + ") " + m).join("\n");
-    try {
-      await updateDoc(doc(db, "submissions", revTargetId), {
-        approved: false,
-        status: "revision",
-        revisionMarks: marks,
-        revisionNote: note,
-        revisionBy: myEmail,
-        revisionAt: Date.now(),
-        reviewLog: arrayUnion({ by: myEmail, at: Date.now(), action: "sent-for-revision", note: note })
-      });
-      /* best-effort email — a failure never blocks the review itself */
-      if (emailjsReady && d.email) {
-        try {
-          const link = new URL("profile.html", location.href).href;
-          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            to_email: d.email, email: d.email, recipient: d.email,
-            full_name: d.fullName, name: d.fullName, user_name: d.fullName,
-            title: d.title, article_title: d.title,
-            subject: "ARC Journals — corrections requested: " + (d.title || "your submission"),
-            message: "Dear " + (d.fullName || "author") + ",\n\nYour submission \"" + (d.title || "") +
-              "\" has been reviewed and needs correction before it can be published:\n\n" + note +
-              "\n\nPlease log in, open your profile page and upload the corrected file: " + link
-          });
-        } catch (emailErr) {
-          /* best-effort: log the REAL EmailJS reason too (usually 404
-             "No records found" = Public Key / Service ID / Template ID
-             mismatch with the EmailJS dashboard — same fix as submit.html) */
-          var ereason = (emailErr && (emailErr.text || emailErr.message)) ? String(emailErr.text || emailErr.message) : String(emailErr);
-          console.warn("[ARC admin] revision email failed:", ereason, emailErr);
-        }
+  /* ---- build the file that is emailed ---- */
+  async function rfBuildOutput(points) {
+    const meta = {
+      title: rf.sub.title || "", author: rf.sub.fullName || "", email: rf.sub.email || "",
+      category: rf.sub.category || "", journal: rf.sub.journalTitle || "",
+      fileLabel: rf.sub.fileUrl ? fileNameFromUrl(rf.sub.fileUrl) : "",
+      fileUrl: rf.sub.fileUrl || "", reviewer: myEmail, dateStr: rfToday(), wordNote: ""
+    };
+    if (rf.mode === "pdf" && rf.origBytes && typeof PDFLib !== "undefined") {
+      try {
+        const bytes = await rfBuildAnnotatedPdf(rf.origBytes, rf.pages, points, meta);
+        return { bytes, filename: rfBaseName() + "-reviewed.pdf", kind: "annotated" };
+      } catch (e) {
+        console.warn("[ARC review] annotated build failed \u2014 Review Report fallback:", e);
       }
-      closeReview();
-      loadAll();
-    } catch (err) {
-      console.error("[ARC admin] send revision:", err);
-      alert("Could not send the submission back. " + (err && err.message ? err.message : ""));
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send back to the author';
     }
+    if (rf.mode === "docx" || rf.mode === "doc" || rf.mode === "other") {
+      meta.wordNote = "The original file is a Word document, which a browser cannot edit. The corrections are listed below. " +
+        "The original, unchanged file can be downloaded from the link underneath.";
+    } else if (rf.mode === "nofile") {
+      meta.wordNote = "No file was attached to this submission; the corrections are listed below.";
+    } else {
+      meta.wordNote = "The uploaded PDF could not be modified directly, so the corrections are listed below instead.";
+    }
+    const doc = await PDFLib.PDFDocument.create();
+    await rfAppendPointsPage(doc, points.length ? points : ["(no typed points)"], meta, true);
+    return { bytes: await doc.save(), filename: rfBaseName() + "-review-report.pdf", kind: "report" };
+  }
+  /* ---- upload / persist / email ---- */
+  async function rfUploadReviewed(bytes, filename) {
+    const fd = new FormData();
+    fd.append("file", new File([bytes], filename, { type: "application/pdf" }));
+    const res = await fetch(WORKER_URL, { method: "POST", body: fd });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = (await res.text()).trim();
+    let url = null;
+    try {
+      const j = JSON.parse(text);
+      url = (typeof j === "string") ? j : (j.url || j.fileUrl || j.path || j.link || j.data || null);
+    } catch (e) { url = text; }
+    if (!url || !/^https?:\/\//i.test(url)) throw new Error("unreadable response: " + text.slice(0, 120));
+    return url;
+  }
+  async function rfPersistReview(points, anyMarks, upUrl, built, markRev) {
+    const note = points.map((m, i) => (i + 1) + ") " + m).join("\n");
+    const marksForAuthor = points.length
+      ? points
+      : (anyMarks ? ["The corrections are marked directly on the reviewed file."] : []);
+    const patch = {
+      reviewedFileName: built.filename,
+      reviewedFileUrl: upUrl || "",
+      reviewedFileKind: built.kind,
+      reviewedSentAt: Date.now(),
+      reviewedBy: myEmail,
+      reviewLog: arrayUnion({
+        by: myEmail, at: Date.now(),
+        action: markRev ? "sent-for-revision" : "file-reviewed",
+        note: (markRev ? (note || "Corrections marked on the reviewed file.") : "Reviewed file emailed to the author") +
+          (upUrl ? "\nReviewed file: " + upUrl : "")
+      })
+    };
+    if (markRev) Object.assign(patch, {
+      approved: false, status: "revision",
+      revisionMarks: marksForAuthor, revisionNote: note || "See the reviewed file.",
+      revisionBy: myEmail, revisionAt: Date.now()
+    });
+    await updateDoc(doc(db, "submissions", rf.sub.id), patch);
+    return patch;
+  }
+  async function rfSendEmail(points, upUrl, built, withAttach) {
+    const d = rf.sub;
+    const params = {
+      to_email: d.email, email: d.email, recipient: d.email,
+      full_name: d.fullName, name: d.fullName, user_name: d.fullName,
+      title: d.title, article_title: d.title,
+      subject: "ARC Journals \u2014 reviewed file: " + (d.title || "your submission"),
+      message: "Dear " + (d.fullName || "author") + ",\n\nYour submission \"" + (d.title || "") +
+        "\" has been reviewed. The reviewed file (with the corrections marked on it) is attached to this email" +
+        (upUrl ? " and can also be downloaded here:\n" + upUrl : "") + ".\n\nCorrections required:\n" +
+        (points.map((p, i) => (i + 1) + ") " + p).join("\n") || "(marked on the reviewed file)") +
+        "\n\nAfter correcting, please log in, open your profile page and upload the corrected file: " +
+        new URL("profile.html", location.href).href,
+      reviewed_file_url: upUrl || "",
+      reviewed_file_name: built.filename
+    };
+    let hadAttach = false;
+    if (withAttach && upUrl && ((built.bytes.size || built.bytes.length || 0) <= RF_MAX_ATTACH)) {
+      params.reviewed_file = upUrl;  /* EmailJS "Variable Attachment" content (Base64 or URL) */
+      hadAttach = true;
+    }
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+      return { ok: true };
+    } catch (e) {
+      const why = (e && (e.text || e.message)) ? String(e.text || e.message) : String(e);
+      console.warn("[ARC review] email failed" + (hadAttach ? " (with the attachment variable)" : "") + ":", why, e);
+      return { ok: false, why, hadAttach };
+    }
+  }
+  function rfSaveBlob(bytes, filename) {
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+  }
+  async function rfDoSend(doEmail) {
+    if (rf.busy) return;
+    const points = rfCollectPoints();
+    const anyMarks = rf.pages.some((p) => (p.marks || []).length);
+    if (!rfCanSend()) {
+      rfStatus(rf.mode === "pdf"
+        ? "Mark something on the file or type at least one correction point first."
+        : "Type at least one correction point first \u2014 Word files cannot be marked visually.", true);
+      return;
+    }
+    rf.busy = true;
+    rfUpdateChrome();
+    const sendBtn = document.getElementById("rfSend");
+    const oldSend = sendBtn.innerHTML;
+    sendBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Working\u2026';
+    rfShowResult("", "");
+    try {
+      rfStatus("Building the edited file\u2026");
+      const built = await rfBuildOutput(points);
+      if (!doEmail) {
+        rfSaveBlob(built.bytes, built.filename);
+        rfShowResult("ok", '<b><i class="fas fa-download"></i> Download started.</b> ' + esc(built.filename) +
+          " was saved to your device. Nothing was emailed and the submission was not changed.");
+        rfStatus("Done \u2014 the edited file is on your device.");
+        return;
+      }
+      let upUrl = null;
+      rfStatus("Uploading the edited file to the site's file host\u2026");
+      try { upUrl = await rfUploadReviewed(built.bytes, built.filename); }
+      catch (ue) { console.warn("[ARC review] upload failed (the email will carry the local file / the link may be missing):", ue); }
+      const markRev = document.getElementById("rfMarkRev").checked;
+      rfStatus("Saving the review on the submission\u2026");
+      await rfPersistReview(points, anyMarks, upUrl, built, markRev);
+      rfStatus("Emailing the author\u2026");
+      let mail = null;
+      if (emailjsReady && rf.sub.email) {
+        mail = await rfSendEmail(points, upUrl, built, true);
+        if (!mail.ok && mail.hadAttach) mail = await rfSendEmail(points, upUrl, built, false);
+      }
+      let html = '<b><i class="fas fa-check-circle"></i> Sent.</b> The edited file (' + esc(built.filename) + ") was built" +
+        (upUrl ? ', uploaded to the file host (<a href="' + esc(upUrl) + '" target="_blank" rel="noopener">open</a>)' : "") +
+        (mail && mail.ok
+          ? " and <b>emailed to " + esc(rf.sub.email) + "</b>"
+          : '. <b>The email could not be sent</b>' + (mail && mail.why ? " \u2014 " + esc(mail.why) : "")) +
+        "." +
+        (markRev
+          ? '<br>The submission is now marked <b>Needs Revision</b>' +
+            (points.length ? " with " + points.length + " correction point" + (points.length === 1 ? "" : "s") : "") +
+            " \u2014 the author sees them on their profile page and must upload the corrected file."
+          : '<br>The submission status was not changed (send-only).') +
+        ' <a href="#" data-rf-again>Download the edited file again</a>';
+      rfShowResult("ok", html);
+      rfStatus("Done \u2014 the edited file was emailed to the author.");
+      const again = document.querySelector("#rfResult [data-rf-again]");
+      if (again) again.addEventListener("click", (e) => { e.preventDefault(); rfSaveBlob(built.bytes, built.filename); });
+      loadAll();  /* refresh the dashboard cards behind the editor */
+    } catch (err) {
+      console.error("[ARC review] send:", err);
+      rfShowResult("err", '<b><i class="fas fa-exclamation-triangle"></i> Could not finish.</b> ' +
+        esc(err && err.message ? err.message : String(err)) +
+        '<br>Try "Download the edited file only" \u2014 you can email it to the author yourself.');
+      rfStatus("Failed.", true);
+    } finally {
+      rf.busy = false;
+      sendBtn.innerHTML = oldSend;
+      sendBtn.disabled = false;
+      rfUpdateChrome();
+    }
+  }
+  /* ---- bindings ---- */
+  document.querySelectorAll("#rfTools .rf-tool[data-tool]").forEach((b) => {
+    b.addEventListener("click", () => {
+      rf.tool = b.dataset.tool;
+      document.querySelectorAll("#rfTools .rf-tool[data-tool]").forEach((x) => x.classList.toggle("on", x === b));
+      if (rf.noteEd) rfCommitNoteEd();
+    });
   });
+  document.getElementById("rfUndo").addEventListener("click", () => {
+    const e = rf.log.pop();
+    if (!e) return;
+    const pg = rf.pages[e.p];
+    if (pg) {
+      const i = pg.marks.indexOf(e.m);
+      if (i !== -1) pg.marks.splice(i, 1);
+      rfRedrawPage(pg);
+    }
+    rfUpdateChrome();
+  });
+  document.getElementById("rfClearPg").addEventListener("click", () => {
+    const t = rfClearTarget();
+    if (t === -1) return;
+    if (!confirm("Remove all marks on page " + (t + 1) + "?")) return;
+    rf.log = rf.log.filter((e) => e.p !== t);
+    rf.pages[t].marks = [];
+    rfRedrawPage(rf.pages[t]);
+    rfUpdateChrome();
+  });
+  document.getElementById("rfAddPt").addEventListener("click", () => { rfAddPointRow(""); rfRenumberPts(); });
+  document.getElementById("rfClose").addEventListener("click", rfClose);
+  document.getElementById("rfSend").addEventListener("click", () => rfDoSend(true));
+  document.getElementById("rfSave").addEventListener("click", () => rfDoSend(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("fileRevModal").classList.contains("open")) rfClose();
+  });
+  /* ---- RF-UI-END ---- */
 
   /* ---------------- review log — who reviewed what ---------------- */
   function allReviewEntries() {
