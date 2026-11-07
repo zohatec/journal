@@ -1459,7 +1459,11 @@
       esc(d.fullName || "(no name)") + (d.email ? " &middot; " + esc(d.email) : "") +
       (d.category ? " &middot; " + esc(d.category) : "") +
       (d.journalTitle ? " &middot; " + esc(d.journalTitle) : "") + "<br>" +
-      (url ? "File: " + esc(fileNameFromUrl(url)) : "No file was uploaded with this submission.");
+      (url ? "File: " + esc(fileNameFromUrl(url)) : "No file was uploaded with this submission.") +
+      (d.reviewedFileUrl
+        ? '<br>Previously reviewed file: <a href="' + esc(d.reviewedFileUrl) + '" target="_blank" rel="noopener">' +
+          esc(d.reviewedFileName || "open the reviewed file") + "</a> \u2014 shown to the author on their profile card"
+        : "");
     document.getElementById("rfMailTo").textContent = d.email || "(no email on this submission)";
     rfShowResult("", "");
     rfStatus("");
@@ -1560,28 +1564,39 @@
   }
   async function rfSendEmail(points, upUrl, built, withAttach) {
     const d = rf.sub;
+    /* Task 42 — the free EmailJS plan cannot attach files and the shared
+       template may not print a "message" variable, so the ONE link that
+       always works is the author's profile page: it now shows the reviewed
+       file with View / Download buttons right on the submission card. The
+       direct file URL travels along too, in several template variables. */
+    const profileLink = new URL("profile.html?sub=" + encodeURIComponent(d.id), location.href).href;
     const params = {
       to_email: d.email, email: d.email, recipient: d.email,
       full_name: d.fullName, name: d.fullName, user_name: d.fullName,
       title: d.title, article_title: d.title,
       subject: "ARC Journals \u2014 reviewed file: " + (d.title || "your submission"),
       message: "Dear " + (d.fullName || "author") + ",\n\nYour submission \"" + (d.title || "") +
-        "\" has been reviewed. The reviewed file (with the corrections marked on it) is attached to this email" +
-        (upUrl ? " and can also be downloaded here:\n" + upUrl : "") + ".\n\nCorrections required:\n" +
-        (points.map((p, i) => (i + 1) + ") " + p).join("\n") || "(marked on the reviewed file)") +
-        "\n\nAfter correcting, please log in, open your profile page and upload the corrected file: " +
-        new URL("profile.html", location.href).href,
+        "\" has been reviewed. The reviewed file, with the corrections marked on it, can be viewed and downloaded from your profile page:\n" +
+        profileLink + "\n" +
+        "(open the link and sign in with this email address \u2014 the file is on the \"Needs Revision\" card of this submission, with View and Download buttons)" +
+        (upUrl ? "\n\nDirect download link (opens without signing in):\n" + upUrl : "") +
+        "\n\nCorrections required:\n" +
+        (points.map((p, i) => (i + 1) + ") " + p).join("\n") || "(see the marks on the reviewed file)") +
+        "\n\nAfter correcting your manuscript, open the same card and press \"Upload Corrected File\".",
+      view_link: profileLink,   /* the same variables the submission email uses */
+      link: profileLink,
+      profile_link: profileLink,
       reviewed_file_url: upUrl || "",
       reviewed_file_name: built.filename
     };
     let hadAttach = false;
     if (withAttach && upUrl && ((built.bytes.size || built.bytes.length || 0) <= RF_MAX_ATTACH)) {
-      params.reviewed_file = upUrl;  /* EmailJS "Variable Attachment" content (Base64 or URL) */
+      params.reviewed_file = upUrl;  /* EmailJS "Variable Attachment" \u2014 paid plans only */
       hadAttach = true;
     }
     try {
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
-      return { ok: true };
+      return { ok: true, hadAttach };
     } catch (e) {
       const why = (e && (e.text || e.message)) ? String(e.text || e.message) : String(e);
       console.warn("[ARC review] email failed" + (hadAttach ? " (with the attachment variable)" : "") + ":", why, e);
@@ -1624,10 +1639,24 @@
         rfStatus("Done \u2014 the edited file is on your device.");
         return;
       }
+      /* Task 42 — the edited file MUST first reach a place the author can
+         open (the site file host): upload it with one retry. If the host is
+         unreachable we stop BEFORE emailing, because the email now promises
+         a downloadable file on the author's profile card. */
       let upUrl = null;
       rfStatus("Uploading the edited file to the site's file host\u2026");
       try { upUrl = await rfUploadReviewed(built.bytes, built.filename); }
-      catch (ue) { console.warn("[ARC review] upload failed (the email will carry the local file / the link may be missing):", ue); }
+      catch (u1) {
+        console.warn("[ARC review] upload failed, retrying once:", u1);
+        rfStatus("Upload failed \u2014 retrying once\u2026");
+        try { upUrl = await rfUploadReviewed(built.bytes, built.filename); }
+        catch (u2) {
+          throw new Error("The edited file could not be uploaded to the site's file host (" +
+            ((u2 && u2.message) ? u2.message : String(u2)) +
+            "). Nothing was emailed and nothing was saved \u2014 the author would not have been able to open the file. " +
+            'Use "Download the edited file only" and attach it to an email yourself, or try again later.');
+        }
+      }
       const markRev = document.getElementById("rfMarkRev").checked;
       rfStatus("Saving the review on the submission\u2026");
       await rfPersistReview(points, anyMarks, upUrl, built, markRev);
@@ -1637,16 +1666,25 @@
         mail = await rfSendEmail(points, upUrl, built, true);
         if (!mail.ok && mail.hadAttach) mail = await rfSendEmail(points, upUrl, built, false);
       }
-      let html = '<b><i class="fas fa-check-circle"></i> Sent.</b> The edited file (' + esc(built.filename) + ") was built" +
-        (upUrl ? ', uploaded to the file host (<a href="' + esc(upUrl) + '" target="_blank" rel="noopener">open</a>)' : "") +
+      /* Task 42 — the author's guaranteed way to open the file: their profile
+         card for this submission (View / Download buttons). The email links
+         to exactly this card. */
+      const authorLink = new URL("profile.html?sub=" + encodeURIComponent(rf.sub.id), location.href).href;
+      let html = '<b><i class="fas fa-check-circle"></i> Sent.</b> The edited file (' + esc(built.filename) + ") was built and uploaded to the file host" +
+        ' (<a href="' + esc(upUrl) + '" target="_blank" rel="noopener">open</a>)' +
         (mail && mail.ok
           ? " and <b>emailed to " + esc(rf.sub.email) + "</b>"
           : '. <b>The email could not be sent</b>' + (mail && mail.why ? " \u2014 " + esc(mail.why) : "")) +
         "." +
+        '<br><b>How the author opens it:</b> the submission card on their profile page now shows the reviewed file with <b>View</b> and <b>Download</b> buttons \u2014 ' +
+        '<a href="' + esc(authorLink) + '" target="_blank" rel="noopener">open that card</a> (the email carries this same link).' +
+        (mail && mail.ok
+          ? '<br><small>Tip: the free EmailJS plan cannot attach files, so the email links to that card instead. To also print the correction list and both links inside the email body itself, open this template in the EmailJS dashboard and add <b>{{{message}}}</b> where you want them.</small>'
+          : "") +
         (markRev
           ? '<br>The submission is now marked <b>Needs Revision</b>' +
             (points.length ? " with " + points.length + " correction point" + (points.length === 1 ? "" : "s") : "") +
-            " \u2014 the author sees them on their profile page and must upload the corrected file."
+            " \u2014 the author sees them on the same card and must upload the corrected file."
           : '<br>The submission status was not changed (send-only).') +
         ' <a href="#" data-rf-again>Download the edited file again</a>';
       rfShowResult("ok", html);
